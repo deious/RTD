@@ -43,13 +43,17 @@ public class GridManager : MonoBehaviour
 
     private void CreateTile(Vector2Int gridPos, GameObject prefab, TileType tileType)
     {
-        Vector3 worldPos = new Vector3(gridPos.x * cellSize, 0, gridPos.y * cellSize);
+        Vector3 worldPos = new Vector3(gridPos.x * cellSize, 0f, gridPos.y * cellSize);
 
         GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity, tileParent);
-        GridTile tile = obj.AddComponent<GridTile>();
+        
+        GridTile tile = obj.GetComponent<GridTile>();
+        if (tile == null)
+        {
+            tile = obj.AddComponent<GridTile>();
+        }
 
-        tile.GridPos = gridPos;
-        tile.TileType = tileType;
+        tile.Init(gridPos, tileType);
 
         tiles[gridPos.x, gridPos.y] = tile;
     }

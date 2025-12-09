@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1918
     height: 988
   m_ShowMode: 4
-  m_Title: Hierarchy
+  m_Title: Game
   m_RootView: {fileID: 3}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -219,8 +219,8 @@ MonoBehaviour:
     y: 0
     width: 358
     height: 601
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 226}
+  m_MaxSize: {x: 4001, y: 4026}
   m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 15}
@@ -301,8 +301,8 @@ MonoBehaviour:
     y: 0
     width: 371
     height: 932
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 76}
+  m_MaxSize: {x: 4001, y: 4026}
   m_ActualView: {fileID: 22}
   m_Panes:
   - {fileID: 22}
@@ -737,8 +737,7 @@ MonoBehaviour:
       m_LastClickedID:
         m_Data: 0
       m_ExpandedIDs:
-      - m_Data: -20282
-      - m_Data: -16726
+      - m_Data: -1298
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1607,7 +1606,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/RTD/Prefabs/Tiles
+    - Assets/RTD/Scripts/GamePlay
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1617,26 +1616,24 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/RTD/Prefabs/Tiles
+  - Assets/RTD/Scripts/GamePlay
   m_LastFoldersGridSize: -1
   m_LastProjectPath: "D:\\\uC790\uB8CC\\Project\\RTD\\RTD"
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 1
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 120}
+    scrollPos: {x: 0, y: 60}
     m_SelectedIDs:
-    - m_Data: 54298
+    - m_Data: 46044
     m_LastClickedID:
-      m_Data: 54298
+      m_Data: 46044
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 53968
-    - m_Data: 54002
-    - m_Data: 54088
-    - m_Data: 54092
-    - m_Data: 54096
-    - m_Data: 54100
+    - m_Data: 45642
+    - m_Data: 45942
+    - m_Data: 45994
+    - m_Data: 45998
     - m_Data: 1000000000
     - m_Data: 2147483647
     m_RenameOverlay:
@@ -1669,7 +1666,9 @@ MonoBehaviour:
     m_SelectedIDs: []
     m_LastClickedID:
       m_Data: 0
-    m_ExpandedIDs: []
+    m_ExpandedIDs:
+    - m_Data: 0
+    - m_Data: 45642
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
