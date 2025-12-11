@@ -3,13 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tiles/Tile_Buildable.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tiles/Tile_Buildable.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tiles/Tile_Path.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tiles/Tile_Path.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Grid/GridTile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Grid/GridTile.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GridManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GridManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Settings/Mobile_RPAsset.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Settings/Mobile_RPAsset.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -37,7 +32,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "develop__ver__1.0",
+    "git-widget-placeholder": "feature/Add__Waypoint",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -89,6 +84,7 @@
       <updated>1765195982503</updated>
       <workItem from="1765195986225" duration="1533000" />
       <workItem from="1765275474417" duration="3786000" />
+      <workItem from="1765463315681" duration="1172000" />
     </task>
     <servers />
   </component>
