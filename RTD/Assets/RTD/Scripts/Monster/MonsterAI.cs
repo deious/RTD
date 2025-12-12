@@ -5,10 +5,19 @@ public class MonsterAI : MonoBehaviour
     [Header("Move Settings")]
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float stoppingDistance = 0.05f;
+    
+    [Header("Stats")]
+    public int maxHp = 20;
+    private int _currentHp;
 
     private int _currentIndex = 0;
     private Transform _currentTarget;
 
+    private void Awake()
+    {
+        _currentHp = maxHp;
+    }
+    
     private void Start()
     {
         if (GridManager.Instance == null)
@@ -79,6 +88,26 @@ public class MonsterAI : MonoBehaviour
 
     private void ReachGoal()
     {
+        Destroy(gameObject);
+    }
+    
+    public void TakeDamage(int amount)
+    {
+        _currentHp -= amount;
+
+        if (_currentHp <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddGold(5);
+        }
+
         Destroy(gameObject);
     }
 }

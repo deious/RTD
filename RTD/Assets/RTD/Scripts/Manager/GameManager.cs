@@ -3,10 +3,34 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
-    private int gold = 100;
-    private int life = 10;
-    private int currentWave = 1;
-    private int maxWave = 20;
+    public static GameManager Instance { get; private set; }
+
+    [SerializeField] private int startGold = 100;
+    [SerializeField] private int startLife = 10;
+    [SerializeField] private int startWave = 1;
+    [SerializeField] private int maxWave = 20;
+
+    private int gold;
+    private int life;
+    private int currentWave;
+
+    // ✅ 외부에서 골드 읽을 수 있게 프로퍼티
+    public int Gold => gold;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        
+        gold = startGold;
+        life = startLife;
+        currentWave = startWave;
+    }
 
     private void Start()
     {
@@ -18,25 +42,47 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         var keyboard = Keyboard.current;
-        if (keyboard == null) 
+        if (keyboard == null)
             return;
-        
+
+        // 디버그용 키
         if (keyboard.gKey.wasPressedThisFrame)
         {
-            gold += 10;
-            UIManager.Instance.UpdateGold(gold);
+            AddGold(10);
         }
-        
+
         if (keyboard.hKey.wasPressedThisFrame)
         {
-            life--;
-            UIManager.Instance.UpdateLife(life);
+            ChangeLife(-1);
         }
-        
+
         if (keyboard.jKey.wasPressedThisFrame)
         {
-            currentWave++;
-            UIManager.Instance.UpdateWave(currentWave, maxWave);
+            NextWave();
         }
+    }
+    
+    public void AddGold(int amount)
+    {
+        gold += amount;
+        if (gold < 0) 
+            gold = 0;
+
+        UIManager.Instance.UpdateGold(gold);
+    }
+
+    public void ChangeLife(int amount)
+    {
+        life += amount;
+        UIManager.Instance.UpdateLife(life);
+    }
+
+    public void NextWave()
+    {
+        currentWave++;
+        if (currentWave > maxWave)
+            currentWave = maxWave;
+
+        UIManager.Instance.UpdateWave(currentWave, maxWave);
     }
 }
