@@ -18,6 +18,9 @@ public class GridTile : MonoBehaviour
 
     private Renderer _renderer;
     private Color _originalColor;
+    
+    public TowerBase CurrentTower { get; private set; }
+    public bool IsEmpty => CurrentTower == null && TileType == TileType.Buildable;
 
     private void Awake()
     {
@@ -40,9 +43,17 @@ public class GridTile : MonoBehaviour
 
         _renderer.material.color = active ? hoverColor : _originalColor;
     }
+    
+    public void SetTower(TowerBase tower)
+    {
+        CurrentTower = tower;
+    }
 
     public void OnSelected()
     {
-        Debug.Log($"Tile Selected - GridPos: {GridPos}, Type: {TileType}, WorldPos: {transform.position}");
+        if (TowerManager.Instance != null)
+        {
+            TowerManager.Instance.OnTileClicked(this);
+        }
     }
 }
