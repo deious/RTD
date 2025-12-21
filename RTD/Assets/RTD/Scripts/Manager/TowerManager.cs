@@ -100,6 +100,16 @@ public class TowerManager : MonoBehaviour
             Debug.Log("설치 불가 타일이거나 이미 타워가 있습니다.");
             return;
         }
+        
+        TowerBase prefabTower = towerPrefab != null ? towerPrefab.GetComponent<TowerBase>() : null;
+        int cost = towerCost;
+
+        if (prefabTower != null)
+        {
+            TowerData d = prefabTower.GetData(); // TowerBase에 GetData()가 있어야 함
+            if (d != null)
+                cost = d.buildCost;
+        }
 
         if (GameManager.Instance == null)
         {
@@ -107,7 +117,7 @@ public class TowerManager : MonoBehaviour
             return;
         }
 
-        if (GameManager.Instance.Gold < towerCost)
+        if (GameManager.Instance.Gold < cost)
         {
             Debug.Log("골드가 부족합니다.");
             return;
@@ -125,6 +135,6 @@ public class TowerManager : MonoBehaviour
         }
 
         tile.SetTower(tower);
-        GameManager.Instance.AddGold(-towerCost);
+        GameManager.Instance.AddGold(-cost);
     }
 }
