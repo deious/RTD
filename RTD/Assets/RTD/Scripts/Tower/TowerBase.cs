@@ -9,17 +9,16 @@ public abstract class TowerBase : MonoBehaviour
 
     [Header("Visual")]
     [SerializeField] private GameObject rangeVisual;
+    
+    [Header("Data")]
+    [SerializeField] private TowerData data;
 
     protected float _attackTimer;
 
     protected virtual void Start()
     {
-        if (rangeVisual != null)
-        {
-            Vector3 s = rangeVisual.transform.localScale;
-            rangeVisual.transform.localScale = new Vector3(range * 2f, s.y, range * 2f);
-            rangeVisual.SetActive(false);
-        }
+        ApplyDataIfAny();
+        ApplyRangeVisual();
     }
 
     protected virtual void Update()
@@ -62,6 +61,31 @@ public abstract class TowerBase : MonoBehaviour
     {
         if (rangeVisual != null)
             rangeVisual.SetActive(selected);
+    }
+    
+    private void ApplyDataIfAny()
+    {
+        if (data == null) 
+            return;
+        
+        range = data.range;
+        attackInterval = 1f / Mathf.Max(0.0001f, data.attackSpeed);
+        damage = Mathf.RoundToInt(data.damage);
+    }
+
+    private void ApplyRangeVisual()
+    {
+        if (rangeVisual == null) 
+            return;
+
+        Vector3 s = rangeVisual.transform.localScale;
+        rangeVisual.transform.localScale = new Vector3(range * 2f, s.y, range * 2f);
+        rangeVisual.SetActive(false);
+    }
+    
+    public TowerData GetData()
+    {
+        return data;
     }
     
     private void OnDrawGizmosSelected()
