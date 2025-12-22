@@ -88,6 +88,17 @@ public abstract class TowerBase : MonoBehaviour
         return data;
     }
     
+    public void SetData(TowerData newData)
+    {
+        if (newData == null)
+            return;
+
+        data = newData;
+        ApplyDataIfAny();
+        ApplyRangeVisual();
+    }
+
+    
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7800332239842557693}
   - component: {fileID: 2820382311982447250}
   - component: {fileID: 7127550326779563956}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -123,8 +123,7 @@ GameObject:
   - component: {fileID: 7739248978157416647}
   - component: {fileID: 4933947734274942171}
   - component: {fileID: 7553713909770505618}
-  - component: {fileID: 1516985673481355240}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: RangeVisualizer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -203,29 +202,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1516985673481355240
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4998818660976208773}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7171363995591784685
 GameObject:
   m_ObjectHideFlags: 0
@@ -236,7 +212,7 @@ GameObject:
   m_Component:
   - component: {fileID: 856866868640936716}
   - component: {fileID: 4611886797566799654}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BasicTower
   m_TagString: Untagged
   m_Icon: {fileID: 0}

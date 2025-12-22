@@ -1186,6 +1186,55 @@ MonoBehaviour:
   minPitch: 20
   maxPitch: 75
   panSpeed: 20
+--- !u!1 &1531175497
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1531175499}
+  - component: {fileID: 1531175498}
+  m_Layer: 0
+  m_Name: TowerDatabase
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1531175498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531175497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65e59ad888acc364fbae5705a2ce3e7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDataBase
+  allTowerData:
+  - {fileID: 11400000, guid: 9e5e7049571e1c64597ac2de504e1d3f, type: 2}
+  - {fileID: 11400000, guid: 1c496b7a64541104e96fac2b6ebeb91e, type: 2}
+  - {fileID: 11400000, guid: dc8fb1f95c2cbbb47a44cd54ba5ecc34, type: 2}
+  - {fileID: 11400000, guid: 1321efcbc307db04fa8f1bfed8b75e0e, type: 2}
+--- !u!4 &1531175499
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1531175497}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0, y: 0, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1594671948
 GameObject:
   m_ObjectHideFlags: 0
@@ -1475,6 +1524,7 @@ SceneRoots:
   - {fileID: 900364112}
   - {fileID: 766975845}
   - {fileID: 1594671951}
+  - {fileID: 1531175499}
   - {fileID: 2070832432}
   - {fileID: 170118372}
   - {fileID: 360424406}
