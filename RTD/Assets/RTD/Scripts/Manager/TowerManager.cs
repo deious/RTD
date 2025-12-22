@@ -37,6 +37,11 @@ public class TowerManager : MonoBehaviour
         {
             HandleClick();
         }
+        
+        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            TryCombineSelectedTower();
+        }
     }
 
     private void HandleClick()
@@ -44,28 +49,27 @@ public class TowerManager : MonoBehaviour
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+        if (Physics.Raycast(ray, out RaycastHit hitTower, 1000f, LayerMask.GetMask("Tower")))
         {
-            TowerBase tower = hit.collider.GetComponentInParent<TowerBase>();
+            TowerBase tower = hitTower.collider.GetComponentInParent<TowerBase>();
             if (tower != null)
             {
                 SelectTower(tower);
                 return;
             }
-            
-            GridTile tile = hit.collider.GetComponent<GridTile>();
+        }
+        
+        if (Physics.Raycast(ray, out RaycastHit hitTile, 1000f, tileLayerMask))
+        {
+            GridTile tile = hitTile.collider.GetComponent<GridTile>();
             if (tile != null)
             {
                 OnTileClicked(tile);
                 return;
             }
-            
-            ClearSelection();
         }
-        else
-        {
-            ClearSelection();
-        }
+
+        ClearSelection();
     }
     
     private void SelectTower(TowerBase tower)
@@ -136,5 +140,87 @@ public class TowerManager : MonoBehaviour
 
         tile.SetTower(tower);
         GameManager.Instance.AddGold(-cost);
+    }
+    
+    private void FindSameTowers(TowerData 기준, System.Collections.Generic.List<TowerBase> outList)
+    {
+        outList.Clear();
+
+        TowerBase[] allTowers = FindObjectsOfType<TowerBase>();
+        foreach (var t in allTowers)
+        {
+            TowerData d = t.GetData();
+            if (d == null)
+                continue;
+
+            if (d.towerId == 기준.towerId && d.grade == 기준.grade)
+            {
+                outList.Add(t);
+            }
+        }
+    }
+    
+    private void TryCombineSelectedTower()
+    {
+        if (_selectedTower == null)
+        {
+            Debug.Log("선택된 타워가 없습니다.");
+            return;
+        }
+
+        TowerData currentData = _selectedTower.GetData();
+        if (currentData == null)
+        {
+            Debug.Log("현재 타워 데이터가 없습니다.");
+            return;
+        }
+        
+        if (!TowerGradeHelper.TryGetNextGrade(currentData.grade, out TowerGrade nextGrade))
+        {
+            Debug.Log("더 이상 합성할 수 없는 등급입니다.");
+            return;
+        }
+        
+        var sameTowers = new System.Collections.Generic.List<TowerBase>();
+        FindSameTowers(currentData, sameTowers);
+
+        if (sameTowers.Count < 3)
+        {
+            Debug.Log($"합성 조건 미충족: {currentData.towerId} ({sameTowers.Count}/3)");
+            return;
+        }
+        
+        string nextTowerId = GetNextTowerId(currentData.towerId, nextGrade);
+        TowerData nextData = TowerDatabase.Instance.Get(nextTowerId);
+        if (nextData == null)
+        {
+            Debug.LogError($"다음 TowerData를 찾을 수 없습니다: {nextTowerId}");
+            return;
+        }
+        
+        int removed = 0;
+        for (int i = 0; i < sameTowers.Count && removed < 2; i++)
+        {
+            if (sameTowers[i] == _selectedTower)
+                continue;
+
+            Destroy(sameTowers[i].gameObject);
+            removed++;
+        }
+        
+        _selectedTower.SetData(nextData);
+        _selectedTower.SetSelected(true);
+
+        Debug.Log($"합성 성공: {currentData.towerId} → {nextTowerId}");
+    }
+
+    private string GetNextTowerId(string currentId, TowerGrade nextGrade)
+    {
+        int idx = currentId.LastIndexOf('_');
+        if (idx < 0)
+            return currentId;
+
+        string baseId = currentId.Substring(0, idx);
+        return $"{baseId}_{nextGrade.ToString().ToLower()}";
     }
 }

@@ -3,10 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Epic.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Epic.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Legendary.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Legendary.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Rare.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Basic_Rare.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/TileSelector.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/TileSelector.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerGrade.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerGrade.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,16 +33,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "feature/Set__TowerData",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/Set__TowerData&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Unity 에디터에 연결.Unity 에디터에 연결">
     <configuration name="유닛 테스트(배치 모드)" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="D:\Unity\6000.3.0f1\Editor\Unity.exe" />
@@ -87,7 +93,7 @@
       <workItem from="1765275474417" duration="3786000" />
       <workItem from="1765463315681" duration="1172000" />
       <workItem from="1765501659467" duration="2877000" />
-      <workItem from="1766318563896" duration="3918000" />
+      <workItem from="1766318563896" duration="8835000" />
     </task>
     <servers />
   </component>

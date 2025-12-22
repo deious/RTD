@@ -24,7 +24,6 @@ public class TileSelector : MonoBehaviour
         if (_mainCamera == null) return;
 
         HandleHover();
-        HandleClick();
     }
 
     private void HandleHover()
@@ -66,17 +65,6 @@ public class TileSelector : MonoBehaviour
                 _hoveredTile.SetHighlight(false);
                 _hoveredTile = null;
             }
-        }
-    }
-
-    private void HandleClick()
-    {
-        if (Mouse.current == null) 
-            return;
-
-        if (Mouse.current.leftButton.wasPressedThisFrame && _hoveredTile != null)
-        {
-            _hoveredTile.OnSelected();
         }
     }
 }
