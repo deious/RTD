@@ -13,21 +13,25 @@ public abstract class TowerBase : MonoBehaviour
     [Header("Data")]
     [SerializeField] private TowerData data;
 
-    protected float _attackTimer;
+    private Renderer[] renderers;
+    protected float attackTimer;
 
     protected virtual void Start()
     {
+        renderers = GetComponentsInChildren<Renderer>(true);
+        
         ApplyDataIfAny();
         ApplyRangeVisual();
+        ApplyVisual();
     }
 
     protected virtual void Update()
     {
-        _attackTimer += Time.deltaTime;
+        attackTimer += Time.deltaTime;
 
-        if (_attackTimer >= attackInterval)
+        if (attackTimer >= attackInterval)
         {
-            _attackTimer = 0f;
+            attackTimer = 0f;
             Attack();
         }
     }
@@ -83,6 +87,19 @@ public abstract class TowerBase : MonoBehaviour
         rangeVisual.SetActive(false);
     }
     
+    private void ApplyVisual()
+    {
+        if (data == null || renderers == null)
+            return;
+
+        foreach (var r in renderers)
+        {
+            if (r.material.HasProperty("_Color"))
+                r.material.color = data.gradeColor;
+        }
+    }
+
+    
     public TowerData GetData()
     {
         return data;
@@ -96,6 +113,7 @@ public abstract class TowerBase : MonoBehaviour
         data = newData;
         ApplyDataIfAny();
         ApplyRangeVisual();
+        ApplyVisual();
     }
 
     
