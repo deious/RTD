@@ -342,6 +342,10 @@ MonoBehaviour:
   tileLayerMask:
     serializedVersion: 2
     m_Bits: 64
+  buildRollGrade: 0
+  buildPool:
+  - {fileID: 11400000, guid: 9e5e7049571e1c64597ac2de504e1d3f, type: 2}
+  - {fileID: 11400000, guid: 4f089b1e817e2fe418e9b268662fc518, type: 2}
 --- !u!1 &641195638
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,6 +15,8 @@ public abstract class TowerBase : MonoBehaviour
 
     private Renderer[] renderers;
     protected float attackTimer;
+    
+    public GridTile CurrentTile { get; private set; }
 
     protected virtual void Start()
     {
@@ -99,6 +101,19 @@ public abstract class TowerBase : MonoBehaviour
         }
     }
 
+    public void SetTile(GridTile tile)
+    {
+        if (CurrentTile == tile)
+            return;
+        
+        if (CurrentTile != null)
+            CurrentTile.ClearTower(this);
+
+        CurrentTile = tile;
+        
+        if (CurrentTile != null)
+            CurrentTile.SetTower(this);
+    }
     
     public TowerData GetData()
     {
@@ -116,6 +131,14 @@ public abstract class TowerBase : MonoBehaviour
         ApplyVisual();
     }
 
+    private void OnDestroy()
+    {
+        if (CurrentTile != null)
+        {
+            CurrentTile.ClearTower(this);
+            CurrentTile = null;
+        }
+    }
     
     private void OnDrawGizmosSelected()
     {

@@ -48,6 +48,12 @@ public class GridTile : MonoBehaviour
     {
         CurrentTower = tower;
     }
+    
+    public void ClearTower(TowerBase tower)
+    {
+        if (CurrentTower == tower)
+            CurrentTower = null;
+    }
 
     public void OnSelected()
     {
