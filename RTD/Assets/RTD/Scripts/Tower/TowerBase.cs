@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public abstract class TowerBase : MonoBehaviour
@@ -9,6 +10,9 @@ public abstract class TowerBase : MonoBehaviour
 
     [Header("Visual")]
     [SerializeField] private GameObject rangeVisual;
+    [SerializeField] private Renderer gradeRingRenderer;   // GradeRing의 Renderer
+    [SerializeField] private TMP_Text typeLabel;
+    [SerializeField, Range(0f, 1f)] private float gradeRingAlpha = 0.75f;
     
     [Header("Data")]
     [SerializeField] private TowerData data;
@@ -91,14 +95,63 @@ public abstract class TowerBase : MonoBehaviour
     
     private void ApplyVisual()
     {
-        if (data == null || renderers == null)
+        if (data == null)
             return;
-
-        foreach (var r in renderers)
+        
+        if (gradeRingRenderer != null)
         {
-            if (r.material.HasProperty("_Color"))
-                r.material.color = data.gradeColor;
+            var mat = gradeRingRenderer.material;
+            if (mat != null)
+            {
+                Color c = data.gradeColor;
+                c.a = gradeRingAlpha;
+                
+                if (mat.HasProperty("_BaseColor"))
+                    mat.SetColor("_BaseColor", c);
+                else if (mat.HasProperty("_Color"))
+                    mat.SetColor("_Color", c);
+            }
         }
+        
+        if (typeLabel != null)
+        {
+            typeLabel.text = GetTypeShortLabel(data.towerId);
+            typeLabel.color = Color.white;
+        }
+        
+        /*
+        if (renderers != null)
+        {
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                var r = renderers[i];
+                if (r != null && r.material != null && r.material.HasProperty("_Color"))
+                    r.material.color = Color.gray;
+            }
+        }
+        */
+    }
+    
+    private string GetTypeShortLabel(string towerId)
+    {
+        if (string.IsNullOrEmpty(towerId))
+            return "?";
+
+        int idx = towerId.IndexOf('_');
+        string key = (idx >= 0) ? towerId.Substring(0, idx) : towerId;
+
+        key = key.ToLower();
+        
+        if (key.Contains("basic")) 
+            return "B";
+        if (key.Contains("cannon")) 
+            return "C";
+        if (key.Contains("magic")) 
+            return "M";
+        
+        if (key.Length >= 2) 
+            return key.Substring(0, 2).ToUpper();
+        return key.ToUpper();
     }
 
     public void SetTile(GridTile tile)

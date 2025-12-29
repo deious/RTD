@@ -54,4 +54,27 @@ public class TowerDatabase : MonoBehaviour
 
         return _table.TryGetValue(towerId, out var data) ? data : null;
     }
+    
+    public TowerData GetRandomByGrade(TowerGrade grade)
+    {
+        if (allTowerData == null || allTowerData.Length == 0)
+            return null;
+        
+        List<TowerData> candidates = new List<TowerData>();
+        for (int i = 0; i < allTowerData.Length; i++)
+        {
+            TowerData d = allTowerData[i];
+            if (d == null)
+                continue;
+
+            if (d.grade == grade)
+                candidates.Add(d);
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        int idx = Random.Range(0, candidates.Count);
+        return candidates[idx];
+    }
 }
