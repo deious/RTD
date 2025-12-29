@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Grid/GridTile.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Grid/GridTile.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Range_Normal.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Range_Normal.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerDatabase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerDatabase.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UserSettings/Search.settings" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Search.settings" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +45,11 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "git-widget-placeholder": "feature/Add__Build__Random__Tower",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -89,6 +105,7 @@
       <workItem from="1765501659467" duration="2877000" />
       <workItem from="1766318563896" duration="11048000" />
       <workItem from="1766717890837" duration="5941000" />
+      <workItem from="1767001077055" duration="6563000" />
     </task>
     <servers />
   </component>
