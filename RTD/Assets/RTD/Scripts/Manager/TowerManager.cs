@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Cysharp.Threading.Tasks;
 
 public class TowerManager : MonoBehaviour
 {
@@ -7,8 +8,6 @@ public class TowerManager : MonoBehaviour
 
     [Header("Placement")]
     [SerializeField] private Camera mainCamera;
-    //[SerializeField] private GameObject towerPrefab;
-    //[SerializeField] private int towerCost = 10;
     [SerializeField] private LayerMask tileLayerMask;
     
     [Header("Random Build")]
@@ -25,6 +24,7 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private CombineMode combineMode = CombineMode.Exact;
     
     private TowerBase _selectedTower;
+    private bool _combineBusy;
 
     private void Awake()
     {
@@ -43,6 +43,9 @@ public class TowerManager : MonoBehaviour
 
     private void Update()
     {
+        if (_combineBusy) 
+            return;
+        
         if (Mouse.current == null) 
             return;
 
@@ -59,7 +62,10 @@ public class TowerManager : MonoBehaviour
         
         if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
         {
-            TryCombineSelectedTower();
+            if (_combineBusy)
+                return;
+            
+            TryCombineSelectedTowerAsync().Forget();
         }
     }
 
@@ -249,105 +255,144 @@ public class TowerManager : MonoBehaviour
         }
     }
     
-    private void TryCombineSelectedTower()
+    private async UniTaskVoid TryCombineSelectedTowerAsync()
     {
-        if (_selectedTower == null)
-        {
-            Debug.Log("선택된 타워가 없습니다.");
+        if (_combineBusy)
             return;
-        }
-    
-        TowerData selectedData = _selectedTower.GetData();
-        if (selectedData == null)
+
+        _combineBusy = true;
+        
+        try
         {
-            Debug.Log("현재 타워 데이터가 없습니다.");
-            return;
-        }
-    
-        TowerGrade curGrade = selectedData.grade;
-        if (!TowerGradeHelper.TryGetNextGrade(curGrade, out TowerGrade nextGrade))
-        {
-            Debug.Log("더 이상 합성할 수 없는 등급입니다.");
-            return;
-        }
-    
-        if (TowerDatabase.Instance == null)
-        {
-            Debug.LogError("TowerDatabase 인스턴스가 없습니다.");
-            return;
-        }
-    
-        // 1) 후보 수집은 모드에 따라 다름
-        var candidates = new System.Collections.Generic.List<TowerBase>();
-    
-        if (combineMode == CombineMode.Exact)
-            FindExactTowers(selectedData, candidates);
-        else
-            FindSameGradeTowers(curGrade, candidates);
-    
-        if (candidates.Count < 3)
-        {
+            if (_selectedTower == null)
+            {
+                Debug.Log("선택된 타워가 없습니다.");
+                return;
+            }
+            
+            TowerData selectedData = _selectedTower.GetData();
+            if (selectedData == null)
+            {
+                Debug.Log("현재 타워 데이터가 없습니다.");
+                return;
+            }
+            
+            TowerGrade curGrade = selectedData.grade;
+            if (!TowerGradeHelper.TryGetNextGrade(curGrade, out TowerGrade nextGrade))
+            {
+                Debug.Log("더 이상 합성할 수 없는 등급입니다.");
+                return;
+            }
+            
+            if (TowerDatabase.Instance == null)
+            {
+                Debug.LogError("TowerDatabase 인스턴스가 없습니다.");
+                return;
+            }
+            
+            // 1) 후보 수집은 모드에 따라 다름
+            var candidates = new System.Collections.Generic.List<TowerBase>();
+            
             if (combineMode == CombineMode.Exact)
-                Debug.Log($"[Exact Combine] 조건 미충족: {selectedData.towerId} ({candidates.Count}/3)");
+                FindExactTowers(selectedData, candidates);
             else
-                Debug.Log($"[Random Combine] 조건 미충족: grade={curGrade} ({candidates.Count}/3)");
-            return;
-        }
-    
-        // 2) 3개 구성(선택 타워 포함 + 나머지 2개)
-        var mergeList = new System.Collections.Generic.List<TowerBase>(3);
-        mergeList.Add(_selectedTower);
-    
-        for (int i = 0; i < candidates.Count && mergeList.Count < 3; i++)
-        {
-            if (candidates[i] == _selectedTower)
-                continue;
-    
-            mergeList.Add(candidates[i]);
-        }
-    
-        if (mergeList.Count < 3)
-        {
-            Debug.Log("합성 대상 3개를 구성하지 못했습니다.");
-            return;
-        }
-    
-        // 3) 결과 TowerData 결정(모드에 따라 다름)
-        TowerData resultData = null;
-    
-        if (combineMode == CombineMode.Exact)
-        {
-            string nextTowerId = GetNextTowerId(selectedData.towerId, nextGrade);
-            resultData = TowerDatabase.Instance.Get(nextTowerId);
-    
-            if (resultData == null)
+                FindSameGradeTowers(curGrade, candidates);
+            
+            if (candidates.Count < 3)
             {
-                Debug.LogError($"다음 TowerData를 찾을 수 없습니다: {nextTowerId}");
+                if (combineMode == CombineMode.Exact)
+                    Debug.Log($"[Exact Combine] 조건 미충족: {selectedData.towerId} ({candidates.Count}/3)");
+                else
+                    Debug.Log($"[Random Combine] 조건 미충족: grade={curGrade} ({candidates.Count}/3)");
                 return;
             }
-        }
-        else
-        {
-            resultData = RollMergeResultByGrade(nextGrade);
-            if (resultData == null)
+            
+            // 2) 3개 구성(선택 타워 포함 + 나머지 2개)
+            var mergeList = new System.Collections.Generic.List<TowerBase>(3);
+            mergeList.Add(_selectedTower);
+            
+            for (int i = 0; i < candidates.Count && mergeList.Count < 3; i++)
             {
-                Debug.LogError($"혼합 합성 결과 TowerData를 뽑지 못했습니다. targetGrade={nextGrade}");
+                if (candidates[i] == _selectedTower)
+                    continue;
+            
+                mergeList.Add(candidates[i]);
+            }
+            
+            if (mergeList.Count < 3)
+            {
+                Debug.Log("합성 대상 3개를 구성하지 못했습니다.");
                 return;
             }
+            
+            // 3) 결과 TowerData 결정(모드에 따라 다름)
+            TowerData resultData = null;
+            
+            if (combineMode == CombineMode.Exact)
+            {
+                string nextTowerId = GetNextTowerId(selectedData.towerId, nextGrade);
+                resultData = TowerDatabase.Instance.Get(nextTowerId);
+            
+                if (resultData == null)
+                {
+                    Debug.LogError($"다음 TowerData를 찾을 수 없습니다: {nextTowerId}");
+                    return;
+                }
+            }
+            else
+            {
+                resultData = RollMergeResultByGrade(nextGrade);
+                if (resultData == null)
+                {
+                    Debug.LogError($"혼합 합성 결과 TowerData를 뽑지 못했습니다. targetGrade={nextGrade}");
+                    return;
+                }
+            }
+            
+            if (TowerMergeVFX.Instance == null)
+            {
+                Debug.LogError("TowerMergeVFX.Instance가 없습니다. 씬에 TowerMergeVFX 오브젝트가 있어야 합니다.");
+                return;
+            }
+            
+            Transform[] sources =
+            {
+                mergeList[0] != null ? mergeList[0].transform : null,
+                mergeList[1] != null ? mergeList[1].transform : null,
+                mergeList[2] != null ? mergeList[2].transform : null
+            };
+            
+            Vector3 mergePoint = _selectedTower.transform.position;
+            
+            Vector3 keepScale = _selectedTower.transform.localScale;
+            
+            await TowerMergeVFX.Instance.PlayMergeAsync(
+                sources,
+                mergePoint,
+                () =>
+                {
+                    for (int i = 0; i < mergeList.Count; i++)
+                    {
+                        if (mergeList[i] == null) continue;
+                        if (mergeList[i] == _selectedTower) continue;
+                        Destroy(mergeList[i].gameObject);
+                    }
+            
+                    if (_selectedTower == null) return;
+                    
+                    _selectedTower.transform.localScale = keepScale;
+            
+                    _selectedTower.SetData(resultData);
+                    _selectedTower.SetSelected(true);
+            
+                    _selectedTower.PlaySpawnFeedback();
+                }
+            );
         }
-        
-        for (int i = 0; i < mergeList.Count; i++)
+        finally
         {
-            if (mergeList[i] == _selectedTower)
-                continue;
-    
-            Destroy(mergeList[i].gameObject);
+            _combineBusy = false;
         }
-        
-        _selectedTower.SetData(resultData);
-        _selectedTower.SetSelected(true);
-    
-        Debug.Log($"합성 성공: mode={combineMode} ({curGrade}) -> ({nextGrade}) result={resultData.towerId}");
     }
 
 
