@@ -469,6 +469,10 @@ MonoBehaviour:
   typeLabel: {fileID: 6151956830739525794}
   gradeRingAlpha: 0.75
   data: {fileID: 11400000, guid: 9e5e7049571e1c64597ac2de504e1d3f, type: 2}
+  projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+  firePoint: {fileID: 0}
+  projectileSpeed: 18
+  projectileLifeTime: 3
 --- !u!1 &8841714957855586771
 GameObject:
   m_ObjectHideFlags: 0

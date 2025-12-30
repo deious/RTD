@@ -6,10 +6,12 @@ public class BasicTower : TowerBase
     protected override void Attack()
     {
         MonsterAI target = FindTarget();
+        if (target == null)
+            return;
         
-        if (target != null)
-        {
-            target.TakeDamage(damage);
-        }
+        if (TryFireProjectile(target))
+            return;
+        
+        target.TakeDamage(damage);
     }
 }

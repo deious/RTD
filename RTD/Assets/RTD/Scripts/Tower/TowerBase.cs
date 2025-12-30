@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public abstract class TowerBase : MonoBehaviour
 {
@@ -16,6 +17,21 @@ public abstract class TowerBase : MonoBehaviour
     
     [Header("Data")]
     [SerializeField] private TowerData data;
+    
+    [Header("Projectile")]
+    [SerializeField] private Projectile projectilePrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private float projectileSpeed = 18f;
+    [SerializeField] private float projectileLifeTime = 3f;
+    
+    [Header("Spawn FX")]
+    [SerializeField] private bool playSpawnPop = true;
+    [SerializeField] private float spawnPopDuration = 0.14f;
+    [SerializeField] private float spawnPopScaleMul = 1.18f;
+    [SerializeField] private AnimationCurve spawnPopCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [SerializeField] private ParticleSystem spawnParticlePrefab;
+    [SerializeField] private Transform spawnParticlePoint;
 
     private Renderer[] renderers;
     protected float attackTimer;
@@ -29,6 +45,7 @@ public abstract class TowerBase : MonoBehaviour
         ApplyDataIfAny();
         ApplyRangeVisual();
         ApplyVisual();
+        PlaySpawnFeedback();
     }
 
     protected virtual void Update()
@@ -43,6 +60,27 @@ public abstract class TowerBase : MonoBehaviour
     }
     
     protected abstract void Attack();
+    
+    protected bool TryFireProjectile(MonsterAI target)
+    {
+        if (target == null)
+            return false;
+
+        if (projectilePrefab == null)
+            return false;
+
+        Vector3 spawnPos = (firePoint != null) ? firePoint.position : (transform.position + Vector3.up * 0.7f);
+
+        if (ProjectilePool.Instance == null)
+            return false;
+
+        Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
+        if (proj == null)
+            return false;
+
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime);
+        return true;
+    }
     
     protected virtual MonsterAI FindTarget()
     {
@@ -130,6 +168,71 @@ public abstract class TowerBase : MonoBehaviour
             }
         }
         */
+    }
+    
+    public void PlaySpawnFeedback()
+    {
+        PlaySpawnFeedbackAsync().Forget();
+    }
+    
+    private async UniTaskVoid PlaySpawnFeedbackAsync()
+    {
+        if (playSpawnPop)
+            await SpawnPopAsync();
+
+        if (spawnParticlePrefab != null)
+        {
+            Vector3 p = (spawnParticlePoint != null)
+                ? spawnParticlePoint.position
+                : transform.position;
+
+            Instantiate(spawnParticlePrefab, p, Quaternion.identity);
+        }
+    }
+    
+    private async UniTask SpawnPopAsync()
+    {
+        var ct = this.GetCancellationTokenOnDestroy();
+        Transform t = transform;
+
+        Vector3 baseScale = t.localScale;
+        float targetMul = Mathf.Max(1.0f, spawnPopScaleMul);
+
+        float dur = Mathf.Max(0.01f, spawnPopDuration);
+        float timer = 0f;
+
+        try
+        {
+            while (timer < dur)
+            {
+                ct.ThrowIfCancellationRequested();
+                
+                if (t == null)
+                    return;
+
+                timer += Time.deltaTime;
+                float u = Mathf.Clamp01(timer / dur);
+
+                float k = spawnPopCurve != null
+                    ? spawnPopCurve.Evaluate(u)
+                    : u;
+
+                float pop;
+                if (u < 0.5f)
+                    pop = Mathf.Lerp(1f, targetMul, k * 2f);
+                else
+                    pop = Mathf.Lerp(targetMul, 1f, (k - 0.5f) * 2f);
+
+                t.localScale = baseScale * pop;
+                
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+        }
+        finally
+        {
+            if (t != null)
+                t.localScale = baseScale;
+        }
     }
     
     private string GetTypeShortLabel(string towerId)
