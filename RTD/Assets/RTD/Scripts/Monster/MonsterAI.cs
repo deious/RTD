@@ -9,13 +9,19 @@ public class MonsterAI : MonoBehaviour
     [Header("Stats")]
     public int maxHp = 20;
     private int _currentHp;
+    [SerializeField] private int _shieldHp;
 
+    [SerializeField] private Transform shieldVfxPrefab;
+    private Transform _shieldVfxInstance;
+    
     private int _currentIndex = 0;
     private Transform _currentTarget;
 
     private void Awake()
     {
         _currentHp = maxHp;
+        _shieldHp = 0;
+        UpdateShieldVfx();
     }
     
     private void Start()
@@ -44,6 +50,28 @@ public class MonsterAI : MonoBehaviour
     private void Update()
     {
         MoveAlongPath();
+    }
+    
+    public void ApplyWaveModifiers(WaveModifiers mods)
+    {
+        if (mods.speedMul > 0.01f)
+            moveSpeed *= mods.speedMul;
+        
+        if (mods.hpMul > 0.01f)
+        {
+            int newMaxHp = Mathf.RoundToInt(maxHp * mods.hpMul);
+            if (newMaxHp < 1) newMaxHp = 1;
+
+            maxHp = newMaxHp;
+            _currentHp = maxHp;
+        }
+        
+        if (mods.shieldHp > 0)
+        {
+            _shieldHp += mods.shieldHp;
+        }
+
+        UpdateShieldVfx();
     }
 
     private void MoveAlongPath()
@@ -88,11 +116,35 @@ public class MonsterAI : MonoBehaviour
 
     private void ReachGoal()
     {
+        if (_shieldVfxInstance != null)
+        {
+            Destroy(_shieldVfxInstance.gameObject);
+        }
+        
         Destroy(gameObject);
     }
     
     public void TakeDamage(int amount)
     {
+        if (amount <= 0)
+            return;
+        
+        if (_shieldHp > 0)
+        {
+            int absorbed = Mathf.Min(_shieldHp, amount);
+            _shieldHp -= absorbed;
+            amount -= absorbed;
+
+            if (_shieldHp <= 0)
+            {
+                _shieldHp = 0;
+                UpdateShieldVfx();
+            }
+
+            if (amount <= 0)
+                return;
+        }
+        
         _currentHp -= amount;
 
         if (_currentHp <= 0)
@@ -100,6 +152,32 @@ public class MonsterAI : MonoBehaviour
             Die();
         }
     }
+    
+    private void UpdateShieldVfx()
+    {
+        bool shouldShow = _shieldHp > 0;
+        
+        if (shieldVfxPrefab == null)
+            return;
+
+        if (shouldShow)
+        {
+            if (_shieldVfxInstance == null)
+            {
+                _shieldVfxInstance = Instantiate(shieldVfxPrefab, transform);
+            }
+            
+            _shieldVfxInstance.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (_shieldVfxInstance != null)
+            {
+                _shieldVfxInstance.gameObject.SetActive(false);
+            }
+        }
+    }
+
 
     private void Die()
     {
@@ -108,6 +186,11 @@ public class MonsterAI : MonoBehaviour
             GameManager.Instance.AddGold(5);
         }
 
+        if (_shieldVfxInstance != null)
+        {
+            Destroy(_shieldVfxInstance.gameObject);
+        }
+        
         Destroy(gameObject);
     }
 }
