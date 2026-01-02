@@ -13,8 +13,10 @@ public class GameManager : MonoBehaviour
     private int gold;
     private int life;
     private int currentWave;
+    
+    private WaveModifiers _currentWaveMods;
 
-    // ✅ 외부에서 골드 읽을 수 있게 프로퍼티
+    // 외부에서 골드 읽을 수 있게 프로퍼티
     public int Gold => gold;
 
     private void Awake()
@@ -37,6 +39,7 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.UpdateGold(gold);
         UIManager.Instance.UpdateLife(life);
         UIManager.Instance.UpdateWave(currentWave, maxWave);
+        StartWave(currentWave);
     }
 
     private void Update()
@@ -84,5 +87,23 @@ public class GameManager : MonoBehaviour
             currentWave = maxWave;
 
         UIManager.Instance.UpdateWave(currentWave, maxWave);
+
+        StartWave(currentWave);
+    }
+    
+    private void StartWave(int waveIndex)
+    {
+        _currentWaveMods = WaveModifierRoller.Roll(0, 2);
+        
+        Debug.Log($"[Wave {waveIndex}] Modifiers = {_currentWaveMods.label} (speedMul={_currentWaveMods.speedMul}, hpMul={_currentWaveMods.hpMul}, shieldHp={_currentWaveMods.shieldHp})");
+
+        if (MonsterSpawner.Instance != null)
+        {
+            MonsterSpawner.Instance.SpawnWave(waveIndex, _currentWaveMods);
+        }
+        else
+        {
+            Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
+        }
     }
 }
