@@ -97,6 +97,11 @@ public class GameManager : MonoBehaviour
         
         Debug.Log($"[Wave {waveIndex}] Modifiers = {_currentWaveMods.label} (speedMul={_currentWaveMods.speedMul}, hpMul={_currentWaveMods.hpMul}, shieldHp={_currentWaveMods.shieldHp})");
 
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateWave(waveIndex, maxWave, _currentWaveMods.label);
+        }
+        
         if (MonsterSpawner.Instance != null)
         {
             MonsterSpawner.Instance.SpawnWave(waveIndex, _currentWaveMods);

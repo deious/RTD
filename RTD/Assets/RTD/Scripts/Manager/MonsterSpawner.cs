@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public class MonsterSpawner : MonoBehaviour
 {
@@ -7,6 +8,11 @@ public class MonsterSpawner : MonoBehaviour
     [SerializeField] private GameObject monsterPrefab;
     [SerializeField] private int spawnCountPerWave = 5;
     [SerializeField] private float spawnInterval = 0.6f;
+    
+    [Header("Wave Scaling")]
+    [SerializeField] private int spawnAddPerWave = 1;
+    [SerializeField] private int maxSpawnCount = 30;
+    [SerializeField] private int hpAddPerWave = 2;  
 
     private void Awake()
     {
@@ -26,22 +32,35 @@ public class MonsterSpawner : MonoBehaviour
             return;
         }
         
-        for (int i = 0; i < spawnCountPerWave; i++)
+        int count = spawnCountPerWave + (waveIndex - 1) * spawnAddPerWave;
+        if (count < 1) count = 1;
+        if (count > maxSpawnCount) count = maxSpawnCount;
+
+        for (int i = 0; i < count; i++)
         {
             float delay = i * spawnInterval;
-            StartCoroutine(SpawnOneAfter(delay, mods));
+            SpawnOneAfterAsync(delay, waveIndex, mods).Forget();
         }
     }
 
-    private System.Collections.IEnumerator SpawnOneAfter(float delay, WaveModifiers mods)
+    private async UniTaskVoid SpawnOneAfterAsync(
+        float delay,
+        int waveIndex,
+        WaveModifiers mods)
     {
         if (delay > 0f)
-            yield return new WaitForSeconds(delay);
+            await UniTask.Delay(
+                System.TimeSpan.FromSeconds(delay),
+                DelayType.DeltaTime,
+                PlayerLoopTiming.Update,
+                this.GetCancellationTokenOnDestroy());
 
         GameObject go = Instantiate(monsterPrefab);
+
         MonsterAI ai = go.GetComponent<MonsterAI>();
         if (ai != null)
         {
+            ai.AddBaseHp(hpAddPerWave * (waveIndex - 1));
             ai.ApplyWaveModifiers(mods);
         }
     }

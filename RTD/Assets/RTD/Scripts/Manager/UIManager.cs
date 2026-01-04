@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TextMeshProUGUI lifeText;
     [SerializeField] private TextMeshProUGUI waveText;
+    [SerializeField] private TextMeshProUGUI waveModifiersText;
 
     private void Awake()
     {
@@ -26,8 +27,26 @@ public class UIManager : MonoBehaviour
         lifeText.text = $"Life : {value}";
     }
 
+    // 추후 웨이브 표기만 필요할 경우 사용하기 위해 남겨둠
     public void UpdateWave(int curr, int max)
     {
         waveText.text = $"Wave : {curr}/{max}";
+    }
+    
+    public void UpdateWave(int curr, int max, string modifiersLabel)
+    {
+        waveText.text = $"Wave : {curr}/{max}";
+
+        if (waveModifiersText == null)
+            return;
+
+        if (string.IsNullOrEmpty(modifiersLabel) || modifiersLabel == "None")
+        {
+            waveModifiersText.text = "Wave Mod: None";
+        }
+        else
+        {
+            waveModifiersText.text = $"Wave Mod: {modifiersLabel}";
+        }
     }
 }
