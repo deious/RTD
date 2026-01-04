@@ -178,6 +178,16 @@ public class MonsterAI : MonoBehaviour
         }
     }
 
+    public void AddBaseHp(int add)
+    {
+        if (add <= 0)
+            return;
+
+        maxHp += add;
+        if (maxHp < 1) maxHp = 1;
+
+        _currentHp = maxHp;
+    }
 
     private void Die()
     {
