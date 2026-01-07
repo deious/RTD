@@ -1219,6 +1219,9 @@ MonoBehaviour:
   startLife: 10
   startWave: 1
   maxWave: 20
+  wavePatterns:
+  - {fileID: 11400000, guid: 1ac2f11372802ad44a29c9e55555ba61, type: 2}
+  - {fileID: 11400000, guid: 5813e6ec10f626248a5592b49ca32e26, type: 2}
 --- !u!1 &1310832521
 GameObject:
   m_ObjectHideFlags: 0
@@ -1705,6 +1708,9 @@ MonoBehaviour:
   monsterPrefab: {fileID: 8095480719588087266, guid: b34f5d8f24a62644eace968f0a05879b, type: 3}
   spawnCountPerWave: 5
   spawnInterval: 0.6
+  spawnAddPerWave: 1
+  maxSpawnCount: 30
+  hpAddPerWave: 2
 --- !u!4 &2062218226
 Transform:
   m_ObjectHideFlags: 0

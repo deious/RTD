@@ -1,5 +1,6 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using RTD.Scripts.GamePlay.Wave;
 
 public class MonsterSpawner : MonoBehaviour
 {
@@ -39,14 +40,59 @@ public class MonsterSpawner : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             float delay = i * spawnInterval;
-            SpawnOneAfterAsync(delay, waveIndex, mods).Forget();
+            SpawnOneAfterAsync(delay, waveIndex, mods, null).Forget();
+        }
+    }
+    
+    public void SpawnPattern(WavePatternSO pattern, WaveModifiers mods)
+    {
+        if (pattern == null)
+        {
+            Debug.LogError("MonsterSpawner: pattern is null");
+            return;
+        }
+    
+        float interval = (pattern.spawnInterval > 0f) ? pattern.spawnInterval : spawnInterval;
+    
+        int seq = 0;
+        int waveIndex = pattern.waveIndex;
+    
+        // Normal spawns
+        if (pattern.spawns != null)
+        {
+            for (int e = 0; e < pattern.spawns.Length; e++)
+            {
+                var entry = pattern.spawns[e];
+                if (entry.monsterPrefab == null || entry.count <= 0)
+                    continue;
+    
+                int count = entry.count;
+                if (count > maxSpawnCount) count = maxSpawnCount;
+    
+                for (int i = 0; i < count; i++)
+                {
+                    float delay = seq * interval;
+                    seq++;
+    
+                    SpawnOneAfterAsync(delay, waveIndex, mods, entry.monsterPrefab).Forget();
+                }
+            }
+        }
+    
+        // Boss spawn
+        if (pattern.isBossWave && pattern.bossPrefab != null)
+        {
+            float delay = seq * interval;
+            SpawnOneAfterAsync(delay, waveIndex, mods, pattern.bossPrefab, true).Forget();
         }
     }
 
     private async UniTaskVoid SpawnOneAfterAsync(
         float delay,
         int waveIndex,
-        WaveModifiers mods)
+        WaveModifiers mods,
+        GameObject prefabOverride = null,
+        bool isBoss = false)
     {
         if (delay > 0f)
             await UniTask.Delay(
@@ -55,13 +101,24 @@ public class MonsterSpawner : MonoBehaviour
                 PlayerLoopTiming.Update,
                 this.GetCancellationTokenOnDestroy());
 
-        GameObject go = Instantiate(monsterPrefab);
+        GameObject prefabToUse = (prefabOverride != null) ? prefabOverride : monsterPrefab;
+        if (prefabToUse == null)
+        {
+            Debug.LogError("MonsterSpawner: prefabToUse is null");
+            return;
+        }
+
+        GameObject go = Instantiate(prefabToUse);
 
         MonsterAI ai = go.GetComponent<MonsterAI>();
+        
         if (ai != null)
         {
+            ai.SetIsBoss(isBoss);
+
             ai.AddBaseHp(hpAddPerWave * (waveIndex - 1));
             ai.ApplyWaveModifiers(mods);
         }
     }
+
 }

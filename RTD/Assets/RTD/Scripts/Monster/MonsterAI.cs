@@ -52,6 +52,14 @@ public class MonsterAI : MonoBehaviour
         MoveAlongPath();
     }
     
+    public bool IsBoss { get; private set; }
+    public static System.Action OnBossDied;
+
+    public void SetIsBoss(bool isBoss)
+    {
+        IsBoss = isBoss;
+    }
+    
     public void ApplyWaveModifiers(WaveModifiers mods)
     {
         if (mods.speedMul > 0.01f)
@@ -71,6 +79,23 @@ public class MonsterAI : MonoBehaviour
             _shieldHp += mods.shieldHp;
         }
 
+        if (GameManager.Instance != null)
+        {
+            float spMul = GameManager.Instance.EnemySpeedMul;
+            if (spMul > 0.01f)
+                moveSpeed *= spMul;
+
+            float hpMul = GameManager.Instance.EnemyHpMul;
+            if (hpMul > 0.01f)
+            {
+                int newMaxHp = Mathf.RoundToInt(maxHp * hpMul);
+                if (newMaxHp < 1) newMaxHp = 1;
+
+                maxHp = newMaxHp;
+                _currentHp = maxHp;
+            }
+        }
+        
         UpdateShieldVfx();
     }
 
@@ -199,6 +224,11 @@ public class MonsterAI : MonoBehaviour
         if (_shieldVfxInstance != null)
         {
             Destroy(_shieldVfxInstance.gameObject);
+        }
+        
+        if (IsBoss)
+        {
+            OnBossDied?.Invoke();
         }
         
         Destroy(gameObject);

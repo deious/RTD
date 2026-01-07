@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using RTD.Scripts.GamePlay.Wave;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,6 +10,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int startLife = 10;
     [SerializeField] private int startWave = 1;
     [SerializeField] private int maxWave = 20;
+    
+    [Header("Wave Patterns")]
+    [SerializeField] private WavePatternSO[] wavePatterns;
+    
+    [Header("Systems")]
+    [SerializeField] private AugmentSystem augmentSystem;
 
     private int gold;
     private int life;
@@ -26,6 +33,9 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+        
+        if (augmentSystem == null)
+            augmentSystem = FindFirstObjectByType<AugmentSystem>();
 
         Instance = this;
         
@@ -93,22 +103,73 @@ public class GameManager : MonoBehaviour
     
     private void StartWave(int waveIndex)
     {
+        WavePatternSO pattern = FindWavePattern(waveIndex);
+
+        if (pattern != null)
+        {
+            // 패턴에 들어있는 modifier type을 기존 WaveModifiers로 변환
+            _currentWaveMods = WaveModifierUtil.ToWaveModifiers(pattern.modifiers);
+
+            Debug.Log($"[Wave {waveIndex}] Pattern={pattern.name} Modifiers={_currentWaveMods.label}");
+
+            if (UIManager.Instance != null)
+                UIManager.Instance.UpdateWave(waveIndex, maxWave, _currentWaveMods.label);
+
+            if (MonsterSpawner.Instance != null)
+                MonsterSpawner.Instance.SpawnPattern(pattern, _currentWaveMods);
+            else
+                Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
+
+            MonsterAI.OnBossDied -= HandleBossDied;
+
+            if (pattern.isBossWave)
+            {
+                MonsterAI.OnBossDied += HandleBossDied;
+            }
+            
+            return;
+        }
+
+        // 패턴이 없으면 기존 랜덤 웨이브 유지 (기존 동작 보존)
         _currentWaveMods = WaveModifierRoller.Roll(0, 2);
-        
+
         Debug.Log($"[Wave {waveIndex}] Modifiers = {_currentWaveMods.label} (speedMul={_currentWaveMods.speedMul}, hpMul={_currentWaveMods.hpMul}, shieldHp={_currentWaveMods.shieldHp})");
 
         if (UIManager.Instance != null)
-        {
             UIManager.Instance.UpdateWave(waveIndex, maxWave, _currentWaveMods.label);
-        }
-        
+
         if (MonsterSpawner.Instance != null)
-        {
             MonsterSpawner.Instance.SpawnWave(waveIndex, _currentWaveMods);
-        }
         else
-        {
             Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
-        }
     }
+    
+    private void HandleBossDied()
+    {
+        MonsterAI.OnBossDied -= HandleBossDied;
+        
+        BeginAugmentChoice();
+    }
+    
+    private void OnDestroy()
+    {
+        MonsterAI.OnBossDied -= HandleBossDied;
+    }
+
+    private WavePatternSO FindWavePattern(int waveIndex)
+    {
+        if (wavePatterns == null || wavePatterns.Length == 0)
+            return null;
+
+        for (int i = 0; i < wavePatterns.Length; i++)
+        {
+            var p = wavePatterns[i];
+            if (p == null) continue;
+            if (p.waveIndex == waveIndex)
+                return p;
+        }
+
+        return null;
+    }
+
 }
