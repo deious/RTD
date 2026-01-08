@@ -23,6 +23,12 @@ public class GameManager : MonoBehaviour
     
     private WaveModifiers _currentWaveMods;
 
+    public float TowerDamageMul => (augmentSystem != null) ? augmentSystem.TowerDamageMul : 1f;
+    public float TowerAttackSpeedMul => (augmentSystem != null) ? augmentSystem.TowerAttackSpeedMul : 1f;
+    public float TowerRangeAdd => (augmentSystem != null) ? augmentSystem.TowerRangeAdd : 0f;
+
+    public float EnemySpeedMul => (augmentSystem != null) ? augmentSystem.EnemySpeedMul : 1f;
+    public float EnemyHpMul => (augmentSystem != null) ? augmentSystem.EnemyHpMul : 1f;
     // 외부에서 골드 읽을 수 있게 프로퍼티
     public int Gold => gold;
 
@@ -54,10 +60,19 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (augmentSystem != null && augmentSystem.IsChoosing)
+            return;
+        
         var keyboard = Keyboard.current;
         if (keyboard == null)
             return;
 
+        if (keyboard.kKey.wasPressedThisFrame)
+        {
+            if (augmentSystem != null)
+                augmentSystem.BeginChoice(null);
+        }
+        
         // 디버그용 키
         if (keyboard.gKey.wasPressedThisFrame)
         {
@@ -148,7 +163,14 @@ public class GameManager : MonoBehaviour
     {
         MonsterAI.OnBossDied -= HandleBossDied;
         
-        BeginAugmentChoice();
+        if (augmentSystem == null)
+        {
+            Debug.LogWarning("[GameManager] augmentSystem is null. NextWave immediately.");
+            NextWave();
+            return;
+        }
+
+        augmentSystem.BeginChoice(NextWave);
     }
     
     private void OnDestroy()

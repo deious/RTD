@@ -131,6 +131,11 @@ public abstract class TowerBase : MonoBehaviour
             damage = Mathf.RoundToInt(damage * GameManager.Instance.TowerDamageMul);
         }
     }
+    
+    public void RefreshStats()
+    {
+        ApplyDataIfAny();
+    }
 
     private void ApplyRangeVisual()
     {

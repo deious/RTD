@@ -55,7 +55,10 @@ public class AugmentSystem : MonoBehaviour
             return;
 
         if (picked != null)
+        {
             ApplyAugment(picked);
+            RefreshAllTowers();
+        }
 
         if (augmentUI != null)
             augmentUI.Hide();
@@ -67,6 +70,16 @@ public class AugmentSystem : MonoBehaviour
         var cb = _onChoiceComplete;
         _onChoiceComplete = null;
         cb?.Invoke();
+    }
+    
+    private void RefreshAllTowers()
+    {
+        TowerBase[] towers = FindObjectsOfType<TowerBase>();
+        for (int i = 0; i < towers.Length; i++)
+        {
+            if (towers[i] != null)
+                towers[i].RefreshStats();
+        }
     }
 
     private void RollOptions(AugmentSO[] outArr)
