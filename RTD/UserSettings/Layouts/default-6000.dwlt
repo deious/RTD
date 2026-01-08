@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1918
     height: 988
   m_ShowMode: 4
-  m_Title: Game
+  m_Title: Project
   m_RootView: {fileID: 3}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -145,7 +145,7 @@ MonoBehaviour:
   m_MinSize: {x: 400, y: 112}
   m_MaxSize: {x: 32384, y: 16192}
   vertical: 0
-  controlID: 130
+  controlID: 50
   draggingID: 0
 --- !u!114 &7
 MonoBehaviour:
@@ -1608,7 +1608,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets
+    - Assets/RTD/Scripts/GamePlay/Augment
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1618,26 +1618,26 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets
+  - Assets/RTD/Scripts/GamePlay/Augment
   m_LastFoldersGridSize: -1
   m_LastProjectPath: "D:\\\uC790\uB8CC\\Project\\RTD\\RTD"
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 1
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 127}
+    scrollPos: {x: 0, y: 255}
     m_SelectedIDs:
-    - m_Data: 48656
+    - m_Data: 50372
     m_LastClickedID:
-      m_Data: 48656
+      m_Data: 50372
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 48656
-    - m_Data: 48658
-    - m_Data: 48660
-    - m_Data: 48662
-    - m_Data: 48664
-    - m_Data: 48666
+    - m_Data: 48684
+    - m_Data: 48686
+    - m_Data: 48688
+    - m_Data: 48690
+    - m_Data: 48692
+    - m_Data: 48694
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1670,12 +1670,12 @@ MonoBehaviour:
       m_Data: 0
     m_ExpandedIDs:
     - m_Data: 0
-    - m_Data: 48656
-    - m_Data: 48658
-    - m_Data: 48660
-    - m_Data: 48662
-    - m_Data: 48664
-    - m_Data: 48666
+    - m_Data: 48684
+    - m_Data: 48686
+    - m_Data: 48688
+    - m_Data: 48690
+    - m_Data: 48692
+    - m_Data: 48694
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1703,9 +1703,9 @@ MonoBehaviour:
       m_ResourceFile: 
   m_ListAreaState:
     m_SelectedInstanceIDs:
-    - m_Data: 47872
-    m_LastClickedInstanceID: 47872
-    m_HadKeyboardFocusLastEvent: 0
+    - m_Data: 50536
+    m_LastClickedInstanceID: 50536
+    m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs:
     - m_Data: 32520
     m_RenameOverlay:
