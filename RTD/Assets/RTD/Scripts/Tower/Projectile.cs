@@ -8,6 +8,7 @@ public class Projectile : MonoBehaviour
     private int _damage;
     private float _lifeTime;
     private float _lifeTimer;
+    private TowerBase _sourceTower;
 
     private ProjectilePool _poolOwner;
     public Projectile PrefabKey { get; private set; }
@@ -18,7 +19,7 @@ public class Projectile : MonoBehaviour
         PrefabKey = prefabKey;
     }
 
-    public void Init(MonsterAI target, float speed, int damage, float lifeTime = 3f)
+    public void Init(MonsterAI target, float speed, int damage, float lifeTime, TowerBase sourceTower)
     {
         _targetMonster = target;
         _target = (target != null) ? target.transform : null;
@@ -26,6 +27,7 @@ public class Projectile : MonoBehaviour
         _damage = damage;
         _lifeTime = lifeTime;
         _lifeTimer = 0f;
+        _sourceTower = sourceTower;
     }
 
     private void Update()
@@ -60,7 +62,17 @@ public class Projectile : MonoBehaviour
     private void Hit()
     {
         if (_targetMonster != null)
-            _targetMonster.TakeDamage(_damage);
+        {
+            int finalDamage = _damage;
+            
+            if (_sourceTower != null && _sourceTower.RuntimeTrait != null)
+            {
+                finalDamage = TraitProcessor.ModifyDamage(_sourceTower.RuntimeTrait, finalDamage);
+                TraitProcessor.ApplyOnHit(_sourceTower.RuntimeTrait, _sourceTower, _targetMonster, finalDamage);
+            }
+
+            _targetMonster.TakeDamage(finalDamage);
+        }
 
         ReleaseOrDestroy();
     }

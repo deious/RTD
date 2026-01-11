@@ -37,6 +37,7 @@ public abstract class TowerBase : MonoBehaviour
     protected float attackTimer;
     
     public GridTile CurrentTile { get; private set; }
+    public TowerTraitSO RuntimeTrait { get; private set; }
 
     protected virtual void Start()
     {
@@ -78,7 +79,7 @@ public abstract class TowerBase : MonoBehaviour
         if (proj == null)
             return false;
 
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime);
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this);
         return true;
     }
     
@@ -285,6 +286,11 @@ public abstract class TowerBase : MonoBehaviour
         
         if (CurrentTile != null)
             CurrentTile.SetTower(this);
+    }
+    
+    public void SetTrait(TowerTraitSO trait)
+    {
+        RuntimeTrait = trait; // 노멀은 null
     }
     
     public TowerData GetData()

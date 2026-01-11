@@ -15,10 +15,17 @@ public class MonsterAI : MonoBehaviour
     private Transform _shieldVfxInstance;
     
     private int _currentIndex = 0;
+    private float _baseMoveSpeed;
+    private float _slowMul = 1f;
+    private float _slowTimer = 0f;
     private Transform _currentTarget;
+    
+    public bool IsBoss { get; private set; }
+    public static System.Action OnBossDied;
 
     private void Awake()
     {
+        _baseMoveSpeed = moveSpeed;
         _currentHp = maxHp;
         _shieldHp = 0;
         UpdateShieldVfx();
@@ -49,15 +56,140 @@ public class MonsterAI : MonoBehaviour
 
     private void Update()
     {
+        if (_slowTimer > 0f)
+        {
+            _slowTimer -= Time.deltaTime;
+            if (_slowTimer <= 0f)
+            {
+                _slowTimer = 0f;
+                _slowMul = 1f;
+            }
+        }
+
         MoveAlongPath();
     }
     
-    public bool IsBoss { get; private set; }
-    public static System.Action OnBossDied;
+    private void MoveAlongPath()
+    {
+        if (_currentTarget == null)
+            return;
+
+        Vector3 targetPos = _currentTarget.position;
+        Vector3 dir = targetPos - transform.position;
+        
+        dir.y = 0f;
+
+        float distanceToTarget = dir.magnitude;
+        float effectiveSpeed = moveSpeed * _slowMul;
+        float moveThisFrame = effectiveSpeed * Time.deltaTime;
+        
+        if (distanceToTarget <= moveThisFrame + stoppingDistance)
+        {
+            _currentIndex++;
+            SetNextTarget();
+            return;
+        }
+
+        Vector3 move = dir.normalized * moveThisFrame;
+        transform.position += move;
+        
+        if (dir.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(dir);
+        }
+    }
+
+    private void SetNextTarget()
+    {
+        if (_currentIndex >= GridManager.Instance.WaypointCount)
+        {
+            ReachGoal();
+            return;
+        }
+
+        _currentTarget = GridManager.Instance.GetWaypoint(_currentIndex);
+    }
+
+    private void ReachGoal()
+    {
+        if (_shieldVfxInstance != null)
+        {
+            Destroy(_shieldVfxInstance.gameObject);
+        }
+        
+        Destroy(gameObject);
+    }
+    
+    private void UpdateShieldVfx()
+    {
+        bool shouldShow = _shieldHp > 0;
+        
+        if (shieldVfxPrefab == null)
+            return;
+
+        if (shouldShow)
+        {
+            if (_shieldVfxInstance == null)
+            {
+                _shieldVfxInstance = Instantiate(shieldVfxPrefab, transform);
+            }
+            
+            _shieldVfxInstance.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (_shieldVfxInstance != null)
+            {
+                _shieldVfxInstance.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    private void Die()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddGold(5);
+        }
+
+        if (_shieldVfxInstance != null)
+        {
+            Destroy(_shieldVfxInstance.gameObject);
+        }
+        
+        if (IsBoss)
+        {
+            OnBossDied?.Invoke();
+        }
+        
+        Destroy(gameObject);
+    }
+    
+    private void ShowDamageText(int damage)
+    {
+        if (damage <= 0)
+            return;
+
+        if (DamageTextManager.Instance != null)
+        {
+            DamageTextManager.Instance.Spawn(damage, transform);
+        }
+    }
 
     public void SetIsBoss(bool isBoss)
     {
         IsBoss = isBoss;
+    }
+    
+    public void AddBaseHp(int add)
+    {
+        if (add <= 0)
+            return;
+
+        maxHp += add;
+        if (maxHp < 1) maxHp = 1;
+
+        _currentHp = maxHp;
     }
     
     public void ApplyWaveModifiers(WaveModifiers mods)
@@ -98,67 +230,32 @@ public class MonsterAI : MonoBehaviour
         
         UpdateShieldVfx();
     }
-
-    private void MoveAlongPath()
+    
+    public void ApplySlow(float slowRate, float duration)
     {
-        if (_currentTarget == null)
-            return;
-
-        Vector3 targetPos = _currentTarget.position;
-        Vector3 dir = targetPos - transform.position;
+        float mul = Mathf.Clamp01(1f - slowRate);
         
-        dir.y = 0f;
-
-        float distanceToTarget = dir.magnitude;
-        float moveThisFrame = moveSpeed * Time.deltaTime;
+        if (mul < _slowMul) 
+            _slowMul = mul;
         
-        if (distanceToTarget <= moveThisFrame + stoppingDistance)
-        {
-            _currentIndex++;
-            SetNextTarget();
-            return;
-        }
-
-        Vector3 move = dir.normalized * moveThisFrame;
-        transform.position += move;
-        
-        if (dir.sqrMagnitude > 0.0001f)
-        {
-            transform.rotation = Quaternion.LookRotation(dir);
-        }
-    }
-
-    private void SetNextTarget()
-    {
-        if (_currentIndex >= GridManager.Instance.WaypointCount)
-        {
-            ReachGoal();
-            return;
-        }
-
-        _currentTarget = GridManager.Instance.GetWaypoint(_currentIndex);
-    }
-
-    private void ReachGoal()
-    {
-        if (_shieldVfxInstance != null)
-        {
-            Destroy(_shieldVfxInstance.gameObject);
-        }
-        
-        Destroy(gameObject);
+        _slowTimer = Mathf.Max(_slowTimer, duration);
     }
     
     public void TakeDamage(int amount)
     {
         if (amount <= 0)
             return;
-        
+
+        int effectiveDamage = 0;
+
+        // 1) 실드 처리
         if (_shieldHp > 0)
         {
             int absorbed = Mathf.Min(_shieldHp, amount);
             _shieldHp -= absorbed;
             amount -= absorbed;
+
+            effectiveDamage += absorbed;
 
             if (_shieldHp <= 0)
             {
@@ -167,70 +264,20 @@ public class MonsterAI : MonoBehaviour
             }
 
             if (amount <= 0)
+            {
+                ShowDamageText(effectiveDamage);
                 return;
+            }
         }
         
         _currentHp -= amount;
+        effectiveDamage += amount;
+        
+        ShowDamageText(effectiveDamage);
 
         if (_currentHp <= 0)
         {
             Die();
         }
-    }
-    
-    private void UpdateShieldVfx()
-    {
-        bool shouldShow = _shieldHp > 0;
-        
-        if (shieldVfxPrefab == null)
-            return;
-
-        if (shouldShow)
-        {
-            if (_shieldVfxInstance == null)
-            {
-                _shieldVfxInstance = Instantiate(shieldVfxPrefab, transform);
-            }
-            
-            _shieldVfxInstance.gameObject.SetActive(true);
-        }
-        else
-        {
-            if (_shieldVfxInstance != null)
-            {
-                _shieldVfxInstance.gameObject.SetActive(false);
-            }
-        }
-    }
-
-    public void AddBaseHp(int add)
-    {
-        if (add <= 0)
-            return;
-
-        maxHp += add;
-        if (maxHp < 1) maxHp = 1;
-
-        _currentHp = maxHp;
-    }
-
-    private void Die()
-    {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.AddGold(5);
-        }
-
-        if (_shieldVfxInstance != null)
-        {
-            Destroy(_shieldVfxInstance.gameObject);
-        }
-        
-        if (IsBoss)
-        {
-            OnBossDied?.Invoke();
-        }
-        
-        Destroy(gameObject);
     }
 }

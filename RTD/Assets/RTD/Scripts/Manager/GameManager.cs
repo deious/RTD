@@ -42,8 +42,10 @@ public class GameManager : MonoBehaviour
         
         if (augmentSystem == null)
             augmentSystem = FindFirstObjectByType<AugmentSystem>();
-
+        
         Instance = this;
+        
+        TraitProcessor.MonsterLayerMask = LayerMask.GetMask("Monster");
         
         gold = startGold;
         life = startLife;
