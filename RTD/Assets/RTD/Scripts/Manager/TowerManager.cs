@@ -14,6 +14,9 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private TowerGrade buildRollGrade = TowerGrade.Normal;
     [SerializeField] private TowerData[] buildPool;
     
+    [Header("Trait Data")]
+    [SerializeField] private TowerTraitDatabase traitDatabase;
+    
     public enum CombineMode
     {
         Exact,
@@ -116,11 +119,6 @@ public class TowerManager : MonoBehaviour
 
         _selectedTower = null;
     }
-    
-    public void OnTileClicked(GridTile tile)
-    {
-        TryPlaceTower(tile);
-    }
 
     private void TryPlaceTower(GridTile tile)
     {
@@ -166,6 +164,7 @@ public class TowerManager : MonoBehaviour
         }
         
         tower.SetData(rolledData);
+        AssignTraitIfNeeded(tower);
         
         tile.SetTower(tower);
         tower.SetTile(tile);
@@ -253,6 +252,33 @@ public class TowerManager : MonoBehaviour
             if (d.grade == grade)
                 outList.Add(t);
         }
+    }
+    
+    private void AssignTraitIfNeeded(TowerBase tower)
+    {
+        if (tower == null) return;
+
+        TowerData d = tower.GetData();
+        if (d == null) return;
+
+        if (d.grade == TowerGrade.Normal)
+        {
+            tower.SetTrait(null);
+            return;
+        }
+
+        if (traitDatabase == null)
+        {
+            Debug.LogWarning("[TowerManager] traitDatabase is null.");
+            tower.SetTrait(null);
+            return;
+        }
+
+        TowerTraitSO rolled = traitDatabase.RollTrait(d.towerId, d.grade);
+        tower.SetTrait(rolled);
+
+        if (rolled != null)
+            Debug.Log($"[Trait] {d.towerId}({d.grade}) => {rolled.type} {rolled.tier}");
     }
     
     private async UniTaskVoid TryCombineSelectedTowerAsync()
@@ -383,6 +409,7 @@ public class TowerManager : MonoBehaviour
                     _selectedTower.transform.localScale = keepScale;
             
                     _selectedTower.SetData(resultData);
+                    AssignTraitIfNeeded(_selectedTower);
                     _selectedTower.SetSelected(true);
             
                     _selectedTower.PlaySpawnFeedback();
@@ -395,7 +422,6 @@ public class TowerManager : MonoBehaviour
         }
     }
 
-
     private string GetNextTowerId(string currentId, TowerGrade nextGrade)
     {
         int idx = currentId.LastIndexOf('_');
@@ -404,5 +430,10 @@ public class TowerManager : MonoBehaviour
 
         string baseId = currentId.Substring(0, idx);
         return $"{baseId}_{nextGrade.ToString().ToLower()}";
+    }
+    
+    public void OnTileClicked(GridTile tile)
+    {
+        TryPlaceTower(tile);
     }
 }
