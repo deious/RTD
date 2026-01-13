@@ -80,6 +80,10 @@ public static class TraitProcessor
             if (next == null) break;
 
             hitSet.Add(next);
+            
+            if (CombatVFX.Instance != null)
+                CombatVFX.Instance.PlayChain(current.transform.position, next.transform.position);
+            
             next.TakeDamage(chainDamage);
 
             current = next;
@@ -96,6 +100,9 @@ public static class TraitProcessor
         if (dmgRatio <= 0f) return;
 
         int splashDamage = Mathf.Max(1, Mathf.RoundToInt(hitDamage * dmgRatio));
+        
+        if (CombatVFX.Instance != null)
+            CombatVFX.Instance.PlayExplosion(center, radius);
 
         Collider[] cols = Physics.OverlapSphere(center, radius, MonsterLayerMask);
 

@@ -24,6 +24,6 @@ namespace RTD.Scripts.GamePlay.Wave
 
         [Header("Boss")]
         public bool isBossWave;
-        public GameObject bossPrefab;
+        public BossMonsterDataSO bossData;
     }
 }

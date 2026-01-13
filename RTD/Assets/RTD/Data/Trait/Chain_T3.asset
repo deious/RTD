@@ -19,5 +19,5 @@ MonoBehaviour:
   description: 
   value: 0.7
   duration: 0
-  range: 4
-  count: 4
+  range: 12
+  count: 6

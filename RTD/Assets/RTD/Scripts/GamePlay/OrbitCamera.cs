@@ -23,6 +23,8 @@ public class OrbitCamera : MonoBehaviour
 
     private float _yaw = 45f;
     private float _pitch = 45f;
+    
+    private Vector3 _externalPosOffset;
 
     private void Start()
     {
@@ -125,8 +127,15 @@ public class OrbitCamera : MonoBehaviour
     {
         Quaternion rot = Quaternion.Euler(_pitch, _yaw, 0f);
         Vector3 offset = rot * new Vector3(0f, 0f, -distance);
-
-        transform.position = target.position + targetOffset + offset;
+        
+        transform.position = target.position + targetOffset + offset + _externalPosOffset;
         transform.LookAt(target.position + targetOffset);
+        
+        _externalPosOffset = Vector3.zero;
+    }
+    
+    public void AddPositionOffset(Vector3 offset)
+    {
+        _externalPosOffset += offset;
     }
 }
