@@ -196,4 +196,15 @@ public class GameManager : MonoBehaviour
         return null;
     }
 
+    public bool TrySpendGold(int amount)
+    {
+        if (amount <= 0) return true;
+
+        if (gold < amount)
+            return false;
+
+        gold -= amount;
+        UIManager.Instance.UpdateGold(gold);
+        return true;
+    }
 }

@@ -26,8 +26,36 @@ public class TowerManager : MonoBehaviour
     [Header("Combine")]
     [SerializeField] private CombineMode combineMode = CombineMode.Exact;
     
+    private enum PlaceState
+    {
+        None,
+        Placing
+    }
+
+    [Header("Build Level (future grade roll)")]
+    [SerializeField] private int buildLevel = 1;
+
+    [Header("Build Level Costs")]
+    [SerializeField] private int baseUpgradeCost = 50;
+    [SerializeField] private int upgradeCostStep = 50;
+    [SerializeField] private int maxBuildLevel = 10;
+
+    [Header("GhostTower")]
+    [SerializeField] private GameObject ghostPreviewPrefab;
+    [SerializeField] private float previewAlpha = 0.35f;
+    [SerializeField] private float previewYOffset = 0.02f;
+
+    private GameObject _ghostGO;
+    private readonly System.Collections.Generic.List<Renderer> _ghostRenderers = new();
+    private MaterialPropertyBlock _mpb;
+    
+    private PlaceState _placeState = PlaceState.None;
+    
     private TowerBase _selectedTower;
     private bool _combineBusy;
+    
+    
+    public int BuildLevel => buildLevel;
 
     private void Awake()
     {
@@ -42,6 +70,8 @@ public class TowerManager : MonoBehaviour
         {
             mainCamera = Camera.main;
         }
+        
+        _mpb = new MaterialPropertyBlock();
     }
 
     private void Update()
@@ -51,6 +81,11 @@ public class TowerManager : MonoBehaviour
         
         if (Mouse.current == null) 
             return;
+        
+        if (_placeState == PlaceState.Placing)
+        {
+            UpdatePlacementPreview();
+        }
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
@@ -134,7 +169,8 @@ public class TowerManager : MonoBehaviour
             return;
         }
         
-        TowerData rolledData = RollBuildTowerData();
+        TowerGrade gradeToRoll = GetBuildRollGrade();
+        TowerData rolledData = RollBuildTowerData(gradeToRoll);
         if (rolledData == null)
             return;
 
@@ -173,26 +209,26 @@ public class TowerManager : MonoBehaviour
         Debug.Log($"[Build] Rolled: {rolledData.towerId} ({rolledData.grade}), cost={cost}");
     }
     
-    private TowerData RollBuildTowerData()
+    private TowerData RollBuildTowerData(TowerGrade grade)
     {
         if (buildPool == null || buildPool.Length == 0)
         {
             Debug.LogError("[TowerManager] buildPool is empty. Assign TowerData assets in Inspector.");
             return null;
         }
-        
+
         int safety = 0;
         while (safety < 50)
         {
             int idx = Random.Range(0, buildPool.Length);
             TowerData d = buildPool[idx];
-            if (d != null && d.grade == buildRollGrade)
+            if (d != null && d.grade == grade)
                 return d;
 
             safety++;
         }
 
-        Debug.LogWarning("[TowerManager] No TowerData matched buildRollGrade. Check buildPool contents.");
+        Debug.LogWarning($"[TowerManager] No TowerData matched grade={grade}. Check buildPool contents.");
         return null;
     }
 
@@ -421,6 +457,25 @@ public class TowerManager : MonoBehaviour
             _combineBusy = false;
         }
     }
+    
+    private int GetMinBuildCostForGrade(TowerGrade grade)
+    {
+        if (buildPool == null) 
+            return int.MaxValue;
+
+        int min = int.MaxValue;
+        for (int i = 0; i < buildPool.Length; i++)
+        {
+            var d = buildPool[i];
+            if (d == null) continue;
+            if (d.grade != grade) continue;
+
+            if (d.buildCost < min) min = d.buildCost;
+        }
+
+        return min;
+    }
+
 
     private string GetNextTowerId(string currentId, TowerGrade nextGrade)
     {
@@ -432,8 +487,247 @@ public class TowerManager : MonoBehaviour
         return $"{baseId}_{nextGrade.ToString().ToLower()}";
     }
     
+    private TowerGrade GetBuildRollGrade()
+    {
+        return buildRollGrade;
+    }
+    
+    private bool TryPlaceTower_ReturnSuccess(GridTile tile)
+    {
+        if (!tile.IsEmpty)
+        {
+            Debug.Log("설치 불가 타일이거나 이미 타워가 있습니다.");
+            return false;
+        }
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager 인스턴스가 없습니다.");
+            return false;
+        }
+
+        TowerGrade gradeToRoll = GetBuildRollGrade();
+        TowerData rolledData = RollBuildTowerData(gradeToRoll);
+        if (rolledData == null) return false;
+
+        if (rolledData.towerPrefab == null)
+        {
+            Debug.LogError($"[TowerManager] towerPrefab is null in TowerData: {rolledData.name}");
+            return false;
+        }
+
+        int cost = rolledData.buildCost;
+
+        if (GameManager.Instance.Gold < cost)
+        {
+            Debug.Log("골드가 부족합니다.");
+            return false;
+        }
+
+        Vector3 spawnPos = tile.transform.position;
+        GameObject towerObj = Instantiate(rolledData.towerPrefab, spawnPos, Quaternion.identity);
+
+        TowerBase tower = towerObj.GetComponent<TowerBase>();
+        if (tower == null)
+        {
+            Debug.LogError("rolledData.towerPrefab에 TowerBase 컴포넌트가 없습니다.");
+            Destroy(towerObj);
+            return false;
+        }
+
+        tower.SetData(rolledData);
+        AssignTraitIfNeeded(tower);
+
+        tile.SetTower(tower);
+        tower.SetTile(tile);
+
+        GameManager.Instance.AddGold(-cost);
+
+        Debug.Log($"[Build] Rolled: {rolledData.towerId} ({rolledData.grade}), cost={cost}");
+        return true;
+    }
+
+    
     public void OnTileClicked(GridTile tile)
     {
-        TryPlaceTower(tile);
+        if (_placeState != PlaceState.Placing)
+            return;
+        
+        bool placed = TryPlaceTower_ReturnSuccess(tile);
+        if (placed)
+            CancelPlaceMode();
     }
+
+    public void CancelPlaceMode()
+    {
+        _placeState = PlaceState.None;
+
+        if (_ghostGO != null)
+            Destroy(_ghostGO);
+
+        _ghostGO = null;
+        _ghostRenderers.Clear();
+
+        Debug.Log("[Build] Place mode OFF");
+    }
+    
+    public int GetBuildUpgradeCost()
+    {
+        return baseUpgradeCost + (buildLevel - 1) * upgradeCostStep;
+    }
+
+    public bool TryUpgradeBuildLevel()
+    {
+        if (buildLevel >= maxBuildLevel)
+        {
+            Debug.Log("[Build] already max level");
+            return false;
+        }
+
+        int cost = GetBuildUpgradeCost();
+        if (GameManager.Instance == null) return false;
+
+        if (!GameManager.Instance.TrySpendGold(cost))
+        {
+            Debug.Log("[Build] Not enough gold for build level up");
+            return false;
+        }
+
+        buildLevel++;
+        Debug.Log($"[Build] Level UP => {buildLevel}");
+        return true;
+    }
+    
+    public void BeginPlaceMode()
+    {
+        if (_placeState == PlaceState.Placing)
+            return;
+        
+        if (GameManager.Instance != null)
+        {
+            int minCost = GetMinBuildCostForGrade(GetBuildRollGrade());
+            if (GameManager.Instance.Gold < minCost)
+            {
+                Debug.Log("[Build] 골드 부족: 빌드 모드 진입 불가");
+                return;
+            }
+        }
+
+        _placeState = PlaceState.Placing;
+        ClearSelection();
+
+        EnsureGhost(ghostPreviewPrefab);
+        UpdateGhostVisible(false);
+
+        Debug.Log("[Build] Place mode ON");
+    }
+
+    private void EnsureGhost(GameObject prefab)
+    {
+        if (_ghostGO != null)
+            Destroy(_ghostGO);
+
+        if (prefab == null)
+        {
+            Debug.LogWarning("[Build] ghostPreviewPrefab is null");
+            return;
+        }
+
+        _ghostGO = Instantiate(prefab);
+        _ghostGO.name = "[GhostPreview]";
+
+        foreach (var col in _ghostGO.GetComponentsInChildren<Collider>(true))
+            col.enabled = false;
+
+        // Ignore Raycast
+        int layer = LayerMask.NameToLayer("Ignore Raycast");
+        if (layer >= 0)
+        {
+            _ghostGO.layer = layer;
+            foreach (Transform t in _ghostGO.GetComponentsInChildren<Transform>(true))
+                t.gameObject.layer = layer;
+        }
+
+        _ghostRenderers.Clear();
+        _ghostGO.GetComponentsInChildren(true, _ghostRenderers);
+
+        ApplyGhostAlpha(previewAlpha);
+    }
+
+    private void UpdateGhostVisible(bool visible)
+    {
+        if (_ghostGO == null) return;
+        _ghostGO.SetActive(visible);
+    }
+
+    private void ApplyGhostAlpha(float a)
+    {
+        a = Mathf.Clamp01(a);
+
+        for (int i = 0; i < _ghostRenderers.Count; i++)
+        {
+            var r = _ghostRenderers[i];
+            if (r == null) continue;
+
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+
+            r.GetPropertyBlock(_mpb);
+
+            if (r.sharedMaterial != null)
+            {
+                if (r.sharedMaterial.HasProperty("_BaseColor"))
+                {
+                    Color c = r.sharedMaterial.GetColor("_BaseColor");
+                    c.a = a;
+                    _mpb.SetColor("_BaseColor", c);
+                }
+                if (r.sharedMaterial.HasProperty("_Color"))
+                {
+                    Color c = r.sharedMaterial.GetColor("_Color");
+                    c.a = a;
+                    _mpb.SetColor("_Color", c);
+                }
+            }
+
+            r.SetPropertyBlock(_mpb);
+        }
+    }
+
+    private void UpdatePlacementPreview()
+    {
+        if (_ghostGO == null)
+            return;
+
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Ray ray = mainCamera.ScreenPointToRay(mousePos);
+
+        if (!Physics.Raycast(ray, out RaycastHit hitTile, 1000f, tileLayerMask))
+        {
+            UpdateGhostVisible(false);
+            return;
+        }
+
+        GridTile tile = hitTile.collider.GetComponent<GridTile>();
+        if (tile == null)
+        {
+            UpdateGhostVisible(false);
+            return;
+        }
+        
+        bool canPlace = tile.IsEmpty && tile.TileType == TileType.Buildable;
+
+        if (!canPlace)
+        {
+            UpdateGhostVisible(false);
+            return;
+        }
+
+        Vector3 pos = tile.transform.position;
+        pos.y += previewYOffset;
+
+        _ghostGO.transform.position = pos;
+        UpdateGhostVisible(true);
+    }
+
 }
