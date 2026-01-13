@@ -80,10 +80,10 @@ public class MonsterSpawner : MonoBehaviour
         }
     
         // Boss spawn
-        if (pattern.isBossWave && pattern.bossPrefab != null)
+        if (pattern.isBossWave && pattern.bossData != null && pattern.bossData.prefab != null)
         {
             float delay = seq * interval;
-            SpawnOneAfterAsync(delay, waveIndex, mods, pattern.bossPrefab, true).Forget();
+            SpawnBossAfterAsync(delay, waveIndex, mods, pattern.bossData).Forget();
         }
     }
 
@@ -120,5 +120,34 @@ public class MonsterSpawner : MonoBehaviour
             ai.ApplyWaveModifiers(mods);
         }
     }
+    
+    private async UniTaskVoid SpawnBossAfterAsync(
+        float delay,
+        int waveIndex,
+        WaveModifiers mods,
+        BossMonsterDataSO bossData)
+    {
+        if (delay > 0f)
+            await UniTask.Delay(
+                System.TimeSpan.FromSeconds(delay),
+                DelayType.DeltaTime,
+                PlayerLoopTiming.Update,
+                this.GetCancellationTokenOnDestroy());
 
+        GameObject go = Instantiate(bossData.prefab);
+        
+        go.transform.localScale = Vector3.one * bossData.scale;
+
+        // 카메라 쉐이크(간단 연출)
+        if (CameraShaker.Instance != null)
+            CameraShaker.Instance.Shake(bossData.shakeDuration, bossData.shakeStrength);
+
+        MonsterAI ai = go.GetComponent<MonsterAI>();
+        if (ai != null)
+        {
+            ai.ApplyBaseStats(bossData.maxHp, bossData.moveSpeed, bossData.shieldHp, true);
+            
+            ai.ApplyWaveModifiers(mods);
+        }
+    }
 }

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a80abf087fb613441a12f9855c728a66, type: 3}
+  m_Name: BossMonsterData
+  m_EditorClassIdentifier: Assembly-CSharp::BossMonsterDataSO
+  bossId: boss_default
+  prefab: {fileID: 8095480719588087266, guid: b542d8777445c4445853dd8a59d688ff, type: 3}
+  scale: 1.2
+  maxHp: 500
+  moveSpeed: 1.4
+  shieldHp: 0
+  rewardGold: 50
+  shakeDuration: 0.25
+  shakeStrength: 0.25

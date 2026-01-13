@@ -280,4 +280,17 @@ public class MonsterAI : MonoBehaviour
             Die();
         }
     }
+    
+    public void ApplyBaseStats(int newMaxHp, float newMoveSpeed, int newShieldHp, bool isBoss)
+    {
+        maxHp = Mathf.Max(1, newMaxHp);
+        _currentHp = maxHp;
+
+        moveSpeed = Mathf.Max(0.01f, newMoveSpeed);
+
+        _shieldHp = Mathf.Max(0, newShieldHp);
+        UpdateShieldVfx();
+
+        SetIsBoss(isBoss);
+    }
 }
