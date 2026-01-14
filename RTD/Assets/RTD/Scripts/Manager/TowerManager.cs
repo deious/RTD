@@ -44,6 +44,9 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private GameObject ghostPreviewPrefab;
     [SerializeField] private float previewAlpha = 0.35f;
     [SerializeField] private float previewYOffset = 0.02f;
+    [SerializeField] private bool showInvalidGhost = true;
+    [SerializeField] private Color validTint = new Color(0.2f, 1f, 0.2f, 1f);
+    [SerializeField] private Color invalidTint = new Color(1f, 0.2f, 0.2f, 1f);
 
     private GameObject _ghostGO;
     private readonly System.Collections.Generic.List<Renderer> _ghostRenderers = new();
@@ -54,8 +57,9 @@ public class TowerManager : MonoBehaviour
     private TowerBase _selectedTower;
     private bool _combineBusy;
     
-    
     public int BuildLevel => buildLevel;
+    public bool IsPlacing => _placeState == PlaceState.Placing;
+    public event System.Action<bool> OnPlacingChanged;
 
     private void Awake()
     {
@@ -78,6 +82,22 @@ public class TowerManager : MonoBehaviour
     {
         if (_combineBusy) 
             return;
+        
+        if (_placeState == PlaceState.Placing)
+        {
+            var kb = Keyboard.current;
+            if (kb != null && kb.escapeKey.wasPressedThisFrame)
+            {
+                CancelPlaceMode();
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.rightButton.wasPressedThisFrame)
+            {
+                CancelPlaceMode();
+                return;
+            }
+        }
         
         if (Mouse.current == null) 
             return;
@@ -568,6 +588,8 @@ public class TowerManager : MonoBehaviour
         _ghostGO = null;
         _ghostRenderers.Clear();
 
+        OnPlacingChanged?.Invoke(false);
+        
         Debug.Log("[Build] Place mode OFF");
     }
     
@@ -618,6 +640,8 @@ public class TowerManager : MonoBehaviour
 
         EnsureGhost(ghostPreviewPrefab);
         UpdateGhostVisible(false);
+        
+        OnPlacingChanged?.Invoke(true);
 
         Debug.Log("[Build] Place mode ON");
     }
@@ -651,7 +675,33 @@ public class TowerManager : MonoBehaviour
         _ghostRenderers.Clear();
         _ghostGO.GetComponentsInChildren(true, _ghostRenderers);
 
-        ApplyGhostAlpha(previewAlpha);
+        //ApplyGhostAlpha(previewAlpha);
+        ApplyGhostTint(true);
+    }
+    
+    private void ApplyGhostTint(bool canPlace)
+    {
+        if (_ghostRenderers == null || _ghostRenderers.Count == 0) return;
+        if (_mpb == null) _mpb = new MaterialPropertyBlock();
+
+        Color tint = canPlace ? validTint : invalidTint;
+        tint.a = previewAlpha;
+
+        for (int i = 0; i < _ghostRenderers.Count; i++)
+        {
+            var r = _ghostRenderers[i];
+            if (r == null) continue;
+
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+
+            r.GetPropertyBlock(_mpb);
+            
+            _mpb.SetColor("_BaseColor", tint);
+            _mpb.SetColor("_Color", tint);
+
+            r.SetPropertyBlock(_mpb);
+        }
     }
 
     private void UpdateGhostVisible(bool visible)
@@ -714,20 +764,25 @@ public class TowerManager : MonoBehaviour
             UpdateGhostVisible(false);
             return;
         }
-        
-        bool canPlace = tile.IsEmpty && tile.TileType == TileType.Buildable;
 
-        if (!canPlace)
+        bool canPlace = tile.IsEmpty && tile.TileType == TileType.Buildable;
+        
+        Vector3 pos = tile.transform.position;
+        pos.y += previewYOffset;
+        _ghostGO.transform.position = pos;
+        
+        if (!canPlace && !showInvalidGhost)
         {
             UpdateGhostVisible(false);
             return;
         }
 
-        Vector3 pos = tile.transform.position;
-        pos.y += previewYOffset;
-
-        _ghostGO.transform.position = pos;
         UpdateGhostVisible(true);
+        ApplyGhostTint(canPlace);
     }
 
+    public int GetMinBuildCostForCurrentGrade()
+    {
+        return GetMinBuildCostForGrade(GetBuildRollGrade());
+    }
 }
