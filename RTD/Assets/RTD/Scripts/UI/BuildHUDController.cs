@@ -39,29 +39,19 @@ public class BuildHUDController : MonoBehaviour
 
     private void Awake()
     {
-        // 혹시 인스펙터 연결 누락된 경우 자동 보정
-        if (btnBuild == null) btnBuild = GetComponentInChildren<Button>(true);
+        if (btnBuild == null || btnUpgrade == null)
+            Debug.LogWarning("[BuildHUDController] Buttons not wired in Inspector.");
 
         if (btnBuild != null)
         {
             if (btnBuildImage == null) btnBuildImage = btnBuild.GetComponent<Image>();
             if (btnBuildLabel == null) btnBuildLabel = btnBuild.GetComponentInChildren<TextMeshProUGUI>(true);
-
-            // Button Transition이 색 덮어쓰는 걸 원천 차단
             btnBuild.transition = Selectable.Transition.None;
-        }
-
-        if (btnUpgrade != null)
-        {
-            // 업그레이드 버튼도 원하면 동일하게
-            // btnUpgrade.transition = Selectable.Transition.None;
         }
     }
 
     private void OnEnable()
     {
-        // OnEnable 시점에 TowerManager가 아직 생성 전이면 여기서 구독이 실패할 수 있음
-        // 그래서 구독은 "될 때만" 하고, Update 폴링으로 항상 동작하게 만들었음.
         TryBindEvents();
     }
 
@@ -211,7 +201,7 @@ public class BuildHUDController : MonoBehaviour
     {
         if (TM == null || GM == null) return;
 
-        int minCost = TM.GetMinBuildCostForCurrentGrade();
+        int minCost = TM.GetMinBuildCostForCurrentLevel();
         bool canBuild = GM.Gold >= minCost;
 
         bool buildInteractable = TM.IsPlacing ? true : canBuild;

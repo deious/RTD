@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Cysharp.Threading.Tasks;
+using UnityEngine.EventSystems;
 
 public class TowerManager : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private LayerMask tileLayerMask;
     
     [Header("Random Build")]
-    [SerializeField] private TowerGrade buildRollGrade = TowerGrade.Normal;
     [SerializeField] private TowerData[] buildPool;
     
     [Header("Trait Data")]
@@ -48,6 +48,16 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private Color validTint = new Color(0.2f, 1f, 0.2f, 1f);
     [SerializeField] private Color invalidTint = new Color(1f, 0.2f, 0.2f, 1f);
 
+    [Header("Context UI")]
+    [SerializeField] private ContextUIController contextUI;
+    
+    [System.Serializable]
+    public struct GradeChance
+    {
+        public TowerGrade grade;
+        [Range(0, 100)] public int percent;
+    }
+    
     private GameObject _ghostGO;
     private readonly System.Collections.Generic.List<Renderer> _ghostRenderers = new();
     private MaterialPropertyBlock _mpb;
@@ -109,6 +119,9 @@ public class TowerManager : MonoBehaviour
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
+
             HandleClick();
         }
         
@@ -157,14 +170,16 @@ public class TowerManager : MonoBehaviour
     
     private void SelectTower(TowerBase tower)
     {
-        if (_selectedTower == tower)
-            return;
+        if (_selectedTower == tower) return;
 
         if (_selectedTower != null)
             _selectedTower.SetSelected(false);
 
         _selectedTower = tower;
         _selectedTower.SetSelected(true);
+
+        if (contextUI != null)
+            contextUI.ShowTower(_selectedTower);
     }
 
     private void ClearSelection()
@@ -173,60 +188,17 @@ public class TowerManager : MonoBehaviour
             _selectedTower.SetSelected(false);
 
         _selectedTower = null;
-    }
 
-    private void TryPlaceTower(GridTile tile)
-    {
-        if (!tile.IsEmpty)
+        if (contextUI == null) return;
+
+        if (_placeState == PlaceState.Placing)
         {
-            Debug.Log("설치 불가 타일이거나 이미 타워가 있습니다.");
-            return;
+            contextUI.ShowBuild(GetMinBuildCostForCurrentLevel(), buildLevel);
         }
-
-        if (GameManager.Instance == null)
+        else
         {
-            Debug.LogError("GameManager 인스턴스가 없습니다.");
-            return;
+            contextUI.Hide();
         }
-        
-        TowerGrade gradeToRoll = GetBuildRollGrade();
-        TowerData rolledData = RollBuildTowerData(gradeToRoll);
-        if (rolledData == null)
-            return;
-
-        if (rolledData.towerPrefab == null)
-        {
-            Debug.LogError($"[TowerManager] towerPrefab is null in TowerData: {rolledData.name}");
-            return;
-        }
-
-        int cost = rolledData.buildCost;
-        
-        if (GameManager.Instance.Gold < cost)
-        {
-            Debug.Log("골드가 부족합니다.");
-            return;
-        }
-        
-        Vector3 spawnPos = tile.transform.position;
-        GameObject towerObj = Instantiate(rolledData.towerPrefab, spawnPos, Quaternion.identity);
-
-        TowerBase tower = towerObj.GetComponent<TowerBase>();
-        if (tower == null)
-        {
-            Debug.LogError("rolledData.towerPrefab에 TowerBase 컴포넌트가 없습니다.");
-            Destroy(towerObj);
-            return;
-        }
-        
-        tower.SetData(rolledData);
-        AssignTraitIfNeeded(tower);
-        
-        tile.SetTower(tower);
-        tower.SetTile(tile);
-        GameManager.Instance.AddGold(-cost);
-
-        Debug.Log($"[Build] Rolled: {rolledData.towerId} ({rolledData.grade}), cost={cost}");
     }
     
     private TowerData RollBuildTowerData(TowerGrade grade)
@@ -509,7 +481,8 @@ public class TowerManager : MonoBehaviour
     
     private TowerGrade GetBuildRollGrade()
     {
-        return buildRollGrade;
+        TowerGrade rolled = RollGradeByBuildLevel();
+        return ResolveGradeIfMissing(rolled);
     }
     
     private bool TryPlaceTower_ReturnSuccess(GridTile tile)
@@ -590,6 +563,9 @@ public class TowerManager : MonoBehaviour
 
         OnPlacingChanged?.Invoke(false);
         
+        if (contextUI != null)
+            contextUI.Hide();
+        
         Debug.Log("[Build] Place mode OFF");
     }
     
@@ -617,6 +593,10 @@ public class TowerManager : MonoBehaviour
 
         buildLevel++;
         Debug.Log($"[Build] Level UP => {buildLevel}");
+        
+        if (IsPlacing && contextUI != null)
+            contextUI.ShowBuild(GetMinBuildCostForCurrentLevel(), buildLevel);
+        
         return true;
     }
     
@@ -627,7 +607,7 @@ public class TowerManager : MonoBehaviour
         
         if (GameManager.Instance != null)
         {
-            int minCost = GetMinBuildCostForGrade(GetBuildRollGrade());
+            int minCost = GetMinBuildCostForCurrentLevel();
             if (GameManager.Instance.Gold < minCost)
             {
                 Debug.Log("[Build] 골드 부족: 빌드 모드 진입 불가");
@@ -642,6 +622,9 @@ public class TowerManager : MonoBehaviour
         UpdateGhostVisible(false);
         
         OnPlacingChanged?.Invoke(true);
+        
+        if (contextUI != null)
+            contextUI.ShowBuild(GetMinBuildCostForCurrentLevel(), buildLevel);
 
         Debug.Log("[Build] Place mode ON");
     }
@@ -780,9 +763,136 @@ public class TowerManager : MonoBehaviour
         UpdateGhostVisible(true);
         ApplyGhostTint(canPlace);
     }
-
-    public int GetMinBuildCostForCurrentGrade()
+    
+    private int CalculateSellRefund(TowerBase tower)
     {
-        return GetMinBuildCostForGrade(GetBuildRollGrade());
+        if (tower == null) return 0;
+
+        TowerData d = tower.GetData();
+        if (d == null) return 0;
+        
+        const float rate = 0.5f;
+        return Mathf.Max(0, Mathf.RoundToInt(d.buildCost * rate));
+    }
+    
+    private GradeChance[] GetChancesForLevel(int level) 
+    {
+        int lv = Mathf.Clamp(level, 1, maxBuildLevel);
+        
+        switch (lv)
+        {
+            case 1:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 100 } };
+            case 2:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 90 }, new GradeChance{ grade = TowerGrade.Rare, percent = 10 } };
+            case 3:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 75 }, new GradeChance{ grade = TowerGrade.Rare, percent = 22 }, new GradeChance{ grade = TowerGrade.Epic, percent = 3 } };
+            case 4:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 60 }, new GradeChance{ grade = TowerGrade.Rare, percent = 33 }, new GradeChance{ grade = TowerGrade.Epic, percent = 7 } };
+            case 5:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 50 }, new GradeChance{ grade = TowerGrade.Rare, percent = 35 }, new GradeChance{ grade = TowerGrade.Epic, percent = 13 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 2 } };
+            case 6:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 40 }, new GradeChance{ grade = TowerGrade.Rare, percent = 35 }, new GradeChance{ grade = TowerGrade.Epic, percent = 20 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 5 } };
+            case 7:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 30 }, new GradeChance{ grade = TowerGrade.Rare, percent = 35 }, new GradeChance{ grade = TowerGrade.Epic, percent = 25 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 10 } };
+            case 8:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 20 }, new GradeChance{ grade = TowerGrade.Rare, percent = 35 }, new GradeChance{ grade = TowerGrade.Epic, percent = 30 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 15 } };
+            case 9:  return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 10 }, new GradeChance{ grade = TowerGrade.Rare, percent = 35 }, new GradeChance{ grade = TowerGrade.Epic, percent = 35 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 20 } };
+            default: return new[] { new GradeChance{ grade = TowerGrade.Normal, percent = 5 },  new GradeChance{ grade = TowerGrade.Rare, percent = 30 }, new GradeChance{ grade = TowerGrade.Epic, percent = 40 }, new GradeChance{ grade = TowerGrade.Legendary, percent = 25 } };
+        }
+    }
+    
+    private TowerGrade RollGradeByBuildLevel()
+    {
+        GradeChance[] chances = GetChancesForLevel(buildLevel);
+
+        int roll = Random.Range(0, 100);
+        int acc = 0;
+
+        for (int i = 0; i < chances.Length; i++)
+        {
+            acc += chances[i].percent;
+            if (roll < acc)
+                return chances[i].grade;
+        }
+        
+        return chances[chances.Length - 1].grade;
+    }
+    
+    private bool HasAnyTowerOfGrade(TowerGrade grade)
+    {
+        if (buildPool == null) return false;
+
+        for (int i = 0; i < buildPool.Length; i++)
+        {
+            var d = buildPool[i];
+            if (d != null && d.grade == grade)
+                return true;
+        }
+        return false;
+    }
+
+    private TowerGrade ResolveGradeIfMissing(TowerGrade rolled)
+    {
+        TowerGrade g = rolled;
+
+        while (!HasAnyTowerOfGrade(g))
+        {
+            if (g == TowerGrade.Normal)
+                return TowerGrade.Normal;
+
+            g = (TowerGrade)((int)g - 1); // Legendary->Epic->Rare->Normal
+        }
+
+        return g;
+    }
+    
+    public bool TrySellTower(TowerBase tower)
+    {
+        if (tower == null)
+            return false;
+        
+        if (_selectedTower == tower)
+        {
+            _selectedTower.SetSelected(false);
+            _selectedTower = null;
+        }
+
+        int refund = CalculateSellRefund(tower);
+        
+        tower.SetTile(null);
+        
+        if (GameManager.Instance != null && refund > 0)
+            GameManager.Instance.AddGold(refund);
+        
+        Destroy(tower.gameObject);
+
+        return true;
+    }
+    
+    public string GetBuildLevelChanceLabel()
+    {
+        var chances = GetChancesForLevel(buildLevel);
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Build Lv. {buildLevel}");
+
+        for (int i = 0; i < chances.Length; i++)
+            sb.AppendLine($"{chances[i].grade}: {chances[i].percent}%");
+
+        return sb.ToString();
+    }
+    
+    public int GetMinBuildCostForCurrentLevel()
+    {
+        var chances = GetChancesForLevel(buildLevel);
+        if (chances == null || chances.Length == 0) 
+            return int.MaxValue;
+
+        int min = int.MaxValue;
+
+        for (int i = 0; i < chances.Length; i++)
+        {
+            if (chances[i].percent <= 0) 
+                continue;
+
+            int c = GetMinBuildCostForGrade(chances[i].grade);
+            if (c < min) 
+                min = c;
+        }
+
+        return min;
     }
 }
