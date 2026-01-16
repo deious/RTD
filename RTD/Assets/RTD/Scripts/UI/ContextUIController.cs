@@ -16,7 +16,7 @@ public class ContextUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI txtGrade;
 
     [Header("Trait (optional)")]
-    [SerializeField] private GameObject traitRow;          // ★ Trait 라인 전체
+    [SerializeField] private GameObject traitRow;
     [SerializeField] private TextMeshProUGUI txtTrait;
 
     [Header("Stats")]
@@ -31,6 +31,17 @@ public class ContextUIController : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button btnSell;
     [SerializeField] private Button btnCancel;
+    
+    [Header("Action Buttons")]
+    [SerializeField] private Button btnCombineExact;
+    [SerializeField] private Button btnCombineRandom;
+    [SerializeField] private Button btnRerollTrait;
+    
+    [Header("Reroll UI")]
+    [SerializeField] private TextMeshProUGUI txtRerollCost;
+
+    [Header("Sell UI")]
+    [SerializeField] private TextMeshProUGUI txtSellRefund;
 
     private TowerBase _current;
 
@@ -80,45 +91,70 @@ public class ContextUIController : MonoBehaviour
             btnSell.onClick.RemoveAllListeners();
             btnSell.onClick.AddListener(OnClickSell);
         }
-    }
-
-    public void ShowBuild(int minCost, int buildLevel)
-    {
-        _current = null;
-
-        SetRoot(true);
-        SetModeBuild();
-
-        if (txtBuildTitle != null)
-            txtBuildTitle.text = $"Build Lv. {buildLevel}";
-
-        if (txtBuildChance != null && TowerManager.Instance != null)
-            txtBuildChance.text = TowerManager.Instance.GetBuildLevelChanceLabel();
-
-        if (txtBuildMinCost != null)
-            txtBuildMinCost.text = $"최소 비용: {minCost}";
-
-        if (txtBuildHint != null)
-            txtBuildHint.text = "타일을 클릭해 타워를 설치하세요";
-
-        if (btnCancel != null)
+        
+        if (btnCombineExact != null)
         {
-            btnCancel.gameObject.SetActive(true);
-            btnCancel.onClick.RemoveAllListeners();
-            btnCancel.onClick.AddListener(OnClickCancel);
+            btnCombineExact.gameObject.SetActive(true);
+            btnCombineExact.onClick.RemoveAllListeners();
+            btnCombineExact.onClick.AddListener(OnClickCombineExact);
+        }
+
+        if (btnCombineRandom != null)
+        {
+            btnCombineRandom.gameObject.SetActive(true);
+            btnCombineRandom.onClick.RemoveAllListeners();
+            btnCombineRandom.onClick.AddListener(OnClickCombineRandom);
+        }
+
+        TowerData data = tower.GetData();
+        bool canReroll = (data != null && data.grade != TowerGrade.Normal);
+
+        if (btnRerollTrait != null)
+        {
+            btnRerollTrait.gameObject.SetActive(true);
+            btnRerollTrait.onClick.RemoveAllListeners();
+            btnRerollTrait.onClick.AddListener(OnClickRerollTrait);
+            
+            btnRerollTrait.interactable = canReroll;
         }
         
-        ForceLayoutRebuild();
-    }
-
-
-    public void Hide()
-    {
-        _current = null;
-        SetRoot(false);
+        if (txtRerollCost != null)
+        {
+            if (!canReroll || data == null)
+            {
+                txtRerollCost.text = "";
+            }
+            else
+            {
+                int cost = GetRerollCost(data.grade);
+                txtRerollCost.text = cost.ToString();
+            }
+        }
         
-        if (btnSell != null) btnSell.onClick.RemoveAllListeners();
-        if (btnCancel != null) btnCancel.onClick.RemoveAllListeners();
+        if (txtSellRefund != null)
+        {
+            int refund = 0;
+            if (TowerManager.Instance != null)
+                refund = TowerManager.Instance.GetSellRefund(tower);
+
+            txtSellRefund.text = (refund > 0) ? refund.ToString() : "";
+        }
+        
+        ForceLayoutRebuildTower();
+    }
+    
+    private void ForceLayoutRebuildTower()
+    {
+        Canvas.ForceUpdateCanvases();
+
+        if (towerPanel != null)
+        {
+            var rt = towerPanel.GetComponent<RectTransform>();
+            if (rt != null)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+        }
+
+        Canvas.ForceUpdateCanvases();
     }
 
     private void SetRoot(bool on)
@@ -185,5 +221,92 @@ public class ContextUIController : MonoBehaviour
         }
 
         Canvas.ForceUpdateCanvases();
+    }
+    
+    private void OnClickCombineExact()
+    {
+        if (TowerManager.Instance == null) return;
+        TowerManager.Instance.RequestCombineExact();
+    }
+
+    private void OnClickCombineRandom()
+    {
+        if (TowerManager.Instance == null) return;
+        TowerManager.Instance.RequestCombineRandom();
+    }
+
+    private void OnClickRerollTrait()
+    {
+        if (_current == null) return;
+
+        TowerData d = _current.GetData();
+        if (d == null) return;
+        
+        if (d.grade == TowerGrade.Normal) return;
+
+        int cost = GetRerollCost(d.grade);
+
+        if (TowerManager.Instance == null) return;
+
+        bool ok = TowerManager.Instance.TryRerollTrait(_current, cost);
+        if (!ok)
+        {
+            Debug.Log("[ContextUI] Reroll failed (not enough gold or no candidate)");
+            return;
+        }
+        
+        ShowTower(_current);
+    }
+
+    private int GetRerollCost(TowerGrade grade)
+    {
+        return grade switch
+        {
+            TowerGrade.Rare => 50,
+            TowerGrade.Epic => 100,
+            TowerGrade.Legendary => 200,
+            _ => 999999
+        };
+    }
+    
+    public void ShowBuild(int minCost, int buildLevel)
+    {
+        _current = null;
+
+        SetRoot(true);
+        SetModeBuild();
+
+        if (txtBuildTitle != null)
+            txtBuildTitle.text = $"Build Lv. {buildLevel}";
+
+        if (txtBuildChance != null && TowerManager.Instance != null)
+            txtBuildChance.text = TowerManager.Instance.GetBuildLevelChanceLabel();
+
+        if (txtBuildMinCost != null)
+            txtBuildMinCost.text = $"최소 비용: {minCost}";
+
+        if (txtBuildHint != null)
+            txtBuildHint.text = "타일을 클릭해 타워를 설치하세요";
+
+        if (btnCancel != null)
+        {
+            btnCancel.gameObject.SetActive(true);
+            btnCancel.onClick.RemoveAllListeners();
+            btnCancel.onClick.AddListener(OnClickCancel);
+        }
+        
+        ForceLayoutRebuild();
+    }
+
+    public void Hide()
+    {
+        _current = null;
+        SetRoot(false);
+        
+        if (btnSell != null) btnSell.onClick.RemoveAllListeners();
+        if (btnCancel != null) btnCancel.onClick.RemoveAllListeners();
+        if (btnCombineExact != null) btnCombineExact.onClick.RemoveAllListeners();
+        if (btnCombineRandom != null) btnCombineRandom.onClick.RemoveAllListeners();
+        if (btnRerollTrait != null) btnRerollTrait.onClick.RemoveAllListeners();
     }
 }

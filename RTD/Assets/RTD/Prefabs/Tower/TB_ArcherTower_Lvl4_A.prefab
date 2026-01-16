@@ -11,8 +11,10 @@ GameObject:
   - component: {fileID: 4483453832534804}
   - component: {fileID: 33448811849773410}
   - component: {fileID: 23045638810766356}
-  m_Layer: 0
-  m_Name: Test
+  - component: {fileID: 5304173362233673592}
+  - component: {fileID: 3152907694084162419}
+  m_Layer: 7
+  m_Name: TB_ArcherTower_Lvl4_A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90,3 +92,77 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5304173362233673592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1989364573068550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75a8b435f295214eae70e194f85a8d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicTower
+  range: 3
+  attackInterval: 1
+  damage: 5
+  rangeVisual: {fileID: 0}
+  gradeRingRenderer: {fileID: 0}
+  typeLabel: {fileID: 0}
+  gradeRingAlpha: 0.75
+  data: {fileID: 0}
+  projectilePrefab: {fileID: 0}
+  firePoint: {fileID: 0}
+  projectileSpeed: 18
+  projectileLifeTime: 3
+  playSpawnPop: 1
+  spawnPopDuration: 0.14
+  spawnPopScaleMul: 1.18
+  spawnPopCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spawnParticlePrefab: {fileID: 0}
+  spawnParticlePoint: {fileID: 0}
+--- !u!65 &3152907694084162419
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1989364573068550}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.8048944, y: 12.596158, z: 7.5039616}
+  m_Center: {x: -0.00000071525574, y: 6.2781987, z: 0.23793185}

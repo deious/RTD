@@ -47,6 +47,9 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private bool showInvalidGhost = true;
     [SerializeField] private Color validTint = new Color(0.2f, 1f, 0.2f, 1f);
     [SerializeField] private Color invalidTint = new Color(1f, 0.2f, 0.2f, 1f);
+    
+    [Header("Spawn Offset")]
+    [SerializeField] private float towerSpawnYOffset = 0.1f;
 
     [Header("Context UI")]
     [SerializeField] private ContextUIController contextUI;
@@ -425,22 +428,48 @@ public class TowerManager : MonoBehaviour
                 mergePoint,
                 () =>
                 {
-                    for (int i = 0; i < mergeList.Count; i++)
-                    {
-                        if (mergeList[i] == null) continue;
-                        if (mergeList[i] == _selectedTower) continue;
-                        Destroy(mergeList[i].gameObject);
-                    }
-            
-                    if (_selectedTower == null) return;
+                    if (resultData == null || _selectedTower == null)
+                        return;
                     
-                    _selectedTower.transform.localScale = keepScale;
-            
-                    _selectedTower.SetData(resultData);
-                    AssignTraitIfNeeded(_selectedTower);
+                    TowerTraitSO baseTrait = _selectedTower.RuntimeTrait;
+                    GridTile tile = _selectedTower.CurrentTile;
+
+                    Vector3 spawnPos = tile != null ? tile.transform.position : mergePoint;
+                    Quaternion rot = _selectedTower.transform.rotation;
+                    
+                    TowerTraitSO resultTrait = null;
+                    if (resultData.grade != TowerGrade.Normal && traitDatabase != null)
+                    {
+                        if (combineMode == CombineMode.Exact)
+                        {
+                            resultTrait = traitDatabase.UpgradeTrait(baseTrait, resultData.grade);
+                        }
+                        else
+                        {
+                            resultTrait = traitDatabase.RollTrait(resultData.towerId, resultData.grade);
+                        }
+                    }
+                    
+                    for (int i = 0; i < mergeList.Count; i++)
+                        RemoveTowerSafe(mergeList[i]);
+                    
+                    TowerBase newTower = SpawnTowerFromData(
+                        resultData,
+                        spawnPos,
+                        rot,
+                        tile,
+                        resultTrait
+                    );
+
+                    if (newTower == null)
+                        return;
+                    
+                    _selectedTower = newTower;
                     _selectedTower.SetSelected(true);
-            
                     _selectedTower.PlaySpawnFeedback();
+
+                    if (contextUI != null)
+                        contextUI.ShowTower(_selectedTower);
                 }
             );
         }
@@ -517,7 +546,7 @@ public class TowerManager : MonoBehaviour
             return false;
         }
 
-        Vector3 spawnPos = tile.transform.position;
+        Vector3 spawnPos = tile.transform.position + Vector3.up * towerSpawnYOffset;
         GameObject towerObj = Instantiate(rolledData.towerPrefab, spawnPos, Quaternion.identity);
 
         TowerBase tower = towerObj.GetComponent<TowerBase>();
@@ -862,6 +891,48 @@ public class TowerManager : MonoBehaviour
         return true;
     }
     
+    private TowerBase SpawnTowerFromData(
+        TowerData data,
+        Vector3 position,
+        Quaternion rotation,
+        GridTile tile,
+        TowerTraitSO trait)
+    {
+        if (data == null || data.towerPrefab == null)
+        {
+            Debug.LogError("[TowerManager] SpawnTowerFromData failed");
+            return null;
+        }
+
+        GameObject go = Instantiate(data.towerPrefab, position, rotation);
+        TowerBase tower = go.GetComponent<TowerBase>();
+
+        if (tower == null)
+        {
+            Debug.LogError("[TowerManager] Prefab has no TowerBase");
+            Destroy(go);
+            return null;
+        }
+
+        tower.SetData(data);
+        tower.SetTrait(trait);
+
+        if (tile != null)
+        {
+            tile.SetTower(tower);
+            tower.SetTile(tile);
+        }
+
+        return tower;
+    }
+
+    private void RemoveTowerSafe(TowerBase tower)
+    {
+        if (tower == null) return;
+        tower.SetTile(null);
+        Destroy(tower.gameObject);
+    }
+    
     public string GetBuildLevelChanceLabel()
     {
         var chances = GetChancesForLevel(buildLevel);
@@ -894,5 +965,52 @@ public class TowerManager : MonoBehaviour
         }
 
         return min;
+    }
+    
+    public void RequestCombineExact()
+    {
+        combineMode = CombineMode.Exact;
+        if (_combineBusy) return;
+        TryCombineSelectedTowerAsync().Forget();
+    }
+
+    public void RequestCombineRandom()
+    {
+        combineMode = CombineMode.Random;
+        if (_combineBusy) return;
+        TryCombineSelectedTowerAsync().Forget();
+    }
+
+    public bool TryRerollTrait(TowerBase tower, int cost)
+    {
+        if (tower == null) return false;
+
+        TowerData d = tower.GetData();
+        if (d == null) return false;
+
+        if (d.grade == TowerGrade.Normal)
+            return false;
+
+        if (GameManager.Instance == null)
+            return false;
+
+        if (!GameManager.Instance.TrySpendGold(cost))
+            return false;
+
+        if (traitDatabase == null)
+            return false;
+
+        TowerTraitSO newTrait = traitDatabase.RollTraitExclude(d.towerId, d.grade, tower.RuntimeTrait);
+        if (newTrait == null)
+            return false;
+
+        tower.SetTrait(newTrait);
+
+        return true;
+    }
+    
+    public int GetSellRefund(TowerBase tower)
+    {
+        return CalculateSellRefund(tower);
     }
 }

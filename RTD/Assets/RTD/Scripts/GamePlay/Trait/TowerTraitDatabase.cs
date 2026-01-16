@@ -21,7 +21,6 @@ public class TowerTraitDatabase : MonoBehaviour
         }
     }
 
-    // 타워 타입별 성향 가중치
     private static readonly Dictionary<string, AffinityWeights> AffinityWeightByType =
         new Dictionary<string, AffinityWeights>
         {
@@ -40,51 +39,16 @@ public class TowerTraitDatabase : MonoBehaviour
             _ => 1
         };
     }
-
-
-    private static TraitTier RollTierByGrade(TowerGrade grade)
+    
+    private static TraitTier GetFixedTierByGrade(TowerGrade grade)
     {
-        // 네 룰: Normal은 Trait 없음이니 이 함수는 Rare/Epic/Legend에만 호출한다고 가정
-        int t1, t2, t3;
-
-        switch (grade)
+        return grade switch
         {
-            case TowerGrade.Rare:
-                t1 = 80; t2 = 20; t3 = 0;
-                break;
-            case TowerGrade.Epic:
-                t1 = 50; t2 = 45; t3 = 5;
-                break;
-            case TowerGrade.Legendary:
-                t1 = 25; t2 = 55; t3 = 20;
-                break;
-            default:
-                t1 = 100; t2 = 0; t3 = 0;
-                break;
-        }
-
-        int sum = t1 + t2 + t3;
-        int roll = Random.Range(1, sum + 1);
-
-        if (roll <= t1) return TraitTier.T1;
-        roll -= t1;
-        if (roll <= t2) return TraitTier.T2;
-        return TraitTier.T3;
-    }
-
-    private static TraitAffinity RollAffinity(AffinityWeights w)
-    {
-        int core = Mathf.Max(0, w.core);
-        int common = Mathf.Max(0, w.common);
-        int wild = Mathf.Max(0, w.wild);
-
-        int sum = Mathf.Max(1, core + common + wild);
-        int roll = Random.Range(1, sum + 1);
-
-        if (roll <= core) return TraitAffinity.Core;
-        roll -= core;
-        if (roll <= common) return TraitAffinity.Common;
-        return TraitAffinity.Wild;
+            TowerGrade.Rare => TraitTier.T1,
+            TowerGrade.Epic => TraitTier.T2,
+            TowerGrade.Legendary => TraitTier.T3,
+            _ => TraitTier.None
+        };
     }
 
     private static string GetTypeKeyFromTowerId(string towerId)
@@ -97,34 +61,34 @@ public class TowerTraitDatabase : MonoBehaviour
         if (lower.Contains("magic")) return "magic";
         return "basic";
     }
-    
+
     public TowerTraitSO RollTrait(string towerId, TowerGrade grade)
     {
         if (allTraits == null || allTraits.Length == 0)
             return null;
 
+        TraitTier tier = GetFixedTierByGrade(grade);
+        if (tier == TraitTier.None)
+            return null;
+
         string typeKey = GetTypeKeyFromTowerId(towerId);
-        TraitTier tier = RollTierByGrade(grade);
 
         AffinityWeights w = AffinityWeightByType.TryGetValue(typeKey, out var found)
             ? found
             : new AffinityWeights(50, 40, 10);
 
-        // 1) tier만 맞는 후보 전부 수집
         List<TowerTraitSO> candidates = new List<TowerTraitSO>(16);
         for (int i = 0; i < allTraits.Length; i++)
         {
             var t = allTraits[i];
             if (t == null) continue;
             if (t.tier != tier) continue;
-
             candidates.Add(t);
         }
 
         if (candidates.Count == 0)
             return null;
 
-        // 2) affinity에 따라 가중 랜덤 선택
         int total = 0;
         for (int i = 0; i < candidates.Count; i++)
             total += GetAffinityWeight(candidates[i].affinity, w);
@@ -141,5 +105,71 @@ public class TowerTraitDatabase : MonoBehaviour
         }
 
         return candidates[candidates.Count - 1];
+    }
+    
+    public TowerTraitSO RollTraitExclude(string towerId, TowerGrade grade, TowerTraitSO exclude)
+    {
+        if (allTraits == null || allTraits.Length == 0)
+            return null;
+
+        TraitTier tier = GetFixedTierByGrade(grade);
+        if (tier == TraitTier.None)
+            return null;
+
+        string typeKey = GetTypeKeyFromTowerId(towerId);
+
+        AffinityWeights w = AffinityWeightByType.TryGetValue(typeKey, out var found)
+            ? found
+            : new AffinityWeights(50, 40, 10);
+
+        List<TowerTraitSO> candidates = new List<TowerTraitSO>(16);
+        for (int i = 0; i < allTraits.Length; i++)
+        {
+            var t = allTraits[i];
+            if (t == null) continue;
+            if (t.tier != tier) continue;
+            if (exclude != null && t == exclude) continue;
+            candidates.Add(t);
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        int total = 0;
+        for (int i = 0; i < candidates.Count; i++)
+            total += GetAffinityWeight(candidates[i].affinity, w);
+
+        if (total <= 0)
+            return candidates[Random.Range(0, candidates.Count)];
+
+        int roll = Random.Range(1, total + 1);
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            roll -= GetAffinityWeight(candidates[i].affinity, w);
+            if (roll <= 0)
+                return candidates[i];
+        }
+
+        return candidates[candidates.Count - 1];
+    }
+    
+    public TowerTraitSO UpgradeTrait(TowerTraitSO current, TowerGrade toGrade)
+    {
+        if (current == null) return null;
+
+        TraitTier targetTier = GetFixedTierByGrade(toGrade);
+        if (targetTier == TraitTier.None)
+            return null;
+
+        for (int i = 0; i < allTraits.Length; i++)
+        {
+            var t = allTraits[i];
+            if (t == null) continue;
+
+            if (t.type == current.type && t.tier == targetTier)
+                return t;
+        }
+
+        return current; // fallback
     }
 }

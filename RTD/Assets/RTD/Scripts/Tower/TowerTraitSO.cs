@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public enum TowerTraitType { Critical, Slow, Chain, Explosion }
-public enum TraitTier { T1, T2, T3 }
+public enum TraitTier { None = 0, T1 = 1, T2 = 2, T3 = 3 }
 public enum TraitAffinity { Core, Common, Wild }
 
 [CreateAssetMenu(menuName = "RTD/Trait")]
