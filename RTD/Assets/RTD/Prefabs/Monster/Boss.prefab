@@ -130,3 +130,9 @@ MonoBehaviour:
   maxHp: 20
   _shieldHp: 0
   shieldVfxPrefab: {fileID: 3190805535892460893, guid: a0f1a86763ddd0a49b590f7629778f0d, type: 3}
+  dotDefaultTickInterval: 0.5
+  dotStrongerOverrides: 1
+  dotFasterTickPreferred: 1
+  immuneExecute: 1
+  showStunDebug: 0
+  allowBurnStack: 1

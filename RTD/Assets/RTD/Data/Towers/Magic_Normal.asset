@@ -18,5 +18,5 @@ MonoBehaviour:
   attackSpeed: 0.6
   range: 5
   buildCost: 5
-  towerPrefab: {fileID: 7171363995591784685, guid: eac647483829d874f84f9514b62b616e, type: 3}
+  towerPrefab: {fileID: 1367997974350908, guid: 929d739386479ad44970b8b56f101075, type: 3}
   gradeColor: {r: 1, g: 1, b: 1, a: 0}

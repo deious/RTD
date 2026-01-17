@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Critical_T3
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
   type: 0
-  tier: 2
-  affinity: 1
-  traitName: 
-  description: 
-  value: 0.3
+  tier: 3
+  allowed: -1
+  traitName: "\uCE58\uBA85\uD0C0"
+  description: "50% \uD655\uB960\uB85C \uCE58\uBA85\uD0C0(2.5\uBC30)\uAC00 \uC801\uC6A9\uB429\uB2C8\uB2E4"
+  value: 0.5
   duration: 0
   range: 2.5
   count: 0

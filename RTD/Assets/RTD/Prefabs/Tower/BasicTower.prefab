@@ -74,6 +74,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldBillboard
   targetCamera: {fileID: 0}
+  lockY: 1
 --- !u!1 &2565141783592770864
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,6 +474,35 @@ MonoBehaviour:
   firePoint: {fileID: 0}
   projectileSpeed: 18
   projectileLifeTime: 3
+  playSpawnPop: 1
+  spawnPopDuration: 0.14
+  spawnPopScaleMul: 1.18
+  spawnPopCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spawnParticlePrefab: {fileID: 0}
+  spawnParticlePoint: {fileID: 0}
 --- !u!1 &8841714957855586771
 GameObject:
   m_ObjectHideFlags: 0

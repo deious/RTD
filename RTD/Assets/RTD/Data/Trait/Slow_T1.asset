@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
   m_Name: Slow_T1
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
-  type: 1
-  tier: 0
-  affinity: 2
-  traitName: 
-  description: 
+  type: 8
+  tier: 1
+  allowed: 4
+  traitName: "\uBE59\uACB0"
+  description: "\uC801\uC744 \uB454\uD654\uC2DC\uCF1C \uC774\uB3D9 \uC18D\uB3C4(20%)\uB97C
+    \uD2B9\uC815 \uC2DC\uAC04 \uB3D9\uC548(1.5\uCD08)\uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4"
   value: 0.2
-  duration: 1.2
+  duration: 1.5
   range: 0
   count: 0

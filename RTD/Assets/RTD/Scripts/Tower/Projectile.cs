@@ -9,6 +9,9 @@ public class Projectile : MonoBehaviour
     private float _lifeTime;
     private float _lifeTimer;
     private TowerBase _sourceTower;
+    
+    private float _splashRadius;
+    private float _splashRatio;
 
     private ProjectilePool _poolOwner;
     public Projectile PrefabKey { get; private set; }
@@ -19,7 +22,15 @@ public class Projectile : MonoBehaviour
         PrefabKey = prefabKey;
     }
 
-    public void Init(MonsterAI target, float speed, int damage, float lifeTime, TowerBase sourceTower)
+    public void Init(
+        MonsterAI target,
+        float speed,
+        int damage,
+        float lifeTime,
+        TowerBase sourceTower,
+        float splashRadius = 0f,
+        float splashRatio = 0f
+    )
     {
         _targetMonster = target;
         _target = (target != null) ? target.transform : null;
@@ -28,6 +39,9 @@ public class Projectile : MonoBehaviour
         _lifeTime = lifeTime;
         _lifeTimer = 0f;
         _sourceTower = sourceTower;
+
+        _splashRadius = Mathf.Max(0f, splashRadius);
+        _splashRatio = Mathf.Clamp01(splashRatio);
     }
 
     private void Update()
@@ -63,15 +77,16 @@ public class Projectile : MonoBehaviour
     {
         if (_targetMonster != null)
         {
-            int finalDamage = _damage;
+            if (_sourceTower != null)
+                _sourceTower.ApplyHitAndReturnDamage(_targetMonster, _damage);
+            else
+                _targetMonster.TakeDamage(_damage);
             
-            if (_sourceTower != null && _sourceTower.RuntimeTrait != null)
+            if (_splashRadius > 0.01f && _splashRatio > 0f)
             {
-                finalDamage = TraitProcessor.ModifyDamage(_sourceTower.RuntimeTrait, finalDamage);
-                TraitProcessor.ApplyOnHit(_sourceTower.RuntimeTrait, _sourceTower, _targetMonster, finalDamage);
+                int splashDmg = Mathf.Max(1, Mathf.RoundToInt(_damage * _splashRatio));
+                TraitProcessor.ApplySplashDamage(_sourceTower, _targetMonster.transform.position, _splashRadius, _targetMonster, splashDmg);
             }
-
-            _targetMonster.TakeDamage(finalDamage);
         }
 
         ReleaseOrDestroy();

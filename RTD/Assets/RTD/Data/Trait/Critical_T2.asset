@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Critical_T2
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
   type: 0
-  tier: 1
-  affinity: 1
-  traitName: 
-  description: 
+  tier: 2
+  allowed: -1
+  traitName: "\uCE58\uBA85\uD0C0"
+  description: "20% \uD655\uB960\uB85C \uCE58\uBA85\uD0C0(2\uBC30)\uAC00 \uC801\uC6A9\uB429\uB2C8\uB2E4"
   value: 0.2
   duration: 0
   range: 2

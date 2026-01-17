@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
   m_Name: Chain_T2
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
-  type: 2
-  tier: 1
-  affinity: 2
-  traitName: 
-  description: 
-  value: 0.55
+  type: 1
+  tier: 2
+  allowed: -1
+  traitName: "\uC5F0\uC1C4"
+  description: "\uC801\uC744 \uD0C0\uACA9\uD558\uBA74 \uC8FC\uBCC0 \uC801\uC5D0\uAC8C
+    \uC5F0\uC1C4 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4(60% \uB300\uBBF8\uC9C0,\uCD5C\uB300
+    3\uBA85)"
+  value: 0.6
   duration: 0
   range: 8
   count: 3
