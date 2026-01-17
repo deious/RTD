@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 33917400407228750}
   - component: {fileID: 23187053197154270}
   - component: {fileID: -2770742625892107848}
+  - component: {fileID: -8351846053138311960}
   m_Layer: 7
   m_Name: TB_CanonTower_Lvl3
   m_TagString: Untagged
@@ -203,3 +204,58 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 8.467821, y: 4.350073, z: 8.467821}
   m_Center: {x: -0.00000023841858, y: 2.175036, z: 0}
+--- !u!114 &-8351846053138311960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1957591423995574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ae2fb2ee80bd8c45913f152c63b6f30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CannonTower
+  range: 3
+  attackInterval: 1
+  damage: 5
+  rangeVisual: {fileID: 0}
+  gradeRingRenderer: {fileID: 0}
+  typeLabel: {fileID: 0}
+  gradeRingAlpha: 0.75
+  data: {fileID: 0}
+  projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+  firePoint: {fileID: 0}
+  projectileSpeed: 12
+  projectileLifeTime: 3
+  playSpawnPop: 1
+  spawnPopDuration: 0.14
+  spawnPopScaleMul: 1.18
+  spawnPopCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spawnParticlePrefab: {fileID: 0}
+  spawnParticlePoint: {fileID: 0}
+  baseSplashRadius: 1.6
+  baseSplashRatio: 0.6

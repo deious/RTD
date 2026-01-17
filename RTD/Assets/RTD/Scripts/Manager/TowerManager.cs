@@ -442,7 +442,10 @@ public class TowerManager : MonoBehaviour
                     {
                         if (combineMode == CombineMode.Exact)
                         {
-                            resultTrait = traitDatabase.UpgradeTrait(baseTrait, resultData.grade);
+                            if (baseTrait != null)
+                                resultTrait = traitDatabase.UpgradeTrait(baseTrait, resultData.grade);
+                            else
+                                resultTrait = traitDatabase.RollTrait(resultData.towerId, resultData.grade);
                         }
                         else
                         {

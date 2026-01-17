@@ -13,7 +13,6 @@ public static class TraitProcessor
         {
             case TowerTraitType.Critical:
             {
-                // value=확률(0~1), range=배율(>=1)
                 float chance = Mathf.Clamp01(trait.value);
                 float mul = Mathf.Max(1f, trait.range);
 
@@ -22,44 +21,66 @@ public static class TraitProcessor
 
                 return baseDamage;
             }
-            default:
-                return baseDamage;
         }
+
+        return baseDamage;
     }
-    
+
     public static void ApplyOnHit(TowerTraitSO trait, TowerBase source, MonsterAI target, int hitDamage)
     {
         if (trait == null || target == null) return;
 
         switch (trait.type)
         {
-            case TowerTraitType.Slow:
-                ApplySlow(trait, target);
-                break;
-
+            // Common
             case TowerTraitType.Chain:
                 ApplyChain(trait, target, hitDamage);
                 break;
+            
+            case TowerTraitType.Execute:
+                ApplyExecute(trait, target);
+                break;
 
-            case TowerTraitType.Explosion:
-                ApplyExplosion(trait, target.transform.position, target, hitDamage);
+            // Magic
+            case TowerTraitType.Slow:
+                target.ApplySlow(Mathf.Clamp01(trait.value), Mathf.Max(0.1f, trait.duration));
+                break;
+
+            case TowerTraitType.Burn:
+                target.ApplyBurn(hitDamage, Mathf.Clamp01(trait.value), Mathf.Max(0.1f, trait.duration), Mathf.Max(1, trait.count));
+                break;
+
+            case TowerTraitType.Curse:
+                target.ApplyCurse(Mathf.Clamp01(trait.value), Mathf.Max(0.1f, trait.duration));
+                break;
+
+            // Cannon
+            case TowerTraitType.Stun:
+                if (Random.value < Mathf.Clamp01(trait.value))
+                    target.ApplyStun(Mathf.Max(0.05f, trait.duration));
+                break;
+
+            case TowerTraitType.Shrapnel:
+                ApplyShrapnel(trait, source, target.transform.position, hitDamage);
                 break;
         }
     }
-
-    private static void ApplySlow(TowerTraitSO trait, MonsterAI target)
+    
+    public static void ApplySplashDamage(TowerBase source, Vector3 center, float radius, MonsterAI directTarget, int splashDamage)
     {
-        // value=둔화율(0.3이면 30% 느려짐), duration=지속시간
-        float slowRate = Mathf.Clamp01(trait.value);
-        float dur = Mathf.Max(0.1f, trait.duration);
-        target.ApplySlow(slowRate, dur);
+        Collider[] cols = Physics.OverlapSphere(center, radius, MonsterLayerMask);
+        for (int i = 0; i < cols.Length; i++)
+        {
+            MonsterAI m = cols[i].GetComponentInParent<MonsterAI>();
+            if (m == null) continue;
+            if (m == directTarget) continue;
+            
+            m.TakeDamage(splashDamage);
+        }
     }
 
     private static void ApplyChain(TowerTraitSO trait, MonsterAI firstTarget, int hitDamage)
     {
-        // range = 다음 타겟 탐색 반경
-        // count = 추가로 맞출 타겟 수
-        // value = 연쇄 데미지 비율(원 데미지 대비)
         float searchRadius = Mathf.Max(0.1f, trait.range);
         int jumps = Mathf.Max(0, trait.count);
         float dmgRatio = Mathf.Clamp01(trait.value);
@@ -68,7 +89,6 @@ public static class TraitProcessor
 
         int chainDamage = Mathf.Max(1, Mathf.RoundToInt(hitDamage * dmgRatio));
 
-        // 이미 맞은 대상은 다시 맞지 않도록
         HashSet<MonsterAI> hitSet = new HashSet<MonsterAI>();
         hitSet.Add(firstTarget);
 
@@ -80,40 +100,62 @@ public static class TraitProcessor
             if (next == null) break;
 
             hitSet.Add(next);
-            
+
             if (CombatVFX.Instance != null)
                 CombatVFX.Instance.PlayChain(current.transform.position, next.transform.position);
-            
-            next.TakeDamage(chainDamage);
 
+            next.TakeDamage(chainDamage);
             current = next;
         }
     }
-
-    private static void ApplyExplosion(TowerTraitSO trait, Vector3 center, MonsterAI directTarget, int hitDamage)
+    
+    private static void ApplyExecute(TowerTraitSO trait, MonsterAI target)
     {
-        // range = 폭발 반경
-        // value = 폭발 데미지 비율
-        float radius = Mathf.Max(0.1f, trait.range);
-        float dmgRatio = Mathf.Clamp01(trait.value);
-
-        if (dmgRatio <= 0f) return;
-
-        int splashDamage = Mathf.Max(1, Mathf.RoundToInt(hitDamage * dmgRatio));
+        float hpThreshold = Mathf.Clamp01(trait.range);
+        float bossMul = Mathf.Max(1f, trait.duration);
         
-        if (CombatVFX.Instance != null)
-            CombatVFX.Instance.PlayExplosion(center, radius);
-
-        Collider[] cols = Physics.OverlapSphere(center, radius, MonsterLayerMask);
-
-        for (int i = 0; i < cols.Length; i++)
+        if (target.Hp01 > hpThreshold)
+            return;
+        
+        if (target.ImmuneExecute)
         {
-            MonsterAI m = cols[i].GetComponentInParent<MonsterAI>();
-            if (m == null) continue;
-            
-            if (m == directTarget) continue;
+            int extraDamage = Mathf.Max(
+                1,
+                Mathf.RoundToInt(target.CurrentHp * (bossMul - 1f))
+            );
+            target.TakeDamage(extraDamage);
+            return;
+        }
+        
+        target.TakeDamage(target.CurrentHp);
+    }
 
-            m.TakeDamage(splashDamage);
+    private static void ApplyShrapnel(TowerTraitSO trait, TowerBase source, Vector3 center, int hitDamage)
+    {
+        int shards = Mathf.Max(1, trait.count);
+        float radius = Mathf.Max(0.1f, trait.range);
+        float ratio = Mathf.Clamp01(trait.value);
+
+        if (ratio <= 0f) return;
+
+        int shardDamage = Mathf.Max(1, Mathf.RoundToInt(hitDamage * ratio));
+
+        // “파편”은 주변에 작은 추가 폭발을 여러 번 발생시키는 느낌
+        for (int i = 0; i < shards; i++)
+        {
+            Vector2 rnd = Random.insideUnitCircle * (radius * 0.6f);
+            Vector3 p = center + new Vector3(rnd.x, 0f, rnd.y);
+
+            if (CombatVFX.Instance != null)
+                CombatVFX.Instance.PlayExplosion(p, radius * 0.5f);
+
+            Collider[] cols = Physics.OverlapSphere(p, radius * 0.5f, MonsterLayerMask);
+            for (int c = 0; c < cols.Length; c++)
+            {
+                MonsterAI m = cols[c].GetComponentInParent<MonsterAI>();
+                if (m == null) continue;
+                m.TakeDamage(shardDamage);
+            }
         }
     }
 

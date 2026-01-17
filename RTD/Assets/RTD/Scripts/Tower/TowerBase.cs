@@ -35,6 +35,8 @@ public abstract class TowerBase : MonoBehaviour
 
     private Renderer[] renderers;
     protected float attackTimer;
+    private MonsterAI _focusTarget;
+    private int _focusStacks;
     
     public GridTile CurrentTile { get; private set; }
     public TowerTraitSO RuntimeTrait { get; private set; }
@@ -62,27 +64,6 @@ public abstract class TowerBase : MonoBehaviour
     
     protected abstract void Attack();
     
-    protected bool TryFireProjectile(MonsterAI target)
-    {
-        if (target == null)
-            return false;
-
-        if (projectilePrefab == null)
-            return false;
-
-        Vector3 spawnPos = (firePoint != null) ? firePoint.position : (transform.position + Vector3.up * 0.7f);
-
-        if (ProjectilePool.Instance == null)
-            return false;
-
-        Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
-        if (proj == null)
-            return false;
-
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this);
-        return true;
-    }
-    
     protected virtual MonsterAI FindTarget()
     {
         MonsterAI[] monsters = FindObjectsOfType<MonsterAI>();
@@ -104,6 +85,66 @@ public abstract class TowerBase : MonoBehaviour
         }
 
         return closest;
+    }
+    
+    protected bool TryFireProjectile(MonsterAI target)
+    {
+        return TryFireProjectile(target, 0f, 0f);
+    }
+
+    protected bool TryFireProjectile(MonsterAI target, float splashRadius, float splashRatio)
+    {
+        if (target == null) return false;
+        if (projectilePrefab == null) return false;
+
+        Vector3 spawnPos = (firePoint != null) ? firePoint.position : (transform.position + Vector3.up * 0.7f);
+        if (ProjectilePool.Instance == null) return false;
+
+        Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
+        if (proj == null) return false;
+
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, splashRadius, splashRatio);
+        return true;
+    }
+
+    public int ApplyHitAndReturnDamage(MonsterAI target, int baseDamage)
+    {
+        if (target == null) return 0;
+
+        int dmg = baseDamage;
+        
+        if (RuntimeTrait != null && RuntimeTrait.type == TowerTraitType.Execute)
+        {
+            float threshold = Mathf.Clamp01(RuntimeTrait.range);
+            float bonus = Mathf.Max(0f, RuntimeTrait.value);
+            if (target.Hp01 <= threshold)
+                dmg = Mathf.RoundToInt(dmg * (1f + bonus));
+        }
+        
+        if (RuntimeTrait != null && RuntimeTrait.type == TowerTraitType.Focus)
+        {
+            if (_focusTarget == target) _focusStacks++;
+            else { _focusTarget = target; _focusStacks = 1; }
+
+            int maxStacks = Mathf.Max(1, RuntimeTrait.count);
+            _focusStacks = Mathf.Min(_focusStacks, maxStacks);
+
+            float per = Mathf.Max(0f, RuntimeTrait.value);
+            float mul = 1f + per * (_focusStacks - 1);
+            dmg = Mathf.RoundToInt(dmg * mul);
+        }
+        else
+        {
+            _focusTarget = null;
+            _focusStacks = 0;
+        }
+        
+        dmg = TraitProcessor.ModifyDamage(RuntimeTrait, dmg);
+        
+        TraitProcessor.ApplyOnHit(RuntimeTrait, this, target, dmg);
+
+        target.TakeDamage(dmg);
+        return dmg;
     }
     
     public void SetSelected(bool selected)

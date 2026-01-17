@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 33472251016460910}
   - component: {fileID: 23189282200214684}
   - component: {fileID: 6638251675488259995}
+  - component: {fileID: -237408673341921786}
   m_Layer: 7
   m_Name: TB_MageTower_Lvl2
   m_TagString: Untagged
@@ -113,6 +114,61 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 7.4802976, y: 5.9945965, z: 7.480296}
   m_Center: {x: -0.0000011920929, y: 2.9972968, z: 0.0000010728836}
+--- !u!114 &-237408673341921786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064594759508384}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ea42723eecefba42864bc06db9d15b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MagicTower
+  range: 3
+  attackInterval: 1
+  damage: 5
+  rangeVisual: {fileID: 0}
+  gradeRingRenderer: {fileID: 0}
+  typeLabel: {fileID: 0}
+  gradeRingAlpha: 0.75
+  data: {fileID: 0}
+  projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+  firePoint: {fileID: 0}
+  projectileSpeed: 18
+  projectileLifeTime: 3
+  playSpawnPop: 1
+  spawnPopDuration: 0.14
+  spawnPopScaleMul: 1.18
+  spawnPopCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spawnParticlePrefab: {fileID: 0}
+  spawnParticlePoint: {fileID: 0}
+  baseDotDps: 6
+  baseDotDuration: 2.5
 --- !u!1 &1288453322137492
 GameObject:
   m_ObjectHideFlags: 0

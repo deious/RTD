@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
-  m_Name: Explosion_T2
+  m_Name: Burn_T2
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
-  type: 3
-  tier: 1
-  affinity: 0
-  traitName: 
-  description: 
-  value: 0.7
-  duration: 0
-  range: 3
-  count: 0
+  type: 9
+  tier: 2
+  allowed: 4
+  traitName: "\uC5F0\uC18C"
+  description: "\uC801\uC5D0\uAC8C \uD654\uC0C1 \uD53C\uD574\uB97C \uBD80\uC5EC\uD569\uB2C8\uB2E4(\uAE30\uBCF8
+    \uB300\uBBF8\uC9C0\uC758 20%, \uCD5C\uB300 4\uC2A4\uD0DD)"
+  value: 0.2
+  duration: 3.5
+  range: 0
+  count: 4
