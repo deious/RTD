@@ -68,6 +68,9 @@ public static class TraitProcessor
     
     public static void ApplySplashDamage(TowerBase source, Vector3 center, float radius, MonsterAI directTarget, int splashDamage)
     {
+        if (CombatVFX.Instance != null)
+            CombatVFX.Instance.PlayExplosion(center, radius);
+        
         Collider[] cols = Physics.OverlapSphere(center, radius, MonsterLayerMask);
         for (int i = 0; i < cols.Length; i++)
         {
