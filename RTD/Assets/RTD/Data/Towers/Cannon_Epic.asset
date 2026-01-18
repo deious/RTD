@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: cannon_epic
   grade: 2
+  displayName: "\uACF5\uC131 \uD0C0\uC6CC"
   damage: 9
   attackSpeed: 1
   range: 9

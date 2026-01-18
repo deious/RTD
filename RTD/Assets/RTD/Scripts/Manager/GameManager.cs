@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using RTD.Scripts.GamePlay.Wave;
+using Cysharp.Threading.Tasks;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int startLife = 10;
     [SerializeField] private int startWave = 1;
     [SerializeField] private int maxWave = 20;
+    [SerializeField] private float intermissionSeconds = 30f;
     
     [Header("Wave Patterns")]
     [SerializeField] private WavePatternSO[] wavePatterns;
@@ -20,6 +22,9 @@ public class GameManager : MonoBehaviour
     private int gold;
     private int life;
     private int currentWave;
+    private bool _waveRunning;
+    private bool _waitingIntermission;
+    private bool _waitingAugment;
     
     private WaveModifiers _currentWaveMods;
 
@@ -57,7 +62,14 @@ public class GameManager : MonoBehaviour
         UIManager.Instance.UpdateGold(gold);
         UIManager.Instance.UpdateLife(life);
         UIManager.Instance.UpdateWave(currentWave, maxWave);
-        StartWave(currentWave);
+        
+        if (MonsterSpawner.Instance != null)
+        {
+            MonsterSpawner.Instance.OnWaveCleared += HandleWaveCleared;
+            MonsterSpawner.Instance.OnWaveMonsterCountChanged += HandleWaveMonsterCountChanged;
+        }
+        
+        StartWaveLoopAsync().Forget();
     }
 
     private void Update()
@@ -92,29 +104,15 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    public void AddGold(int amount)
+    private async UniTaskVoid StartWaveLoopAsync()
     {
-        gold += amount;
-        if (gold < 0) 
-            gold = 0;
-
-        UIManager.Instance.UpdateGold(gold);
+        await RunIntermissionAsync(intermissionSeconds);
+        BeginWave();
     }
 
-    public void ChangeLife(int amount)
+    private void BeginWave()
     {
-        life += amount;
-        UIManager.Instance.UpdateLife(life);
-    }
-
-    public void NextWave()
-    {
-        currentWave++;
-        if (currentWave > maxWave)
-            currentWave = maxWave;
-
-        UIManager.Instance.UpdateWave(currentWave, maxWave);
-
+        _waveRunning = true;
         StartWave(currentWave);
     }
     
@@ -161,23 +159,102 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
     }
     
-    private void HandleBossDied()
+    private void HandleWaveCleared()
     {
-        MonsterAI.OnBossDied -= HandleBossDied;
+        if (!_waveRunning) return;
+        _waveRunning = false;
         
-        if (augmentSystem == null)
+        var pattern = FindWavePattern(currentWave);
+        bool isBossWave = (pattern != null && pattern.isBossWave);
+
+        if (isBossWave)
         {
-            Debug.LogWarning("[GameManager] augmentSystem is null. NextWave immediately.");
-            NextWave();
+            _waitingAugment = true;
+            StartBossIntermission();
             return;
         }
 
-        augmentSystem.BeginChoice(NextWave);
+        AutoNextWaveAsync().Forget();
+    }
+    
+    private void StartBossIntermission()
+    {
+        if (_waitingIntermission) return;
+
+        _waitingIntermission = true;
+        
+        RunIntermissionAsync(intermissionSeconds).ContinueWith(() =>
+        {
+            _waitingIntermission = false;
+            TryStartNextWave();
+        }).Forget();
+        
+        if (augmentSystem != null)
+        {
+            augmentSystem.BeginChoice(() =>
+            {
+                _waitingAugment = false;
+                TryStartNextWave();
+            });
+        }
+        else
+        {
+            _waitingAugment = false;
+        }
+    }
+
+    private void TryStartNextWave()
+    {
+        if (_waitingAugment || _waitingIntermission)
+            return;
+
+        NextWave();
+        _waveRunning = true;
+    }
+
+    private async UniTaskVoid AutoNextWaveAsync()
+    {
+        if (_waitingIntermission) return;
+        _waitingIntermission = true;
+
+        await RunIntermissionAsync(intermissionSeconds);
+
+        _waitingIntermission = false;
+
+        NextWave();
+        _waveRunning = true;
+    }
+
+    private async UniTask RunIntermissionAsync(float seconds)
+    {
+        float t = seconds;
+        while (t > 0f)
+        {
+            if (UIManager.Instance != null)
+                UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(t));
+
+            await UniTask.Delay(1000);
+            t -= 1f;
+        }
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateNextWaveTimer(0);
+    }
+    
+    private void HandleBossDied()
+    {
+        MonsterAI.OnBossDied -= HandleBossDied;
     }
     
     private void OnDestroy()
     {
         MonsterAI.OnBossDied -= HandleBossDied;
+
+        if (MonsterSpawner.Instance != null)
+        {
+            MonsterSpawner.Instance.OnWaveCleared -= HandleWaveCleared;
+            MonsterSpawner.Instance.OnWaveMonsterCountChanged -= HandleWaveMonsterCountChanged;
+        }
     }
 
     private WavePatternSO FindWavePattern(int waveIndex)
@@ -195,6 +272,12 @@ public class GameManager : MonoBehaviour
 
         return null;
     }
+    
+    private void HandleWaveMonsterCountChanged(int alive, int total)
+    {
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateWaveMonsterCount(alive, total);
+    }
 
     public bool TrySpendGold(int amount)
     {
@@ -206,5 +289,29 @@ public class GameManager : MonoBehaviour
         gold -= amount;
         UIManager.Instance.UpdateGold(gold);
         return true;
+    }
+    
+    public void AddGold(int amount)
+    {
+        gold += amount;
+        if (gold < 0) 
+            gold = 0;
+
+        UIManager.Instance.UpdateGold(gold);
+    }
+
+    public void ChangeLife(int amount)
+    {
+        life += amount;
+        UIManager.Instance.UpdateLife(life);
+    }
+
+    public void NextWave()
+    {
+        currentWave++;
+        if (currentWave > maxWave)
+            currentWave = maxWave;
+
+        StartWave(currentWave);
     }
 }

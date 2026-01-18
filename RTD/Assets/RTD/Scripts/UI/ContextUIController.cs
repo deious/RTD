@@ -66,23 +66,33 @@ public class ContextUIController : MonoBehaviour
         TowerData d = tower.GetData();
         if (d != null)
         {
-            if (txtName != null)  txtName.text = string.IsNullOrEmpty(d.towerId) ? "Tower" : d.towerId;
-            if (txtGrade != null) txtGrade.text = d.grade.ToString();
+            if (txtName != null)
+                txtName.text = !string.IsNullOrEmpty(d.displayName) ? d.displayName : d.towerId;
+
+            if (txtGrade != null)
+                txtGrade.text = GradeToKr(d.grade);
         }
         else
         {
-            if (txtName != null)  txtName.text = "Tower";
+            if (txtName != null)  txtName.text = "타워";
             if (txtGrade != null) txtGrade.text = "-";
         }
-        
+
         TowerTraitSO trait = TryGetTrait(tower);
         bool hasTrait = trait != null;
+
         if (traitRow != null) traitRow.SetActive(hasTrait);
-        if (txtTrait != null && hasTrait)
-            txtTrait.text = $"{trait.type} {trait.tier}";
-        
+
+        if (txtTrait != null)
+        {
+            if (hasTrait)
+                txtTrait.text = FormatTraitKr(trait);
+            else
+                txtTrait.text = "";
+        }
+
         if (txtStats != null)
-            txtStats.text = BuildStatsText(tower);
+            txtStats.text = BuildStatsTextKr(tower);
         
         if (btnSell != null)
         {
@@ -268,6 +278,44 @@ public class ContextUIController : MonoBehaviour
             _ => 999999
         };
     }
+    
+    private static string GradeToKr(TowerGrade grade)
+    {
+        return grade switch
+        {
+            TowerGrade.Normal => "일반",
+            TowerGrade.Rare => "희귀",
+            TowerGrade.Epic => "영웅",
+            TowerGrade.Legendary => "전설",
+            _ => grade.ToString()
+        };
+    }
+
+    private static int TierToInt(TraitTier tier) => (int)tier;
+    private static string FormatTraitKr(TowerTraitSO trait)
+    {
+        if (trait == null) return "";
+
+        string name = !string.IsNullOrEmpty(trait.traitName) ? trait.traitName : trait.type.ToString();
+
+        int t = TierToInt(trait.tier);
+        if (t <= 0) return name;
+
+        return $"{name} 티어 {t}";
+    }
+
+    private string BuildStatsTextKr(TowerBase tower)
+    {
+        if (tower == null) return "-";
+
+        float attacksPerSec = (tower.attackInterval > 0.0001f) ? (1f / tower.attackInterval) : 0f;
+
+        return
+            $"대미지: {tower.damage}\n" +
+            $"공격속도: {attacksPerSec:0.##}\n" +
+            $"공격범위: {tower.range:0.##}";
+    }
+
     
     public void ShowBuild(int minCost, int buildLevel)
     {
