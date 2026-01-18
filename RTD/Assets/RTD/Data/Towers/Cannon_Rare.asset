@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: cannon_rare
   grade: 1
+  displayName: "\uACF5\uC131 \uD0C0\uC6CC"
   damage: 7
   attackSpeed: 0.7
   range: 7

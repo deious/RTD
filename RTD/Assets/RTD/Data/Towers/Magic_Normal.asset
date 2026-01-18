@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: magic_normal
   grade: 0
+  displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 5
   attackSpeed: 0.6
   range: 5

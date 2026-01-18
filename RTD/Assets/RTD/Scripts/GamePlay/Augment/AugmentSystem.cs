@@ -44,8 +44,7 @@ public class AugmentSystem : MonoBehaviour
         _onChoiceComplete = onChoiceComplete;
 
         RollOptions(_offered);
-
-        Time.timeScale = 0f;
+        
         augmentUI.Show(_offered, OnPicked);
     }
 
@@ -62,8 +61,6 @@ public class AugmentSystem : MonoBehaviour
 
         if (augmentUI != null)
             augmentUI.Hide();
-
-        Time.timeScale = 1f;
 
         IsChoosing = false;
 

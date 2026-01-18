@@ -186,11 +186,15 @@ public class MonsterAI : MonoBehaviour
 
     private void ReachGoal()
     {
+        if (GameManager.Instance != null)
+            GameManager.Instance.ChangeLife(-1);
+
         if (_shieldVfxInstance != null)
-        {
             Destroy(_shieldVfxInstance.gameObject);
-        }
         
+        if (IsBoss)
+            OnBossDied?.Invoke();
+
         Destroy(gameObject);
     }
     
