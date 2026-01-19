@@ -20,31 +20,40 @@ public class OrbitCamera : MonoBehaviour
 
     [Header("Panning")]
     public float panSpeed = 10f;
+    
+    [Header("Mode")]
+    [SerializeField] private bool useTransformAsInitialView = false;
 
     private float _yaw = 45f;
     private float _pitch = 45f;
+    private bool _lockInput;
     
     private Vector3 _externalPosOffset;
+    
+    public float Yaw => _yaw;
+    public float Pitch => _pitch;
+    public float Distance => distance;
 
     private void Start()
     {
         if (target == null)
         {
-            Debug.LogWarning("OrbitCamera: Target이 비었습니다. (0,0,0)에 임시 타겟을 생성합니다.");
             GameObject temp = new GameObject("CameraTarget");
             temp.transform.position = Vector3.zero;
             target = temp.transform;
         }
 
-        // 현재 카메라 위치 기준으로 초기 yaw/pitch 계산
-        Vector3 dir = transform.position - (target.position + targetOffset);
-        distance = dir.magnitude;
-
-        if (distance > 0.01f)
+        if (useTransformAsInitialView)
         {
-            Vector3 dirNorm = dir.normalized;
-            _pitch = Mathf.Asin(dirNorm.y) * Mathf.Rad2Deg;
-            _yaw = Mathf.Atan2(dirNorm.x, dirNorm.z) * Mathf.Rad2Deg;
+            Vector3 dir = transform.position - (target.position + targetOffset);
+            distance = dir.magnitude;
+
+            if (distance > 0.01f)
+            {
+                Vector3 dirNorm = dir.normalized;
+                _pitch = Mathf.Asin(dirNorm.y) * Mathf.Rad2Deg;
+                _yaw = Mathf.Atan2(dirNorm.x, dirNorm.z) * Mathf.Rad2Deg;
+            }
         }
     }
 
@@ -52,9 +61,12 @@ public class OrbitCamera : MonoBehaviour
     {
         if (target == null) return;
 
-        HandleRotation();
-        HandleZoom();
-        HandlePan();
+        if (!_lockInput)
+        {
+            HandleRotation();
+            HandleZoom();
+            HandlePan();
+        }
 
         UpdateCameraPosition();
     }
@@ -83,7 +95,7 @@ public class OrbitCamera : MonoBehaviour
         float scroll = Mouse.current.scroll.ReadValue().y;
         if (Mathf.Abs(scroll) > 0.01f)
         {
-            float zoomDelta = -scroll * zoomSpeed * Time.deltaTime * 0.1f;
+            float zoomDelta = -scroll * zoomSpeed * 0.01f;
             distance = Mathf.Clamp(distance + zoomDelta, minDistance, maxDistance);
         }
     }
@@ -111,10 +123,9 @@ public class OrbitCamera : MonoBehaviour
 
         if (panDir.sqrMagnitude > 0.0001f)
         {
-            /*Vector3 pan = panDir.normalized * panSpeed * Time.deltaTime;*/
             Vector3 dir = panDir;
 
-            if (dir.sqrMagnitude > 0.0001f) // normalized보다 직접 Normalize()가 효율적이라 위 코드에서 아래 코드로 변경
+            if (dir.sqrMagnitude > 0.0001f)
                 dir.Normalize();
 
             Vector3 pan = dir * (panSpeed * Time.deltaTime);
@@ -134,8 +145,70 @@ public class OrbitCamera : MonoBehaviour
         _externalPosOffset = Vector3.zero;
     }
     
+    [ContextMenu("Print Camera View")]
+    private void PrintView()
+    {
+        Debug.Log($"Yaw={_yaw:F2}, Pitch={_pitch:F2}, Dist={distance:F2}, Target={target.position}");
+    }
+    
     public void AddPositionOffset(Vector3 offset)
     {
         _externalPosOffset += offset;
     }
+    
+    public void SetInitialView(
+        Vector3 targetPos,
+        float yaw,
+        float pitch,
+        float dist)
+    {
+        target.position = targetPos;
+        _yaw = yaw;
+        _pitch = pitch;
+        distance = dist;
+
+        UpdateCameraPosition();
+    }
+    
+    public void SetView(Vector3 targetPos, float yaw, float pitch, float dist)
+    {
+        if (target != null) target.position = targetPos;
+        _yaw = yaw;
+        _pitch = pitch;
+        distance = dist;
+        UpdateCameraPosition();
+    }
+    
+    public async Cysharp.Threading.Tasks.UniTask PlayIntroToView(
+        Vector3 startTargetPos, float startYaw, float startPitch, float startDist,
+        Vector3 endTargetPos,   float endYaw,   float endPitch,   float endDist,
+        float duration)
+    {
+        SetView(startTargetPos, startYaw, startPitch, startDist);
+
+        float t = 0f;
+        duration = Mathf.Max(0.01f, duration);
+        
+        float yawFrom = startYaw;
+        float yawTo = endYaw;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime / duration;
+            float s = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
+
+            float yaw = Mathf.LerpAngle(yawFrom, yawTo, s);
+            float pitch = Mathf.Lerp(startPitch, endPitch, s);
+            float dist = Mathf.Lerp(startDist, endDist, s);
+            Vector3 tp = Vector3.Lerp(startTargetPos, endTargetPos, s);
+
+            SetView(tp, yaw, pitch, dist);
+
+            await Cysharp.Threading.Tasks.UniTask.Yield();
+        }
+        
+        SetView(endTargetPos, endYaw, endPitch, endDist);
+    }
+    
+    public void SetInputLock(bool locked) => _lockInput = locked;
 }

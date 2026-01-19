@@ -42,6 +42,12 @@ public class MonsterAI : MonoBehaviour
     [Header("Status: Curse (Damage Taken Mul)")]
     private float _curseTimer;
     private float _curseExtraMul;
+    
+    [Header("Lane")]
+    [SerializeField] private bool randomLane = true;
+    [SerializeField] private int fixedLaneIndex = 1;
+    private int _laneIndex;
+    private Vector3 _currentTargetPos;
 
     private float _dotTimer = 0f;       // 남은 DOT 시간
     private float _dotTickTimer = 0f;   // 다음 틱까지 남은 시간
@@ -82,7 +88,16 @@ public class MonsterAI : MonoBehaviour
         }
         
         Transform startPoint = GridManager.Instance.GetWaypoint(0);
-        transform.position = startPoint.position;
+        if (randomLane)
+        {
+            _laneIndex = Random.Range(0, GridManager.Instance.LaneCount);
+        }
+        else
+        {
+            _laneIndex = Mathf.Clamp(fixedLaneIndex, 0, GridManager.Instance.LaneCount - 1);
+        }
+        
+        transform.position = GridManager.Instance.GetLaneTargetPos(0, _laneIndex);
         
         _currentIndex = 1;
         SetNextTarget();
@@ -145,18 +160,14 @@ public class MonsterAI : MonoBehaviour
     
     private void MoveAlongPath()
     {
-        if (_currentTarget == null)
-            return;
-
-        Vector3 targetPos = _currentTarget.position;
+        Vector3 targetPos = _currentTargetPos;
         Vector3 dir = targetPos - transform.position;
-        
         dir.y = 0f;
 
         float distanceToTarget = dir.magnitude;
         float effectiveSpeed = moveSpeed * _slowMul;
         float moveThisFrame = effectiveSpeed * Time.deltaTime;
-        
+
         if (distanceToTarget <= moveThisFrame + stoppingDistance)
         {
             _currentIndex++;
@@ -166,7 +177,7 @@ public class MonsterAI : MonoBehaviour
 
         Vector3 move = dir.normalized * moveThisFrame;
         transform.position += move;
-        
+
         if (dir.sqrMagnitude > 0.0001f)
         {
             transform.rotation = Quaternion.LookRotation(dir);
@@ -181,7 +192,7 @@ public class MonsterAI : MonoBehaviour
             return;
         }
 
-        _currentTarget = GridManager.Instance.GetWaypoint(_currentIndex);
+        _currentTargetPos = GridManager.Instance.GetLaneTargetPos(_currentIndex, _laneIndex);
     }
 
     private void ReachGoal()

@@ -7,16 +7,20 @@ public class GridManager : MonoBehaviour
 
     public int width = 16;
     public int height = 12;
-    public float cellSize = 1f;
+    public float cellSize = 10f;
 
-    public GameObject buildablePrefab;
-    public GameObject pathPrefab;
-
+    [Header("Scene Tiles Root (MapRoot/Tiles)")]
     public Transform tileParent;
 
-    [Header("Path Tiles")] public List<Vector2Int> pathTiles = new List<Vector2Int>();
+    [Header("Waypoints")]
+    public List<Transform> waypoints = new List<Transform>();
 
-    [Header("Waypoints")] public List<Transform> waypoints = new List<Transform>();
+    [Header("Waypoint Source")]
+    [SerializeField] private WaypointPath waypointPath;
+
+    [Header("Lanes")]
+    [SerializeField] private int laneCount = 3;
+    [SerializeField] private float laneOffset = 0.35f;
 
     private GridTile[,] tiles;
 
@@ -25,120 +29,131 @@ public class GridManager : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Debug.LogWarning("여러 개의 GridManager가 씬에 있습니다.");
+            Destroy(gameObject);
+            return;
         }
 
         Instance = this;
 
-        GenerateGrid();
-        GenerateWaypoints();
+        BuildTilesFromScene();
+        
+        if (!LoadWaypointsFromPath())
+        {
+            Debug.LogError("WaypointPath가 지정되지 않았습니다. MapRoot/WaypointPath를 할당하세요.");
+        }
     }
 
-    private void GenerateGrid()
+    private void BuildTilesFromScene()
     {
         tiles = new GridTile[width, height];
 
-        for (int x = 0; x < width; x++)
+        if (tileParent == null)
         {
-            for (int y = 0; y < height; y++)
-            {
-                Vector2Int pos = new Vector2Int(x, y);
-                bool isPath = pathTiles.Contains(pos);
-
-                GameObject prefab = isPath ? pathPrefab : buildablePrefab;
-                TileType tileType = isPath ? TileType.Path : TileType.Buildable;
-
-                CreateTile(pos, prefab, tileType);
-            }
-        }
-    }
-
-    private void CreateTile(Vector2Int gridPos, GameObject prefab, TileType tileType)
-    {
-        Vector3 worldPos = new Vector3(gridPos.x * cellSize, 0f, gridPos.y * cellSize);
-
-        GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity, tileParent);
-
-        GridTile tile = obj.GetComponent<GridTile>();
-        if (tile == null)
-        {
-            tile = obj.AddComponent<GridTile>();
-        }
-
-        tile.Init(gridPos, tileType);
-
-        tiles[gridPos.x, gridPos.y] = tile;
-    }
-
-    private void GenerateWaypoints()
-    {
-        waypoints.Clear();
-
-        if (tiles == null)
-        {
-            Debug.LogError("타일이 아직 생성되지 않았습니다. GenerateGrid 이후에 호출해야 합니다.");
+            Debug.LogError("tileParent가 비어 있습니다. MapRoot/Tiles를 할당하세요.");
             return;
         }
 
-        foreach (Vector2Int gridPos in pathTiles)
+        var found = tileParent.GetComponentsInChildren<GridTile>(true);
+
+        foreach (var t in found)
         {
-            if (gridPos.x < 0 || gridPos.x >= width || gridPos.y < 0 || gridPos.y >= height)
+            Vector2Int p = t.GridPos;
+
+            if (p.x < 0 || p.x >= width || p.y < 0 || p.y >= height)
             {
-                Debug.LogWarning($"PathTile {gridPos} 좌표가 Grid 범위를 벗어났습니다.");
+                Debug.LogWarning($"GridPos out of range: {t.name} pos={p}");
                 continue;
             }
 
-            GridTile tile = tiles[gridPos.x, gridPos.y];
-            if (tile == null)
+            if (tiles[p.x, p.y] != null && tiles[p.x, p.y] != t)
             {
-                Debug.LogWarning($"PathTile {gridPos} 위치에 타일이 없습니다.");
+                Debug.LogWarning($"Duplicate tile at {p}: {tiles[p.x, p.y].name} and {t.name}");
                 continue;
             }
 
-            waypoints.Add(tile.transform);
+            tiles[p.x, p.y] = t;
+        }
+
+        // 누락 체크(선택)
+        for (int x = 0; x < width; x++)
+        for (int y = 0; y < height; y++)
+        {
+            if (tiles[x, y] == null)
+                Debug.LogWarning($"Missing GridTile at ({x},{y}) under tileParent={tileParent.name}");
+        }
+    }
+
+    private bool LoadWaypointsFromPath()
+    {
+        waypoints.Clear();
+
+        if (waypointPath == null)
+            return false;
+
+        if (waypointPath.points == null || waypointPath.points.Count == 0)
+        {
+            Debug.LogError("WaypointPath가 비어있습니다. points를 채워주세요.");
+            return true;
+        }
+
+        for (int i = 0; i < waypointPath.points.Count; i++)
+        {
+            Transform p = waypointPath.points[i];
+            if (p == null)
+            {
+                Debug.LogWarning($"WaypointPath points[{i}]가 null 입니다.");
+                continue;
+            }
+            waypoints.Add(p);
         }
 
         if (waypoints.Count == 0)
-        {
-            Debug.LogWarning("Waypoint가 하나도 생성되지 않았습니다. pathTiles를 확인하세요.");
-        }
+            Debug.LogError("WaypointPath에서 유효한 웨이포인트를 하나도 가져오지 못했습니다.");
+
+        return true;
     }
 
     public Transform GetWaypoint(int index)
     {
         if (index < 0 || index >= waypoints.Count)
             return null;
-
         return waypoints[index];
     }
-    
+
     public int WaypointCount => waypoints.Count;
-    
-    #if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            if (pathTiles == null || pathTiles.Count == 0)
-                return;
-    
-            Gizmos.color = Color.yellow;
-    
-            Vector3 prevPos = Vector3.zero;
-            bool hasPrev = false;
-    
-            foreach (Vector2Int gridPos in pathTiles)
-            {
-                Vector3 worldPos = new Vector3(gridPos.x * cellSize, 0f, gridPos.y * cellSize);
-                Vector3 drawPos = worldPos + Vector3.up * 0.3f;
-    
-                Gizmos.DrawSphere(drawPos, 0.1f);
-    
-                if (hasPrev)
-                {
-                    Gizmos.DrawLine(prevPos, drawPos);
-                }
-    
-                prevPos = drawPos;
-                hasPrev = true;
-            }
-        }
-    #endif
+
+    public Vector3 GetLaneTargetPos(int waypointIndex, int laneIndex)
+    {
+        if (waypoints == null || waypoints.Count == 0)
+            return Vector3.zero;
+
+        waypointIndex = Mathf.Clamp(waypointIndex, 0, waypoints.Count - 1);
+        laneIndex = Mathf.Clamp(laneIndex, 0, Mathf.Max(0, laneCount - 1));
+
+        Transform wp = waypoints[waypointIndex];
+        Vector3 wpPos = wp.position;
+
+        Vector3 forward;
+        if (waypointIndex < waypoints.Count - 1)
+            forward = (waypoints[waypointIndex + 1].position - wpPos);
+        else if (waypointIndex > 0)
+            forward = (wpPos - waypoints[waypointIndex - 1].position);
+        else
+            forward = Vector3.forward;
+
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.0001f)
+            forward = Vector3.forward;
+
+        forward.Normalize();
+
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+
+        float center = (laneCount - 1) * 0.5f;
+        float laneSigned = laneIndex - center;
+
+        return wpPos + right * (laneSigned * laneOffset);
+    }
+
+    public int LaneCount => laneCount;
 }
