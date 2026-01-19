@@ -18,6 +18,8 @@ public class GameManager : MonoBehaviour
     
     [Header("Systems")]
     [SerializeField] private AugmentSystem augmentSystem;
+    [SerializeField] private OrbitCamera orbitCamera;
+    [SerializeField] private GridManager grid;
 
     private int gold;
     private int life;
@@ -59,6 +61,29 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        PlayCameraIntro().Forget();
+        
+        if (orbitCamera != null && grid != null)
+        {
+            float cell = grid.cellSize;
+            int w = grid.width;
+            int h = grid.height;
+            
+            Vector3 topLeft = new Vector3(0f, 0f, 0f);
+            
+            float diag = Mathf.Sqrt(
+                (w * cell) * (w * cell) +
+                (h * cell) * (h * cell)
+            );
+
+            orbitCamera.SetInitialView(
+                targetPos: topLeft,
+                yaw: 225f,
+                pitch: 55f,
+                dist: diag * 0.9f
+            );
+        }
+        
         UIManager.Instance.UpdateGold(gold);
         UIManager.Instance.UpdateLife(life);
         UIManager.Instance.UpdateWave(currentWave, maxWave);
@@ -104,6 +129,29 @@ public class GameManager : MonoBehaviour
         }
     }
     
+    private async UniTaskVoid PlayCameraIntro()
+    {
+        if (orbitCamera == null) return;
+
+        Vector3 startTarget = new Vector3(8f, 0f, 6f);
+        float startYaw = 45f;
+        float startPitch = 45f;
+        float startDist = 159f;
+
+        Vector3 endTarget = new Vector3(75.99f, 0f, 42.16f);
+        float endYaw = 0.40f;
+        float endPitch = 66.38f;
+        float endDist = 157.50f;
+
+        await orbitCamera.PlayIntroToView(
+            startTarget, startYaw, startPitch, startDist,
+            endTarget,   endYaw,   endPitch,   endDist,
+            duration: 0.8f
+        );
+
+        orbitCamera.SetInputLock(false);
+    }
+
     private async UniTaskVoid StartWaveLoopAsync()
     {
         await RunIntermissionAsync(intermissionSeconds);
