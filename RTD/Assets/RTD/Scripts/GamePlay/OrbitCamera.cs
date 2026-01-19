@@ -83,7 +83,7 @@ public class OrbitCamera : MonoBehaviour
         float scroll = Mouse.current.scroll.ReadValue().y;
         if (Mathf.Abs(scroll) > 0.01f)
         {
-            float zoomDelta = -scroll * zoomSpeed * Time.deltaTime * 0.1f;
+            float zoomDelta = -scroll * zoomSpeed * 0.01f;
             distance = Mathf.Clamp(distance + zoomDelta, minDistance, maxDistance);
         }
     }

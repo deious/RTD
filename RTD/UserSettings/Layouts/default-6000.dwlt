@@ -731,7 +731,7 @@ MonoBehaviour:
     m_DynamicPanelBehavior: 0
   m_SceneHierarchy:
     m_TreeViewState:
-      scrollPos: {x: 0, y: 96}
+      scrollPos: {x: 0, y: 0}
       m_SelectedIDs: []
       m_LastClickedID:
         m_Data: 0
@@ -1433,7 +1433,7 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 72, y: 856, z: 0}
+    m_Target: {x: 1720, y: 310, z: 0}
     speed: 2
     m_Value: {x: 72, y: 856, z: 0}
   m_RenderMode: 0
@@ -1485,7 +1485,7 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: -0.08717229, y: 0.89959055, z: -0.21045254, w: -0.3726226}
   m_Size:
-    m_Target: 10
+    m_Target: 1127.4935
     speed: 2
     m_Value: 10
   m_Ortho:
