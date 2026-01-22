@@ -10,11 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f81231f3baa5d784780125b2a02adca6, type: 3}
-  m_Name: WavePattern_5
+  m_Name: WavePattern_01
   m_EditorClassIdentifier: Assembly-CSharp::RTD.Scripts.GamePlay.Wave.WavePatternSO
-  waveIndex: 5
-  spawns: []
+  waveIndex: 1
+  spawns:
+  - monsterPrefab: {fileID: 1032480660094732, guid: 62d18f162f42f5b489d22fe1e7cfb210, type: 3}
+    count: 3
+  - monsterPrefab: {fileID: 1350674450777910, guid: 423ed8581f95cbe4f85de94b2c7d59b2, type: 3}
+    count: 3
   spawnInterval: 0.4
-  modifiers: 02000000
-  isBossWave: 1
-  bossData: {fileID: 11400000, guid: d8f8dc1b303132a4ebe89a9f5a6b8440, type: 2}
+  modifiers: 0300000001000000
+  isBossWave: 0
+  bossData: {fileID: 0}

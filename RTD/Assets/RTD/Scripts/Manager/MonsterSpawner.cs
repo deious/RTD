@@ -9,21 +9,28 @@ public class MonsterSpawner : MonoBehaviour
     [SerializeField] private GameObject monsterPrefab;
     [SerializeField] private int spawnCountPerWave = 5;
     [SerializeField] private float spawnInterval = 0.6f;
-    
+
     [Header("Wave Scaling")]
     [SerializeField] private int spawnAddPerWave = 1;
     [SerializeField] private int maxSpawnCount = 30;
     [SerializeField] private int hpAddPerWave = 2;
-    
+
+    [Header("MiniMap")]
+    [SerializeField] private MiniMapMonsterUIRenderer miniMapMonsterUI;
+
     public event System.Action<int, int> OnWaveMonsterCountChanged;
     public event System.Action OnWaveCleared;
 
-    public int AliveCount => _aliveCount;
+    public int ActiveCount => _activeCount;
     public int TotalThisWave => _totalThisWave;
     public bool IsSpawning => _isSpawning;
 
-    private int _aliveCount;
     private int _totalThisWave;
+    private int _spawnedCount;
+    private int _activeCount;
+    private int _killedCount;
+    private int _escapedCount;
+
     private bool _isSpawning;
     private bool _spawnFinished;
 
@@ -36,17 +43,22 @@ public class MonsterSpawner : MonoBehaviour
         }
         Instance = this;
     }
-    
+
     private void StartWaveTracking(int total)
     {
         _totalThisWave = Mathf.Max(0, total);
-        _aliveCount = 0;
+
+        _spawnedCount = 0;
+        _activeCount = 0;
+        _killedCount = 0;
+        _escapedCount = 0;
+
         _spawnFinished = false;
         _isSpawning = true;
 
         RaiseMonsterCountChanged();
     }
-    
+
     private async UniTaskVoid SpawnOneAfterAsync(
         float delay,
         int waveIndex,
@@ -69,18 +81,17 @@ public class MonsterSpawner : MonoBehaviour
         }
 
         GameObject go = Instantiate(prefabToUse);
-        RegisterSpawnedMonster(go);
+        RegisterSpawnedMonster(go, isBoss);
+
         MonsterAI ai = go.GetComponent<MonsterAI>();
-        
         if (ai != null)
         {
             ai.SetIsBoss(isBoss);
-
             ai.AddBaseHp(hpAddPerWave * (waveIndex - 1));
             ai.ApplyWaveModifiers(mods);
         }
     }
-    
+
     private async UniTaskVoid SpawnBossAfterAsync(
         float delay,
         int waveIndex,
@@ -95,9 +106,10 @@ public class MonsterSpawner : MonoBehaviour
                 this.GetCancellationTokenOnDestroy());
 
         GameObject go = Instantiate(bossData.prefab);
-        RegisterSpawnedMonster(go);
+        RegisterSpawnedMonster(go, isBoss: true);
+
         go.transform.localScale = Vector3.one * bossData.scale;
-        
+
         if (CameraShaker.Instance != null)
             CameraShaker.Instance.Shake(bossData.shakeDuration, bossData.shakeStrength);
 
@@ -105,7 +117,6 @@ public class MonsterSpawner : MonoBehaviour
         if (ai != null)
         {
             ai.ApplyBaseStats(bossData.maxHp, bossData.moveSpeed, bossData.shieldHp, true);
-            
             ai.ApplyWaveModifiers(mods);
         }
     }
@@ -124,53 +135,78 @@ public class MonsterSpawner : MonoBehaviour
 
         TryNotifyWaveCleared();
     }
-    
-    private void RegisterSpawnedMonster(GameObject go)
+
+    private void RegisterSpawnedMonster(GameObject go, bool isBoss)
     {
         if (go == null) return;
 
-        _aliveCount++;
+        _spawnedCount++;
+        _activeCount++;
         RaiseMonsterCountChanged();
         
+        if (miniMapMonsterUI != null)
+        {
+            var mm = go.AddComponent<MiniMapMonsterReporter>();
+            mm.Init(miniMapMonsterUI, go.transform);
+        }
+
         var reporter = go.AddComponent<MonsterLifeReporter>();
         reporter.Init(this);
+        
+        var ai = go.GetComponent<MonsterAI>();
+        if (ai != null)
+            ai.SetSpawner(this);
     }
 
-    internal void NotifyMonsterRemoved()
+    // ====== 외부(몬스터)에서 호출 ======
+
+    internal void NotifyMonsterKilled()
     {
-        _aliveCount = Mathf.Max(0, _aliveCount - 1);
+        _activeCount = Mathf.Max(0, _activeCount - 1);
+        _killedCount++;
+        RaiseMonsterCountChanged();
+        TryNotifyWaveCleared();
+    }
+
+    internal void NotifyMonsterEscaped()
+    {
+        _activeCount = Mathf.Max(0, _activeCount - 1);
+        _escapedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
     }
 
     private void RaiseMonsterCountChanged()
     {
-        int killed = _totalThisWave - _aliveCount;
-        if (killed < 0) killed = 0;
-
-        OnWaveMonsterCountChanged?.Invoke(killed, _totalThisWave);
+        OnWaveMonsterCountChanged?.Invoke(_killedCount, _totalThisWave);
     }
 
     private void TryNotifyWaveCleared()
     {
-        if (_spawnFinished && _aliveCount <= 0)
-        {
+        if (_spawnFinished && (_killedCount + _escapedCount) >= _totalThisWave)
             OnWaveCleared?.Invoke();
-        }
     }
-    
+
     private class MonsterLifeReporter : MonoBehaviour
     {
         private MonsterSpawner _spawner;
         private bool _done;
+        private bool _wasKilled;
 
-        public void Init(MonsterSpawner spawner) => _spawner = spawner;
+        public void Init(MonsterSpawner spawner)
+        {
+            _spawner = spawner;
+        }
+
+        public void MarkKilled()
+        {
+            _wasKilled = true;
+        }
 
         private void OnDestroy()
         {
             if (_done) return;
             _done = true;
-            _spawner?.NotifyMonsterRemoved();
         }
     }
 
@@ -193,11 +229,11 @@ public class MonsterSpawner : MonoBehaviour
             float delay = i * spawnInterval;
             SpawnOneAfterAsync(delay, waveIndex, mods, null).Forget();
         }
-        
+
         float lastDelay = (count > 0) ? ((count - 1) * spawnInterval) : 0f;
         FinishSpawnAfterAsync(lastDelay + 0.01f).Forget();
     }
-    
+
     public void SpawnPattern(WavePatternSO pattern, WaveModifiers mods)
     {
         if (pattern == null)
@@ -211,7 +247,7 @@ public class MonsterSpawner : MonoBehaviour
         int seq = 0;
         int waveIndex = pattern.waveIndex;
         int total = 0;
-        
+
         if (pattern.spawns != null)
         {
             for (int e = 0; e < pattern.spawns.Length; e++)
@@ -220,16 +256,16 @@ public class MonsterSpawner : MonoBehaviour
                 if (entry.monsterPrefab == null || entry.count <= 0)
                     continue;
 
-                int count = Mathf.Min(entry.count, maxSpawnCount);
-                total += count;
+                int c = Mathf.Min(entry.count, maxSpawnCount);
+                total += c;
             }
         }
 
         bool hasBoss = pattern.isBossWave && pattern.bossData != null && pattern.bossData.prefab != null;
         if (hasBoss) total += 1;
-        
+
         StartWaveTracking(total);
-        
+
         if (pattern.spawns != null)
         {
             for (int e = 0; e < pattern.spawns.Length; e++)
@@ -238,9 +274,9 @@ public class MonsterSpawner : MonoBehaviour
                 if (entry.monsterPrefab == null || entry.count <= 0)
                     continue;
 
-                int count = Mathf.Min(entry.count, maxSpawnCount);
+                int c = Mathf.Min(entry.count, maxSpawnCount);
 
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < c; i++)
                 {
                     float delay = seq * interval;
                     seq++;
@@ -249,7 +285,7 @@ public class MonsterSpawner : MonoBehaviour
             }
         }
 
-        float lastDelay = 0f;
+        float lastDelay;
 
         if (hasBoss)
         {
@@ -259,10 +295,9 @@ public class MonsterSpawner : MonoBehaviour
         }
         else
         {
-            lastDelay = (seq > 0) ? ( (seq - 1) * interval ) : 0f;
+            lastDelay = (seq > 0) ? ((seq - 1) * interval) : 0f;
         }
 
         FinishSpawnAfterAsync(lastDelay + 0.01f).Forget();
     }
-
 }

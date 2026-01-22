@@ -5,13 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/indexLayout.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Boss.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Boss.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Monster.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Monster.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/InGame.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/TARBO-TowerDefensePack/Materials/Soldiers_Blue.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TARBO-TowerDefensePack/Materials/Soldiers_Blue.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/TARBO-TowerDefensePack/Materials/Soldiers_Green.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/TARBO-TowerDefensePack/Materials/Soldiers_Green.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/Packages/com.unity.probuilder/Settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/Packages/com.unity.probuilder/Settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/TagManager.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/CurrentMaximizeLayout.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/CurrentMaximizeLayout.dwlt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +30,8 @@
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Editer/EmptyGridGeneratorWindow.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/Augment/AugmentSystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/IProjectileHitListener.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/MiniMapPathRenderer.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/MiniMapUIController.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/Trait/TraitProcessor.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/UIRaycastDebugger.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/Wave/WaveModifierUtil.cs" root0="FORCE_HIGHLIGHTING" />
@@ -54,7 +60,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;update/Map__Tile&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/Add__MiniMap&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -125,6 +131,8 @@
       <workItem from="1768671455806" duration="3195000" />
       <workItem from="1768739653968" duration="3516000" />
       <workItem from="1768771587817" duration="16310000" />
+      <workItem from="1768854340699" duration="4459000" />
+      <workItem from="1768881975949" duration="11217000" />
     </task>
     <servers />
   </component>

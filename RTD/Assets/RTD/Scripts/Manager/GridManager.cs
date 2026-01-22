@@ -73,14 +73,7 @@ public class GridManager : MonoBehaviour
 
             tiles[p.x, p.y] = t;
         }
-
-        // 누락 체크(선택)
-        for (int x = 0; x < width; x++)
-        for (int y = 0; y < height; y++)
-        {
-            if (tiles[x, y] == null)
-                Debug.LogWarning($"Missing GridTile at ({x},{y}) under tileParent={tileParent.name}");
-        }
+        
     }
 
     private bool LoadWaypointsFromPath()

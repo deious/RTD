@@ -112,9 +112,9 @@ MonoBehaviour:
   typeLabel: {fileID: 0}
   gradeRingAlpha: 0.75
   data: {fileID: 0}
-  projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+  projectilePrefab: {fileID: -7168191655994484760, guid: 3058fa39189f3b746b14fa01e4ede177, type: 3}
   firePoint: {fileID: 0}
-  projectileSpeed: 18
+  projectileSpeed: 40
   projectileLifeTime: 3
   playSpawnPop: 1
   spawnPopDuration: 0.14

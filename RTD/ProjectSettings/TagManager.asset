@@ -14,9 +14,9 @@ TagManager:
   - Tile
   - Tower
   - Monster
-  - 
-  - 
-  - 
+  - BackGround
+  - MiniMap_Path
+  - MiniMap_Monster
   - 
   - 
   - 
