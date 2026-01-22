@@ -33,7 +33,7 @@ public class OrbitCamera : MonoBehaviour
     public float Yaw => _yaw;
     public float Pitch => _pitch;
     public float Distance => distance;
-
+    
     private void Start()
     {
         if (target == null)

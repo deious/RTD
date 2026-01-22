@@ -224,7 +224,7 @@ MonoBehaviour:
   typeLabel: {fileID: 0}
   gradeRingAlpha: 0.75
   data: {fileID: 0}
-  projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+  projectilePrefab: {fileID: -4094461298891190339, guid: d2aff0554999b3147a62ff841b831c1b, type: 3}
   firePoint: {fileID: 0}
   projectileSpeed: 12
   projectileLifeTime: 3

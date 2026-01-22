@@ -59,6 +59,9 @@ public class MonsterAI : MonoBehaviour
     private float _slowMul = 1f;
     private float _slowTimer = 0f;
     private Transform _currentTarget;
+    private MonsterSpawner _spawner;
+    
+    public void SetSpawner(MonsterSpawner spawner) => _spawner = spawner;
     
     public bool IsBoss { get; private set; }
     public static System.Action OnBossDied;
@@ -206,6 +209,7 @@ public class MonsterAI : MonoBehaviour
         if (IsBoss)
             OnBossDied?.Invoke();
 
+        _spawner?.NotifyMonsterEscaped();
         Destroy(gameObject);
     }
     
@@ -251,6 +255,7 @@ public class MonsterAI : MonoBehaviour
             OnBossDied?.Invoke();
         }
         
+        _spawner?.NotifyMonsterKilled();
         Destroy(gameObject);
     }
     

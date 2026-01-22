@@ -102,8 +102,10 @@ public abstract class TowerBase : MonoBehaviour
 
         Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
         if (proj == null) return false;
+        
+        IProjectileHitListener listener = this as IProjectileHitListener;
 
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, splashRadius, splashRatio);
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
         return true;
     }
 

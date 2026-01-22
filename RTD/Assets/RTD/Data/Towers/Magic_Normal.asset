@@ -17,7 +17,7 @@ MonoBehaviour:
   displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 5
   attackSpeed: 0.6
-  range: 5
+  range: 50
   buildCost: 5
   towerPrefab: {fileID: 1367997974350908, guid: 929d739386479ad44970b8b56f101075, type: 3}
   gradeColor: {r: 1, g: 1, b: 1, a: 0}
