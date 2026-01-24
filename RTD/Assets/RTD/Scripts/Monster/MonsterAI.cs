@@ -48,6 +48,15 @@ public class MonsterAI : MonoBehaviour
     [SerializeField] private int fixedLaneIndex = 1;
     private int _laneIndex;
     private Vector3 _currentTargetPos;
+    
+    public enum ModelForwardAxis
+    {
+        Xp, Xm, Yp, Ym, Zp, Zm
+    }
+
+    [Header("Facing")]
+    [SerializeField] private ModelForwardAxis modelForward = ModelForwardAxis.Zp;
+    [SerializeField] private Vector3 modelRotationOffsetEuler = Vector3.zero;
 
     private float _dotTimer = 0f;       // 남은 DOT 시간
     private float _dotTickTimer = 0f;   // 다음 틱까지 남은 시간
@@ -183,7 +192,8 @@ public class MonsterAI : MonoBehaviour
 
         if (dir.sqrMagnitude > 0.0001f)
         {
-            transform.rotation = Quaternion.LookRotation(dir);
+            //transform.rotation = Quaternion.LookRotation(dir);
+            SetRotationFacing(dir);
         }
     }
 
@@ -200,8 +210,8 @@ public class MonsterAI : MonoBehaviour
 
     private void ReachGoal()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.ChangeLife(-1);
+        if (GameRuntime.Instance != null)
+            GameRuntime.Instance.ChangeLife(-1);
 
         if (_shieldVfxInstance != null)
             Destroy(_shieldVfxInstance.gameObject);
@@ -237,12 +247,40 @@ public class MonsterAI : MonoBehaviour
             }
         }
     }
+    
+    private void SetRotationFacing(Vector3 dir)
+    {
+        if (dir.sqrMagnitude < 0.0001f)
+            return;
+
+        Quaternion dirRot = Quaternion.LookRotation(dir, Vector3.up);
+        Quaternion fix = GetAxisFix(modelForward);
+        Quaternion offset = Quaternion.Euler(modelRotationOffsetEuler);
+
+        transform.rotation = dirRot * fix * offset;
+    }
+
+    private static Quaternion GetAxisFix(ModelForwardAxis axis)
+    {
+        Vector3 modelAxis = axis switch
+        {
+            ModelForwardAxis.Xp => Vector3.right,
+            ModelForwardAxis.Xm => Vector3.left,
+            ModelForwardAxis.Yp => Vector3.up,
+            ModelForwardAxis.Ym => Vector3.down,
+            ModelForwardAxis.Zp => Vector3.forward,
+            ModelForwardAxis.Zm => Vector3.back,
+            _ => Vector3.forward
+        };
+
+        return Quaternion.FromToRotation(modelAxis, Vector3.forward);
+    }
 
     private void Die()
     {
-        if (GameManager.Instance != null)
+        if (GameRuntime.Instance != null)
         {
-            GameManager.Instance.AddGold(5);
+            GameRuntime.Instance.AddGold(5);
         }
 
         if (_shieldVfxInstance != null)
@@ -372,13 +410,13 @@ public class MonsterAI : MonoBehaviour
             _shieldHp += mods.shieldHp;
         }
 
-        if (GameManager.Instance != null)
+        if (GameRuntime.Instance != null)
         {
-            float spMul = GameManager.Instance.EnemySpeedMul;
+            float spMul = GameRuntime.Instance.EnemySpeedMul;
             if (spMul > 0.01f)
                 moveSpeed *= spMul;
 
-            float hpMul = GameManager.Instance.EnemyHpMul;
+            float hpMul = GameRuntime.Instance.EnemyHpMul;
             if (hpMul > 0.01f)
             {
                 int newMaxHp = Mathf.RoundToInt(maxHp * hpMul);

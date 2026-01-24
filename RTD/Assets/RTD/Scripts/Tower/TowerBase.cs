@@ -164,15 +164,15 @@ public abstract class TowerBase : MonoBehaviour
         attackInterval = 1f / Mathf.Max(0.0001f, data.attackSpeed);
         damage = Mathf.RoundToInt(data.damage);
         
-        if (GameManager.Instance != null)
+        if (GameRuntime.Instance != null)
         {
-            range += GameManager.Instance.TowerRangeAdd;
+            range += GameRuntime.Instance.TowerRangeAdd;
 
-            float atkMul = GameManager.Instance.TowerAttackSpeedMul;
+            float atkMul = GameRuntime.Instance.TowerAttackSpeedMul;
             if (atkMul > 0.0001f)
                 attackInterval /= atkMul;
 
-            damage = Mathf.RoundToInt(damage * GameManager.Instance.TowerDamageMul);
+            damage = Mathf.RoundToInt(damage * GameRuntime.Instance.TowerDamageMul);
         }
     }
     

@@ -15,10 +15,44 @@ public class UIManager : MonoBehaviour
     
     [Header("Top Center")]
     [SerializeField] private TextMeshProUGUI nextWaveTimerText;
+    
+    [Header("Result Panel")]
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private UnityEngine.UI.Image dimmerImage;
+    [SerializeField] private UnityEngine.UI.Image windowImage;
+    [SerializeField] private UnityEngine.UI.Image headerBgImage;
+    [SerializeField] private UnityEngine.UI.Image detailBgImage;
+    [SerializeField] private TMPro.TextMeshProUGUI resultTitleText;
+    [SerializeField] private TMPro.TextMeshProUGUI resultDetailText;
+    
+    [Header("Result Buttons")]
+    [SerializeField] private Button btnRestart;
+    [SerializeField] private Button btnTitle;
+
+    [Header("Result Theme Colors")]
+    [SerializeField] private Color winHeaderColor = new Color(0.75f, 0.93f, 0.86f, 1f);
+    [SerializeField] private Color loseHeaderColor = new Color(0.95f, 0.76f, 0.74f, 1f);
+    [SerializeField] private Color winDetailColor = new Color(0.85f, 0.96f, 0.92f, 1f);
+    [SerializeField] private Color loseDetailColor = new Color(0.97f, 0.85f, 0.80f, 1f);
+
+    [SerializeField] private Color titleTextColor = new Color(1f, 0.96f, 0.91f, 1f);
+    [SerializeField] private Color detailTextColor = new Color(0.95f, 0.93f, 0.89f, 1f);
 
     private void Awake()
     {
         Instance = this;
+        
+        if (btnRestart != null)
+        {
+            btnRestart.onClick.RemoveAllListeners();
+            btnRestart.onClick.AddListener(OnClickRestart);
+        }
+
+        if (btnTitle != null)
+        {
+            btnTitle.onClick.RemoveAllListeners();
+            btnTitle.onClick.AddListener(OnClickGoTitle);
+        }
     }
 
     public void UpdateGold(int value)
@@ -84,4 +118,53 @@ public class UIManager : MonoBehaviour
 
         nextWaveTimerText.text = $"남은 시간 : {secondsRemaining}";
     }
+    public void ShowResultPanel(GameResult result)
+    {
+        if (resultPanel != null)
+            resultPanel.SetActive(true);
+
+        bool isWin = (result.endType == GameEndType.Win);
+
+        if (resultTitleText != null)
+        {
+            resultTitleText.text = isWin ? "승리" : "패배";
+            resultTitleText.color = titleTextColor;
+        }
+
+        if (resultDetailText != null)
+        {
+            resultDetailText.text = $"최종 라운드 : {result.reachedWave}";
+            resultDetailText.color = detailTextColor;
+        }
+
+        if (headerBgImage != null)
+            headerBgImage.color = isWin ? winHeaderColor : loseHeaderColor;
+
+        if (detailBgImage != null)
+            detailBgImage.color = isWin ? winDetailColor : loseDetailColor;
+        
+        if (dimmerImage != null)
+            dimmerImage.color = new Color(0f, 0f, 0f, 0.75f);
+
+        if (windowImage != null)
+            windowImage.color = new Color(0.95f, 0.90f, 0.82f, 1f); // 베이지 살짝 눌린 톤
+    }
+
+
+    public void OnClickRestart()
+    {
+        Time.timeScale = 1f;
+        
+        if (AppFlowManager.Instance != null)
+            AppFlowManager.Instance.RestartSingleGame();
+    }
+
+    public void OnClickGoTitle()
+    {
+        Time.timeScale = 1f;
+        
+        if (AppFlowManager.Instance != null)
+            AppFlowManager.Instance.GoTitle();
+    }
+
 }

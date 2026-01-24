@@ -321,6 +321,8 @@ MonoBehaviour:
   allowBurnStack: 1
   randomLane: 1
   fixedLaneIndex: 1
+  modelForward: 5
+  modelRotationOffsetEuler: {x: 0, y: 0, z: 180}
 --- !u!1 &1911990075883896
 GameObject:
   m_ObjectHideFlags: 0

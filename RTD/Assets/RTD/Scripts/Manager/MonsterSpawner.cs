@@ -21,18 +21,18 @@ public class MonsterSpawner : MonoBehaviour
     public event System.Action<int, int> OnWaveMonsterCountChanged;
     public event System.Action OnWaveCleared;
 
-    public int ActiveCount => _activeCount;
-    public int TotalThisWave => _totalThisWave;
-    public bool IsSpawning => _isSpawning;
+    public int ActiveCount => activeCount;
+    public int TotalThisWave => totalThisWave;
+    public bool IsSpawning => isSpawning;
 
-    private int _totalThisWave;
-    private int _spawnedCount;
-    private int _activeCount;
-    private int _killedCount;
-    private int _escapedCount;
+    private int totalThisWave;
+    private int spawnedCount;
+    private int activeCount;
+    private int killedCount;
+    private int escapedCount;
 
-    private bool _isSpawning;
-    private bool _spawnFinished;
+    private bool isSpawning;
+    private bool spawnFinished;
 
     private void Awake()
     {
@@ -46,15 +46,15 @@ public class MonsterSpawner : MonoBehaviour
 
     private void StartWaveTracking(int total)
     {
-        _totalThisWave = Mathf.Max(0, total);
+        totalThisWave = Mathf.Max(0, total);
 
-        _spawnedCount = 0;
-        _activeCount = 0;
-        _killedCount = 0;
-        _escapedCount = 0;
+        spawnedCount = 0;
+        activeCount = 0;
+        killedCount = 0;
+        escapedCount = 0;
 
-        _spawnFinished = false;
-        _isSpawning = true;
+        spawnFinished = false;
+        isSpawning = true;
 
         RaiseMonsterCountChanged();
     }
@@ -73,6 +73,9 @@ public class MonsterSpawner : MonoBehaviour
                 PlayerLoopTiming.Update,
                 this.GetCancellationTokenOnDestroy());
 
+        if (!isSpawning) 
+            return;
+        
         GameObject prefabToUse = (prefabOverride != null) ? prefabOverride : monsterPrefab;
         if (prefabToUse == null)
         {
@@ -105,6 +108,9 @@ public class MonsterSpawner : MonoBehaviour
                 PlayerLoopTiming.Update,
                 this.GetCancellationTokenOnDestroy());
 
+        if (!isSpawning) 
+            return;
+        
         GameObject go = Instantiate(bossData.prefab);
         RegisterSpawnedMonster(go, isBoss: true);
 
@@ -129,9 +135,12 @@ public class MonsterSpawner : MonoBehaviour
                 DelayType.DeltaTime,
                 PlayerLoopTiming.Update,
                 this.GetCancellationTokenOnDestroy());
-
-        _spawnFinished = true;
-        _isSpawning = false;
+        
+        if (!isSpawning) 
+            return;
+        
+        spawnFinished = true;
+        isSpawning = false;
 
         TryNotifyWaveCleared();
     }
@@ -140,8 +149,8 @@ public class MonsterSpawner : MonoBehaviour
     {
         if (go == null) return;
 
-        _spawnedCount++;
-        _activeCount++;
+        spawnedCount++;
+        activeCount++;
         RaiseMonsterCountChanged();
         
         if (miniMapMonsterUI != null)
@@ -162,28 +171,28 @@ public class MonsterSpawner : MonoBehaviour
 
     internal void NotifyMonsterKilled()
     {
-        _activeCount = Mathf.Max(0, _activeCount - 1);
-        _killedCount++;
+        activeCount = Mathf.Max(0, activeCount - 1);
+        killedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
     }
 
     internal void NotifyMonsterEscaped()
     {
-        _activeCount = Mathf.Max(0, _activeCount - 1);
-        _escapedCount++;
+        activeCount = Mathf.Max(0, activeCount - 1);
+        escapedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
     }
 
     private void RaiseMonsterCountChanged()
     {
-        OnWaveMonsterCountChanged?.Invoke(_killedCount, _totalThisWave);
+        OnWaveMonsterCountChanged?.Invoke(killedCount, totalThisWave);
     }
 
     private void TryNotifyWaveCleared()
     {
-        if (_spawnFinished && (_killedCount + _escapedCount) >= _totalThisWave)
+        if (spawnFinished && (killedCount + escapedCount) >= totalThisWave)
             OnWaveCleared?.Invoke();
     }
 
@@ -299,5 +308,22 @@ public class MonsterSpawner : MonoBehaviour
         }
 
         FinishSpawnAfterAsync(lastDelay + 0.01f).Forget();
+    }
+    
+    public void StopAllSpawning(bool destroyAlive = false)
+    {
+        isSpawning = false;
+        spawnFinished = true;
+
+        if (destroyAlive)
+        {
+            var monsters = FindObjectsByType<MonsterAI>(FindObjectsSortMode.None);
+            foreach (var m in monsters)
+            {
+                if (m != null) Destroy(m.gameObject);
+            }
+        }
+
+        RaiseMonsterCountChanged();
     }
 }

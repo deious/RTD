@@ -147,4 +147,31 @@ public class AugmentSystem : MonoBehaviour
             }
         }
     }
+    
+    public void ForcePickRandomIfChoosing()
+    {
+        if (!IsChoosing)
+            return;
+        
+        int count = 0;
+        for (int i = 0; i < _offered.Length; i++)
+        {
+            if (_offered[i] != null) 
+                count++;
+        }
+
+        if (count <= 0)
+        {
+            OnPicked(null);
+            return;
+        }
+        
+        int idx = Random.Range(0, _offered.Length);
+        int safety = 0;
+        while (_offered[idx] == null && safety++ < 20)
+            idx = Random.Range(0, _offered.Length);
+
+        OnPicked(_offered[idx]);
+    }
+
 }

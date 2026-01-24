@@ -2,10 +2,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using RTD.Scripts.GamePlay.Wave;
 using Cysharp.Threading.Tasks;
+using UnityEngine.SceneManagement;
+using System.Threading;
 
-public class GameManager : MonoBehaviour
+public class GameRuntime : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameRuntime Instance { get; private set; }
 
     [SerializeField] private int startGold = 100;
     [SerializeField] private int startLife = 10;
@@ -20,13 +22,20 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AugmentSystem augmentSystem;
     [SerializeField] private OrbitCamera orbitCamera;
     [SerializeField] private GridManager grid;
+    
+    [Header("Scene")]
+    [SerializeField] private string titleSceneName = "Title";
+    [SerializeField] private string gameSceneName = "InGame";
 
+    private bool gameOver;
+    private CancellationTokenSource cts;
+    
     private int gold;
     private int life;
     private int currentWave;
-    private bool _waveRunning;
-    private bool _waitingIntermission;
-    private bool _waitingAugment;
+    private bool waveRunning;
+    private bool waitingIntermission;
+    private bool waitingAugment;
     
     private WaveModifiers _currentWaveMods;
 
@@ -38,6 +47,9 @@ public class GameManager : MonoBehaviour
     public float EnemyHpMul => (augmentSystem != null) ? augmentSystem.EnemyHpMul : 1f;
     // 외부에서 골드 읽을 수 있게 프로퍼티
     public int Gold => gold;
+    public bool IsGameOver => gameOver;
+    public int Life => life;
+    public int CurrentWave => currentWave;
 
     private void Awake()
     {
@@ -57,6 +69,9 @@ public class GameManager : MonoBehaviour
         gold = startGold;
         life = startLife;
         currentWave = startWave;
+        
+        cts = new CancellationTokenSource();
+        gameOver = false;
     }
 
     private void Start()
@@ -99,6 +114,9 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (gameOver)
+            return;
+        
         if (augmentSystem != null && augmentSystem.IsChoosing)
             return;
         
@@ -160,12 +178,18 @@ public class GameManager : MonoBehaviour
 
     private void BeginWave()
     {
-        _waveRunning = true;
+        if (gameOver) 
+            return;
+        
+        waveRunning = true;
         StartWave(currentWave);
     }
     
     private void StartWave(int waveIndex)
     {
+        if (gameOver)
+            return;
+        
         WavePatternSO pattern = FindWavePattern(waveIndex);
 
         if (pattern != null)
@@ -209,15 +233,24 @@ public class GameManager : MonoBehaviour
     
     private void HandleWaveCleared()
     {
-        if (!_waveRunning) return;
-        _waveRunning = false;
+        if (gameOver) 
+            return;
+        
+        if (currentWave >= maxWave)
+        {
+            EndGame(GameEndType.Win);
+            return;
+        }
+        
+        if (!waveRunning) return;
+        waveRunning = false;
         
         var pattern = FindWavePattern(currentWave);
         bool isBossWave = (pattern != null && pattern.isBossWave);
 
         if (isBossWave)
         {
-            _waitingAugment = true;
+            waitingAugment = true;
             StartBossIntermission();
             return;
         }
@@ -227,66 +260,92 @@ public class GameManager : MonoBehaviour
     
     private void StartBossIntermission()
     {
-        if (_waitingIntermission) return;
+        if (waitingIntermission) return;
 
-        _waitingIntermission = true;
-        
+        waitingIntermission = true;
+
         RunIntermissionAsync(intermissionSeconds).ContinueWith(() =>
         {
-            _waitingIntermission = false;
+            waitingIntermission = false;
+            
+            if (!gameOver && waitingAugment && augmentSystem != null && augmentSystem.IsChoosing)
+            {
+                augmentSystem.ForcePickRandomIfChoosing();
+                // ForcePickRandomIfChoosing() 안에서 "선택 완료 콜백"이 호출되도록 만들면
+                // waitingAugment=false + TryStartNextWave()가 그 콜백에서 처리됨
+            }
+
             TryStartNextWave();
         }).Forget();
-        
+
         if (augmentSystem != null)
         {
+            waitingAugment = true;
+
             augmentSystem.BeginChoice(() =>
             {
-                _waitingAugment = false;
+                waitingAugment = false;
                 TryStartNextWave();
             });
         }
         else
         {
-            _waitingAugment = false;
+            waitingAugment = false;
         }
     }
 
+
     private void TryStartNextWave()
     {
-        if (_waitingAugment || _waitingIntermission)
+        if (gameOver)
+            return;
+        
+        if (waitingAugment || waitingIntermission)
             return;
 
         NextWave();
-        _waveRunning = true;
+        waveRunning = true;
     }
 
     private async UniTaskVoid AutoNextWaveAsync()
     {
-        if (_waitingIntermission) return;
-        _waitingIntermission = true;
+        if (gameOver) 
+            return;
+        if (waitingIntermission) 
+            return;
+        waitingIntermission = true;
 
         await RunIntermissionAsync(intermissionSeconds);
 
-        _waitingIntermission = false;
+        waitingIntermission = false;
 
         NextWave();
-        _waveRunning = true;
+        waveRunning = true;
     }
 
     private async UniTask RunIntermissionAsync(float seconds)
     {
-        float t = seconds;
-        while (t > 0f)
+        try
+        {
+            float t = seconds;
+            while (t > 0f)
+            {
+                if (UIManager.Instance != null)
+                    UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(t));
+
+                await UniTask.Delay(1000, cancellationToken: cts.Token);
+                t -= 1f;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            return;
+        }
+        finally
         {
             if (UIManager.Instance != null)
-                UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(t));
-
-            await UniTask.Delay(1000);
-            t -= 1f;
+                UIManager.Instance.UpdateNextWaveTimer(0);
         }
-
-        if (UIManager.Instance != null)
-            UIManager.Instance.UpdateNextWaveTimer(0);
     }
     
     private void HandleBossDied()
@@ -303,6 +362,13 @@ public class GameManager : MonoBehaviour
             MonsterSpawner.Instance.OnWaveCleared -= HandleWaveCleared;
             MonsterSpawner.Instance.OnWaveMonsterCountChanged -= HandleWaveMonsterCountChanged;
         }
+        
+        cts?.Cancel();
+        cts?.Dispose();
+        cts = null;
+
+        if (Instance == this)
+            Instance = null;
     }
 
     private WavePatternSO FindWavePattern(int waveIndex)
@@ -319,6 +385,27 @@ public class GameManager : MonoBehaviour
         }
 
         return null;
+    }
+    
+    private void EndGame(GameEndType endType)
+    {
+        if (gameOver) return;
+        gameOver = true;
+
+        waveRunning = false;
+        waitingIntermission = false;
+        waitingAugment = false;
+        
+        cts.Cancel();
+        
+        if (orbitCamera != null)
+            orbitCamera.SetInputLock(true);
+        
+        if (MonsterSpawner.Instance != null)
+            MonsterSpawner.Instance.StopAllSpawning(destroyAlive: true);
+        
+        if (AppFlowManager.Instance != null)
+            AppFlowManager.Instance.OnGameEnd(new GameResult(endType, currentWave));
     }
     
     private void HandleWaveMonsterCountChanged(int alive, int total)
@@ -350,8 +437,17 @@ public class GameManager : MonoBehaviour
 
     public void ChangeLife(int amount)
     {
+        if (gameOver)
+            return;
+
         life += amount;
-        UIManager.Instance.UpdateLife(life);
+        if (life < 0) life = 0;
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateLife(life);
+
+        if (life <= 0)
+            EndGame(GameEndType.Lose);
     }
 
     public void NextWave()
