@@ -111,8 +111,12 @@ public abstract class TowerBase : MonoBehaviour
 
     public int ApplyHitAndReturnDamage(MonsterAI target, int baseDamage)
     {
-        if (target == null) return 0;
+        if (target == null) 
+            return 0;
 
+        if (target.IsEnded || !target.gameObject.activeInHierarchy)
+            return 0;
+        
         int dmg = baseDamage;
         
         if (RuntimeTrait != null && RuntimeTrait.type == TowerTraitType.Execute)

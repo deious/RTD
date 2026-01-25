@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f81231f3baa5d784780125b2a02adca6, type: 3}
-  m_Name: WavePattern_01
+  m_Name: WavePattern_03
   m_EditorClassIdentifier: Assembly-CSharp::RTD.Scripts.GamePlay.Wave.WavePatternSO
-  waveIndex: 1
+  waveIndex: 3
   spawns:
   - archetype: {fileID: 11400000, guid: 7de36f7123cee2b498d28a4082fe2877, type: 2}
     color: {fileID: 11400000, guid: 81930c496e7faee4ea357f50f55881b9, type: 2}

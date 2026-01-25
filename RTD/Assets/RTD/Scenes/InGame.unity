@@ -25402,10 +25402,13 @@ MonoBehaviour:
   startGold: 200
   startLife: 10
   startWave: 1
-  maxWave: 20
+  maxWave: 5
   intermissionSeconds: 20
   wavePatterns:
   - {fileID: 11400000, guid: 1ac2f11372802ad44a29c9e55555ba61, type: 2}
+  - {fileID: 11400000, guid: 1cd37e0983619bc41aa9f8d2e3e3e432, type: 2}
+  - {fileID: 11400000, guid: d89d9ce0c9f1f444f8383210f5ae2df4, type: 2}
+  - {fileID: 11400000, guid: 0a5624c15f9e5b4449bc76aa9abac535, type: 2}
   - {fileID: 11400000, guid: 5813e6ec10f626248a5592b49ca32e26, type: 2}
   augmentSystem: {fileID: 981668133}
   orbitCamera: {fileID: 1348242619}
@@ -26300,6 +26303,51 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!1 &1345960617
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1345960618}
+  - component: {fileID: 1345960619}
+  m_Layer: 0
+  m_Name: MonsterPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1345960618
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345960617}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1345960619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1345960617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1045b2d42d56c984e999fd31c6a627ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SimplePool
+  poolRoot: {fileID: 0}
 --- !u!1 &1346189072
 GameObject:
   m_ObjectHideFlags: 0
@@ -41381,11 +41429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dee314c6862dbfa408a0479007590e58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterSpawner
-  monsterPrefab: {fileID: 8095480719588087266, guid: b34f5d8f24a62644eace968f0a05879b, type: 3}
-  spawnCountPerWave: 5
   spawnInterval: 0.6
-  spawnAddPerWave: 1
-  maxSpawnCount: 30
   hpAddPerWave: 2
   miniMapMonsterUI: {fileID: 1859221896}
 --- !u!4 &2062218226
@@ -43148,6 +43192,7 @@ SceneRoots:
   - {fileID: 780817754}
   - {fileID: 981756289}
   - {fileID: 2062218226}
+  - {fileID: 1345960618}
   - {fileID: 842393323}
   - {fileID: 981668132}
   - {fileID: 761900544}

@@ -16,59 +16,49 @@ public class Projectile : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] private MoveType moveType = MoveType.Straight;
-
-    [Tooltip("모델(화살촉)이 바라보는 로컬 축")]
     [SerializeField] private ModelForwardAxis modelForward = ModelForwardAxis.Yp;
-
-    [Tooltip("유도 회전 속도. (Homing에 사용)")]
     [SerializeField] private float homingTurnSpeed = 20f;
 
     [Header("Ballistic")]
-    [Tooltip("곡사 중력 가속도(양수). (Ballistic에 사용)")]
     [SerializeField] private float gravity = 25f;
-
-    [Tooltip("곡사 비행시간(초). 짧을수록 포물선이 빠르고 낮아짐. (Ballistic에 사용)")]
     [SerializeField] private float ballisticFlightTime = 0.55f;
-    
-    [Header("Ballistic Arc")]
     [SerializeField] private float arcHeight = 2.0f;
-    
-    private Transform _target;
-    private MonsterAI _targetMonster;
 
-    private float _speed;
-    private int _damage;
+    private Transform target;
+    private MonsterAI targetMonster;
 
-    private float _lifeTime;
-    private float _lifeTimer;
+    private float speed;
+    private int damage;
+    private float lifeTime;
+    private float lifeTimer;
 
-    private TowerBase _sourceTower;
-    private IProjectileHitListener _hitListener;
+    private TowerBase sourceTower;
+    private IProjectileHitListener hitListener;
 
-    private float _splashRadius;
-    private float _splashRatio;
-    
-    private bool _ballisticInited;
-    private Vector3 _ballisticStart;
-    private Vector3 _ballisticEnd;
-    private float _ballisticT;
-    private Vector3 _ballisticVel;
+    private float splashRadius;
+    private float splashRatio;
 
-    private ProjectilePool _poolOwner;
+    private bool ballisticInited;
+    private Vector3 ballisticStart;
+    private Vector3 ballisticEnd;
+    private float ballisticT;
+    private Vector3 ballisticVel;
+
+    private ProjectilePool poolOwner;
     public Projectile PrefabKey { get; private set; }
 
     public void SetPoolOwner(ProjectilePool owner, Projectile prefabKey)
     {
-        _poolOwner = owner;
+        poolOwner = owner;
         PrefabKey = prefabKey;
     }
 
     private void OnEnable()
     {
-        _lifeTimer = 0f;
-        _ballisticInited = false;
-        _ballisticT = 0f;
-        _ballisticVel = Vector3.zero;
+        lifeTimer = 0f;
+        ballisticInited = false;
+        ballisticT = 0f;
+        ballisticVel = Vector3.zero;
     }
 
     public void Init(
@@ -79,161 +69,171 @@ public class Projectile : MonoBehaviour
         TowerBase sourceTower,
         IProjectileHitListener hitListener = null,
         float splashRadius = 0f,
-        float splashRatio = 0f
-    )
+        float splashRatio = 0f)
     {
-        _targetMonster = target;
-        _target = (target != null) ? target.transform : null;
+        targetMonster = target;
+        this.target = target != null ? target.transform : null;
 
-        _speed = Mathf.Max(0.01f, speed);
-        _damage = damage;
+        this.speed = Mathf.Max(0.01f, speed);
+        this.damage = damage;
+        this.lifeTime = Mathf.Max(0.01f, lifeTime);
+        this.lifeTimer = 0f;
 
-        _lifeTime = Mathf.Max(0.01f, lifeTime);
-        _lifeTimer = 0f;
+        this.sourceTower = sourceTower;
+        this.hitListener = hitListener;
 
-        _sourceTower = sourceTower;
-        _hitListener = hitListener;
+        this.splashRadius = Mathf.Max(0f, splashRadius);
+        this.splashRatio = Mathf.Clamp01(splashRatio);
 
-        _splashRadius = Mathf.Max(0f, splashRadius);
-        _splashRatio = Mathf.Clamp01(splashRatio);
-        
-        _ballisticInited = false;
+        ballisticInited = false;
     }
 
     private void Update()
     {
-        _lifeTimer += Time.deltaTime;
-        if (_lifeTimer >= _lifeTime)
+        lifeTimer += Time.deltaTime;
+        if (lifeTimer >= lifeTime)
         {
             ReleaseOrDestroy();
             return;
         }
 
-        if (_target == null)
+        if (target == null && moveType != MoveType.Ballistic)
         {
-            if (moveType != MoveType.Ballistic)
-            {
-                ReleaseOrDestroy();
-                return;
-            }
+            ReleaseOrDestroy();
+            return;
         }
 
         switch (moveType)
         {
-            case MoveType.Straight:
-                UpdateStraight();
-                break;
-            case MoveType.Homing:
-                UpdateHoming();
-                break;
-            case MoveType.Ballistic:
-                UpdateBallistic();
-                break;
+            case MoveType.Straight:   UpdateStraight(); break;
+            case MoveType.Homing:     UpdateHoming(); break;
+            case MoveType.Ballistic:  UpdateBallistic(); break;
         }
     }
 
     private void UpdateStraight()
     {
-        Vector3 to = _target.position - transform.position;
-        float distThisFrame = _speed * Time.deltaTime;
+        Vector3 to = target.position - transform.position;
+        float dist = speed * Time.deltaTime;
 
-        if (to.sqrMagnitude <= distThisFrame * distThisFrame)
+        if (to.sqrMagnitude <= dist * dist)
         {
-            Hit(_target.position);
+            Hit(target.position);
             return;
         }
 
         Vector3 dir = to.normalized;
-        transform.position += dir * distThisFrame;
-
-        SetRotationFacing(dir, instant: true);
+        transform.position += dir * dist;
+        SetRotationFacing(dir, true);
     }
 
     private void UpdateHoming()
     {
-        Vector3 to = _target.position - transform.position;
-        float distThisFrame = _speed * Time.deltaTime;
+        Vector3 to = target.position - transform.position;
+        float dist = speed * Time.deltaTime;
 
-        if (to.sqrMagnitude <= distThisFrame * distThisFrame)
+        if (to.sqrMagnitude <= dist * dist)
         {
-            Hit(_target.position);
+            Hit(target.position);
             return;
         }
 
         Vector3 dir = to.normalized;
-        transform.position += dir * distThisFrame;
-
-        SetRotationFacing(dir, instant: false);
+        transform.position += dir * dist;
+        SetRotationFacing(dir, false);
     }
 
     private void UpdateBallistic()
     {
-        if (!_ballisticInited)
+        if (!ballisticInited)
         {
-            _ballisticInited = true;
-            _ballisticStart = transform.position;
-            _ballisticEnd = _target.position;
-            
-            float dist = Vector3.Distance(_ballisticStart, _ballisticEnd);
-            float baseHeight = Mathf.Clamp(dist * 0.25f, 1.5f, 5.0f);
-            float usedArcHeight = Mathf.Max(0.1f, baseHeight + arcHeight);
+            ballisticInited = true;
+            ballisticStart = transform.position;
+            ballisticEnd = target.position;
 
-            float T = Mathf.Max(0.05f, ballisticFlightTime);
-            _ballisticT = 0f;
+            float dist = Vector3.Distance(ballisticStart, ballisticEnd);
+            float baseHeight = Mathf.Clamp(dist * 0.25f, 1.5f, 5f);
+            float usedArc = Mathf.Max(0.1f, baseHeight + arcHeight);
+
             float g = Mathf.Abs(gravity);
+            float peakY = Mathf.Max(ballisticStart.y, ballisticEnd.y) + usedArc;
+            float vy = Mathf.Sqrt(2f * g * Mathf.Max(0.01f, peakY - ballisticStart.y));
 
-            Vector3 delta = _ballisticEnd - _ballisticStart;
-            
-            float peakY = Mathf.Max(_ballisticStart.y, _ballisticEnd.y) + usedArcHeight;
-
-            float vy = Mathf.Sqrt(2f * g * Mathf.Max(0.01f, peakY - _ballisticStart.y));
             float tUp = vy / g;
-            float totalT = Mathf.Max(T, tUp * 2f);
+            float totalT = Mathf.Max(ballisticFlightTime, tUp * 2f);
 
-            Vector3 deltaXZ = new Vector3(delta.x, 0f, delta.z);
+            Vector3 deltaXZ = new Vector3(ballisticEnd.x - ballisticStart.x, 0f, ballisticEnd.z - ballisticStart.z);
             Vector3 vXZ = deltaXZ / totalT;
 
-            _ballisticVel = new Vector3(vXZ.x, vy, vXZ.z);
+            ballisticVel = new Vector3(vXZ.x, vy, vXZ.z);
             ballisticFlightTime = totalT;
         }
 
-        float Tflight = Mathf.Max(0.05f, ballisticFlightTime);
-        float dt = Time.deltaTime;
+        ballisticT += Time.deltaTime;
+        Vector3 acc = new Vector3(0f, -Mathf.Abs(gravity), 0f);
 
-        _ballisticT += dt;
-        float t = _ballisticT;
+        Vector3 pos = ballisticStart + ballisticVel * ballisticT + 0.5f * acc * ballisticT * ballisticT;
+        Vector3 vel = ballisticVel + acc * ballisticT;
 
-        Vector3 a2 = new Vector3(0f, -Mathf.Abs(gravity), 0f);
-        Vector3 pos = _ballisticStart + _ballisticVel * t + 0.5f * a2 * t * t;
-
-        Vector3 vel = _ballisticVel + a2 * t;
         transform.position = pos;
+        if (vel.sqrMagnitude > 0.001f)
+            SetRotationFacing(vel.normalized, true);
 
-        if (vel.sqrMagnitude > 0.0001f)
-            SetRotationFacing(vel.normalized, instant: true);
-
-        if (t >= Tflight)
+        if (ballisticT >= ballisticFlightTime)
         {
-            transform.position = _ballisticEnd;
-            Hit(_ballisticEnd);
+            transform.position = ballisticEnd;
+            Hit(ballisticEnd);
         }
+    }
+
+    private void Hit(Vector3 hitPos)
+    {
+        int dealt = 0;
+
+        bool canHitTarget =
+            targetMonster != null &&
+            !targetMonster.IsEnded &&
+            targetMonster.gameObject.activeInHierarchy;
+        
+        if (canHitTarget)
+        {
+            if (sourceTower != null)
+                dealt = sourceTower.ApplyHitAndReturnDamage(targetMonster, damage);
+            else
+                targetMonster.TakeDamage(damage);
+        }
+        
+        if (splashRadius > 0.01f && splashRatio > 0f)
+        {
+            int splashDmg = Mathf.Max(1, Mathf.RoundToInt(damage * splashRatio));
+            TraitProcessor.ApplySplashDamage(sourceTower, hitPos, splashRadius, targetMonster, splashDmg);
+        }
+
+        hitListener?.OnProjectileHit(targetMonster, hitPos, dealt);
+        ReleaseOrDestroy();
+    }
+
+    private void ReleaseOrDestroy()
+    {
+        if (poolOwner != null && ProjectilePool.Instance != null)
+        {
+            poolOwner.Release(this);
+            return;
+        }
+
+        Destroy(gameObject);
     }
 
     private void SetRotationFacing(Vector3 dir, bool instant)
     {
         Quaternion dirRot = Quaternion.LookRotation(dir, Vector3.up);
         Quaternion fix = GetAxisFix(modelForward);
-
         Quaternion targetRot = dirRot * fix;
 
         if (instant)
-        {
             transform.rotation = targetRot;
-            return;
-        }
-
-        float k = Mathf.Max(0.01f, homingTurnSpeed);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, k * Time.deltaTime);
+        else
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, homingTurnSpeed * Time.deltaTime);
     }
 
     private static Quaternion GetAxisFix(ModelForwardAxis axis)
@@ -250,42 +250,5 @@ public class Projectile : MonoBehaviour
         };
 
         return Quaternion.FromToRotation(modelAxis, Vector3.forward);
-    }
-    
-    private void Hit(Vector3 hitPos)
-    {
-        int dealt = 0;
-
-        if (_targetMonster != null)
-        {
-            if (_sourceTower != null)
-                dealt = _sourceTower.ApplyHitAndReturnDamage(_targetMonster, _damage);
-            else
-            {
-                _targetMonster.TakeDamage(_damage);
-                dealt = _damage;
-            }
-
-            if (_splashRadius > 0.01f && _splashRatio > 0f)
-            {
-                int splashDmg = Mathf.Max(1, Mathf.RoundToInt(_damage * _splashRatio));
-                TraitProcessor.ApplySplashDamage(_sourceTower, hitPos, _splashRadius, _targetMonster, splashDmg);
-            }
-        }
-        
-        _hitListener?.OnProjectileHit(_targetMonster, hitPos, dealt);
-
-        ReleaseOrDestroy();
-    }
-
-    private void ReleaseOrDestroy()
-    {
-        if (_poolOwner != null && ProjectilePool.Instance != null)
-        {
-            _poolOwner.Release(this);
-            return;
-        }
-
-        Destroy(gameObject);
     }
 }

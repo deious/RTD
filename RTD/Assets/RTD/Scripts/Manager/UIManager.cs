@@ -73,7 +73,7 @@ public class UIManager : MonoBehaviour
     
     public void UpdateWave(int curr, int max, string modifiersLabel)
     {
-        waveText.text = $"Wave : {curr}/{max}";
+        waveText.text = $"라운드 : {curr}/{max}";
 
         if (waveModifiersText == null)
             return;
@@ -88,7 +88,7 @@ public class UIManager : MonoBehaviour
         }
     }
     
-    public void UpdateWaveMonsterCount(int remaining, int total)
+    public void UpdateWaveMonsterCount(int killed, int total)
     {
         if (waveMonsterCountText == null)
             return;
@@ -99,10 +99,10 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        remaining = Mathf.Max(0, remaining);
+        killed = Mathf.Max(0, killed);
         total = Mathf.Max(0, total);
 
-        waveMonsterCountText.text = $"처치 : {remaining}/{total}";
+        waveMonsterCountText.text = $"처치 : {killed}/{total}";
     }
     
     public void UpdateNextWaveTimer(int secondsRemaining)
