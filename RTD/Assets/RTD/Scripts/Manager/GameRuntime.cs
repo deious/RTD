@@ -2,10 +2,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using RTD.Scripts.GamePlay.Wave;
 using Cysharp.Threading.Tasks;
+using UnityEngine.SceneManagement;
+using System.Threading;
 
-public class GameManager : MonoBehaviour
+public class GameRuntime : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameRuntime Instance { get; private set; }
 
     [SerializeField] private int startGold = 100;
     [SerializeField] private int startLife = 10;
@@ -20,13 +22,22 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AugmentSystem augmentSystem;
     [SerializeField] private OrbitCamera orbitCamera;
     [SerializeField] private GridManager grid;
+    
+    [Header("Scene")]
+    [SerializeField] private string titleSceneName = "Title";
+    [SerializeField] private string gameSceneName = "InGame";
 
+    private bool gameOver;
+    private CancellationTokenSource cts;
+    
     private int gold;
     private int life;
     private int currentWave;
-    private bool _waveRunning;
-    private bool _waitingIntermission;
-    private bool _waitingAugment;
+    private bool waveRunning;
+    private bool waitingIntermission;
+    private bool waitingAugment;
+    private int waveAdvanceId;
+    private bool nextWaveStartedForThisAdvance;
     
     private WaveModifiers _currentWaveMods;
 
@@ -38,6 +49,9 @@ public class GameManager : MonoBehaviour
     public float EnemyHpMul => (augmentSystem != null) ? augmentSystem.EnemyHpMul : 1f;
     // 외부에서 골드 읽을 수 있게 프로퍼티
     public int Gold => gold;
+    public bool IsGameOver => gameOver;
+    public int Life => life;
+    public int CurrentWave => currentWave;
 
     private void Awake()
     {
@@ -57,6 +71,9 @@ public class GameManager : MonoBehaviour
         gold = startGold;
         life = startLife;
         currentWave = startWave;
+        
+        cts = new CancellationTokenSource();
+        gameOver = false;
     }
 
     private void Start()
@@ -99,6 +116,9 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (gameOver)
+            return;
+        
         if (augmentSystem != null && augmentSystem.IsChoosing)
             return;
         
@@ -118,7 +138,7 @@ public class GameManager : MonoBehaviour
             AddGold(10);
         }
 
-        if (keyboard.hKey.wasPressedThisFrame)
+        /*if (keyboard.hKey.wasPressedThisFrame)
         {
             ChangeLife(-1);
         }
@@ -126,7 +146,7 @@ public class GameManager : MonoBehaviour
         if (keyboard.jKey.wasPressedThisFrame)
         {
             NextWave();
-        }
+        }*/
     }
     
     private async UniTaskVoid PlayCameraIntro()
@@ -160,133 +180,166 @@ public class GameManager : MonoBehaviour
 
     private void BeginWave()
     {
-        _waveRunning = true;
+        if (gameOver) 
+            return;
+        
+        waveRunning = true;
         StartWave(currentWave);
     }
     
     private void StartWave(int waveIndex)
     {
+        if (gameOver) return;
+
+        Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
         WavePatternSO pattern = FindWavePattern(waveIndex);
 
-        if (pattern != null)
+        if (pattern == null)
         {
-            // 패턴에 들어있는 modifier type을 기존 WaveModifiers로 변환
-            _currentWaveMods = WaveModifierUtil.ToWaveModifiers(pattern.modifiers);
-
-            Debug.Log($"[Wave {waveIndex}] Pattern={pattern.name} Modifiers={_currentWaveMods.label}");
-
-            if (UIManager.Instance != null)
-                UIManager.Instance.UpdateWave(waveIndex, maxWave, _currentWaveMods.label);
-
-            if (MonsterSpawner.Instance != null)
-                MonsterSpawner.Instance.SpawnPattern(pattern, _currentWaveMods);
-            else
-                Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
-
-            MonsterAI.OnBossDied -= HandleBossDied;
-
-            if (pattern.isBossWave)
-            {
-                MonsterAI.OnBossDied += HandleBossDied;
-            }
-            
+            Debug.LogError($"WavePattern not found for waveIndex={waveIndex}. (Option A: pattern-only)");
+            EndGame(GameEndType.Lose); // 혹은 return; 원하는 정책
             return;
         }
 
-        // 패턴이 없으면 기존 랜덤 웨이브 유지 (기존 동작 보존)
-        _currentWaveMods = WaveModifierRoller.Roll(0, 2);
+        WaveModifiers currentWaveMods = WaveModifierUtil.ToWaveModifiers(pattern.modifiers);
 
-        Debug.Log($"[Wave {waveIndex}] Modifiers = {_currentWaveMods.label} (speedMul={_currentWaveMods.speedMul}, hpMul={_currentWaveMods.hpMul}, shieldHp={_currentWaveMods.shieldHp})");
+        Debug.Log($"[Wave {waveIndex}] Pattern={pattern.name} Modifiers={currentWaveMods.label}");
 
         if (UIManager.Instance != null)
-            UIManager.Instance.UpdateWave(waveIndex, maxWave, _currentWaveMods.label);
+            UIManager.Instance.UpdateWave(waveIndex, maxWave, currentWaveMods.label);
+
+        MonsterAI.OnBossDied -= HandleBossDied;
+        if (pattern.isBossWave)
+            MonsterAI.OnBossDied += HandleBossDied;
 
         if (MonsterSpawner.Instance != null)
-            MonsterSpawner.Instance.SpawnWave(waveIndex, _currentWaveMods);
+            MonsterSpawner.Instance.SpawnPattern(pattern, currentWaveMods);
         else
             Debug.LogWarning("MonsterSpawner.Instance is null. Add MonsterSpawner to scene.");
     }
     
     private void HandleWaveCleared()
     {
-        if (!_waveRunning) return;
-        _waveRunning = false;
-        
-        var pattern = FindWavePattern(currentWave);
+        if (gameOver) 
+            return;
+        if (!waveRunning) 
+            return;
+
+        waveRunning = false;
+
+        waveAdvanceId++;
+        nextWaveStartedForThisAdvance = false;
+
+        if (currentWave >= maxWave)
+        {
+            EndGame(GameEndType.Win);
+            return;
+        }
+
+        WavePatternSO pattern = FindWavePattern(currentWave);
         bool isBossWave = (pattern != null && pattern.isBossWave);
 
         if (isBossWave)
         {
-            _waitingAugment = true;
-            StartBossIntermission();
+            waitingAugment = true;
+            StartBossIntermission(waveAdvanceId);
             return;
         }
 
-        AutoNextWaveAsync().Forget();
+        AutoNextWaveAsync(waveAdvanceId).Forget();
     }
     
-    private void StartBossIntermission()
+    private void StartBossIntermission(int advanceId)
     {
-        if (_waitingIntermission) return;
+        if (waitingIntermission) return;
 
-        _waitingIntermission = true;
-        
+        waitingIntermission = true;
+
         RunIntermissionAsync(intermissionSeconds).ContinueWith(() =>
         {
-            _waitingIntermission = false;
-            TryStartNextWave();
+            waitingIntermission = false;
+
+            if (!gameOver && waitingAugment && augmentSystem != null && augmentSystem.IsChoosing)
+            {
+                augmentSystem.ForcePickRandomIfChoosing();
+            }
+
+            TryStartNextWave(advanceId);
         }).Forget();
-        
+
         if (augmentSystem != null)
         {
+            waitingAugment = true;
+
             augmentSystem.BeginChoice(() =>
             {
-                _waitingAugment = false;
-                TryStartNextWave();
+                waitingAugment = false;
+                TryStartNextWave(advanceId);
             });
         }
         else
         {
-            _waitingAugment = false;
+            waitingAugment = false;
+            TryStartNextWave(advanceId);
         }
     }
-
-    private void TryStartNextWave()
+    
+    private void TryStartNextWave(int advanceId)
     {
-        if (_waitingAugment || _waitingIntermission)
+        if (gameOver) return;
+        
+        if (advanceId != waveAdvanceId) 
+            return;
+        
+        if (nextWaveStartedForThisAdvance) 
             return;
 
+        if (waitingAugment || waitingIntermission) 
+            return;
+
+        nextWaveStartedForThisAdvance = true;
+
         NextWave();
-        _waveRunning = true;
+        waveRunning = true;
     }
 
-    private async UniTaskVoid AutoNextWaveAsync()
+    private async UniTaskVoid AutoNextWaveAsync(int advanceId)
     {
-        if (_waitingIntermission) return;
-        _waitingIntermission = true;
+        if (gameOver) return;
+
+        if (waitingIntermission) return;
+        waitingIntermission = true;
 
         await RunIntermissionAsync(intermissionSeconds);
 
-        _waitingIntermission = false;
+        waitingIntermission = false;
 
-        NextWave();
-        _waveRunning = true;
+        TryStartNextWave(advanceId);
     }
 
     private async UniTask RunIntermissionAsync(float seconds)
     {
-        float t = seconds;
-        while (t > 0f)
+        try
+        {
+            float t = seconds;
+            while (t > 0f)
+            {
+                if (UIManager.Instance != null)
+                    UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(t));
+
+                await UniTask.Delay(1000, cancellationToken: cts.Token);
+                t -= 1f;
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            return;
+        }
+        finally
         {
             if (UIManager.Instance != null)
-                UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(t));
-
-            await UniTask.Delay(1000);
-            t -= 1f;
+                UIManager.Instance.UpdateNextWaveTimer(0);
         }
-
-        if (UIManager.Instance != null)
-            UIManager.Instance.UpdateNextWaveTimer(0);
     }
     
     private void HandleBossDied()
@@ -303,6 +356,13 @@ public class GameManager : MonoBehaviour
             MonsterSpawner.Instance.OnWaveCleared -= HandleWaveCleared;
             MonsterSpawner.Instance.OnWaveMonsterCountChanged -= HandleWaveMonsterCountChanged;
         }
+        
+        cts?.Cancel();
+        cts?.Dispose();
+        cts = null;
+
+        if (Instance == this)
+            Instance = null;
     }
 
     private WavePatternSO FindWavePattern(int waveIndex)
@@ -321,10 +381,31 @@ public class GameManager : MonoBehaviour
         return null;
     }
     
-    private void HandleWaveMonsterCountChanged(int alive, int total)
+    private void EndGame(GameEndType endType)
+    {
+        if (gameOver) return;
+        gameOver = true;
+
+        waveRunning = false;
+        waitingIntermission = false;
+        waitingAugment = false;
+        
+        cts.Cancel();
+        
+        if (orbitCamera != null)
+            orbitCamera.SetInputLock(true);
+        
+        if (MonsterSpawner.Instance != null)
+            MonsterSpawner.Instance.StopAllSpawning(destroyAlive: true);
+        
+        if (AppFlowManager.Instance != null)
+            AppFlowManager.Instance.OnGameEnd(new GameResult(endType, currentWave));
+    }
+    
+    private void HandleWaveMonsterCountChanged(int killed, int total)
     {
         if (UIManager.Instance != null)
-            UIManager.Instance.UpdateWaveMonsterCount(alive, total);
+            UIManager.Instance.UpdateWaveMonsterCount(killed, total);
     }
 
     public bool TrySpendGold(int amount)
@@ -350,8 +431,17 @@ public class GameManager : MonoBehaviour
 
     public void ChangeLife(int amount)
     {
+        if (gameOver)
+            return;
+
         life += amount;
-        UIManager.Instance.UpdateLife(life);
+        if (life < 0) life = 0;
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.UpdateLife(life);
+
+        if (life <= 0)
+            EndGame(GameEndType.Lose);
     }
 
     public void NextWave()

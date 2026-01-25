@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: BossMonsterData
   m_EditorClassIdentifier: Assembly-CSharp::BossMonsterDataSO
   bossId: boss_default
-  prefab: {fileID: 8095480719588087266, guid: b542d8777445c4445853dd8a59d688ff, type: 3}
+  prefab: {fileID: 1246070444819080, guid: 5509c5148b2db4643b62fbddc1216303, type: 3}
   scale: 1.2
-  maxHp: 500
-  moveSpeed: 1.4
+  maxHp: 300
+  moveSpeed: 8
   shieldHp: 0
   rewardGold: 50
   shakeDuration: 0.25

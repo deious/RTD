@@ -3,9 +3,10 @@ using UnityEngine;
 namespace RTD.Scripts.GamePlay.Wave
 {
     [System.Serializable]
-    public struct MonsterSpawnEntry
+    public struct WaveSpawnEntry
     {
-        public GameObject monsterPrefab;
+        public MonsterArchetypeSO archetype;
+        public MonsterColorSO color;
         public int count;
     }
 
@@ -16,7 +17,7 @@ namespace RTD.Scripts.GamePlay.Wave
         public int waveIndex;
 
         [Header("Spawn")]
-        public MonsterSpawnEntry[] spawns;
+        public WaveSpawnEntry[] spawns;
         public float spawnInterval = 0.4f;
 
         [Header("Wave Modifiers")]

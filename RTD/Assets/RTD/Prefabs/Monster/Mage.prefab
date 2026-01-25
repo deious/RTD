@@ -103,8 +103,9 @@ GameObject:
   - component: {fileID: 23027828563532868}
   - component: {fileID: -8194612215805722891}
   - component: {fileID: -2577568078088643934}
+  - component: {fileID: 1508799122996905213}
   m_Layer: 8
-  m_Name: TB_Soldier_Mage_Red
+  m_Name: Mage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -229,3 +230,18 @@ MonoBehaviour:
   allowBurnStack: 1
   randomLane: 1
   fixedLaneIndex: 1
+  modelForward: 5
+  modelRotationOffsetEuler: {x: 0, y: 0, z: 180}
+--- !u!114 &1508799122996905213
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1350674450777910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90088b024edc5ec43b51d41b81539df3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterMaterialSlot
+  targetRenderer: {fileID: 0}

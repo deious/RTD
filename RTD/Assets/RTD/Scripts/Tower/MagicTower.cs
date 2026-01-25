@@ -21,8 +21,8 @@ public class MagicTower : TowerBase, IProjectileHitListener
 
         float dps = baseDotDps;
 
-        if (GameManager.Instance != null)
-            dps *= GameManager.Instance.TowerDamageMul;
+        if (GameRuntime.Instance != null)
+            dps *= GameRuntime.Instance.TowerDamageMul;
 
         target.ApplyDot(dps, baseDotDuration);
     }

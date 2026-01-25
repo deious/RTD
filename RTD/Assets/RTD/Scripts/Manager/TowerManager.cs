@@ -525,7 +525,7 @@ public class TowerManager : MonoBehaviour
             return false;
         }
 
-        if (GameManager.Instance == null)
+        if (GameRuntime.Instance == null)
         {
             Debug.LogError("GameManager 인스턴스가 없습니다.");
             return false;
@@ -543,7 +543,7 @@ public class TowerManager : MonoBehaviour
 
         int cost = rolledData.buildCost;
 
-        if (GameManager.Instance.Gold < cost)
+        if (GameRuntime.Instance.Gold < cost)
         {
             Debug.Log("골드가 부족합니다.");
             return false;
@@ -566,7 +566,7 @@ public class TowerManager : MonoBehaviour
         tile.SetTower(tower);
         tower.SetTile(tile);
 
-        GameManager.Instance.AddGold(-cost);
+        GameRuntime.Instance.AddGold(-cost);
 
         Debug.Log($"[Build] Rolled: {rolledData.towerId} ({rolledData.grade}), cost={cost}");
         return true;
@@ -615,9 +615,9 @@ public class TowerManager : MonoBehaviour
         }
 
         int cost = GetBuildUpgradeCost();
-        if (GameManager.Instance == null) return false;
+        if (GameRuntime.Instance == null) return false;
 
-        if (!GameManager.Instance.TrySpendGold(cost))
+        if (!GameRuntime.Instance.TrySpendGold(cost))
         {
             Debug.Log("[Build] Not enough gold for build level up");
             return false;
@@ -637,10 +637,10 @@ public class TowerManager : MonoBehaviour
         if (_placeState == PlaceState.Placing)
             return;
         
-        if (GameManager.Instance != null)
+        if (GameRuntime.Instance != null)
         {
             int minCost = GetMinBuildCostForCurrentLevel();
-            if (GameManager.Instance.Gold < minCost)
+            if (GameRuntime.Instance.Gold < minCost)
             {
                 Debug.Log("[Build] 골드 부족: 빌드 모드 진입 불가");
                 return;
@@ -886,8 +886,8 @@ public class TowerManager : MonoBehaviour
         
         tower.SetTile(null);
         
-        if (GameManager.Instance != null && refund > 0)
-            GameManager.Instance.AddGold(refund);
+        if (GameRuntime.Instance != null && refund > 0)
+            GameRuntime.Instance.AddGold(refund);
         
         Destroy(tower.gameObject);
 
@@ -994,10 +994,10 @@ public class TowerManager : MonoBehaviour
         if (d.grade == TowerGrade.Normal)
             return false;
 
-        if (GameManager.Instance == null)
+        if (GameRuntime.Instance == null)
             return false;
 
-        if (!GameManager.Instance.TrySpendGold(cost))
+        if (!GameRuntime.Instance.TrySpendGold(cost))
             return false;
 
         if (traitDatabase == null)

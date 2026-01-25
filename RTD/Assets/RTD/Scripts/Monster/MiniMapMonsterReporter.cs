@@ -1,27 +1,52 @@
 using UnityEngine;
 
-public class MiniMapMonsterReporter : MonoBehaviour
+public class MiniMapMonsterReporter : MonoBehaviour, IPoolable
 {
-    private MiniMapMonsterUIRenderer _renderer;
-    private Transform _root;
-    private bool _inited;
-    private bool _done;
+    private MiniMapMonsterUIRenderer rendererRef;
+    private Transform root;
+    private bool inited;
+    private bool registered;
 
     public void Init(MiniMapMonsterUIRenderer renderer, Transform monsterRoot)
     {
-        _renderer = renderer;
-        _root = monsterRoot;
-        _inited = true;
+        rendererRef = renderer;
+        root = monsterRoot;
+        inited = true;
 
-        _renderer?.Register(_root);
+        Register();
     }
 
-    private void OnDestroy()
+    private void Register()
     {
-        if (_done) return;
-        _done = true;
+        if (!inited) return;
+        if (registered) return;
+        if (rendererRef == null || root == null) return;
 
-        if (_inited)
-            _renderer?.Unregister(_root);
+        registered = true;
+        rendererRef.Register(root);
+    }
+
+    private void Unregister()
+    {
+        if (!registered) return;
+        registered = false;
+
+        if (rendererRef != null && root != null)
+            rendererRef.Unregister(root);
+    }
+
+    public void OnSpawned()
+    {
+        Register();
+    }
+
+    public void OnDespawned()
+    {
+        Unregister();
+    }
+
+    private void OnDisable()
+    {
+        Unregister();
     }
 }

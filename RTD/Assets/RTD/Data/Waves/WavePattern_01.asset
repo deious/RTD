@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RTD.Scripts.GamePlay.Wave.WavePatternSO
   waveIndex: 1
   spawns:
-  - monsterPrefab: {fileID: 1032480660094732, guid: 62d18f162f42f5b489d22fe1e7cfb210, type: 3}
-    count: 3
-  - monsterPrefab: {fileID: 1350674450777910, guid: 423ed8581f95cbe4f85de94b2c7d59b2, type: 3}
-    count: 3
-  spawnInterval: 0.4
-  modifiers: 0300000001000000
+  - archetype: {fileID: 11400000, guid: 7de36f7123cee2b498d28a4082fe2877, type: 2}
+    color: {fileID: 11400000, guid: 81930c496e7faee4ea357f50f55881b9, type: 2}
+    count: 5
+  spawnInterval: 0.3
+  modifiers: 
   isBossWave: 0
   bossData: {fileID: 0}
