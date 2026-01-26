@@ -13,8 +13,17 @@ MonoBehaviour:
   m_Name: WavePattern_05
   m_EditorClassIdentifier: Assembly-CSharp::RTD.Scripts.GamePlay.Wave.WavePatternSO
   waveIndex: 5
-  spawns: []
-  spawnInterval: 0.4
-  modifiers: 01000000
-  isBossWave: 1
-  bossData: {fileID: 11400000, guid: d8f8dc1b303132a4ebe89a9f5a6b8440, type: 2}
+  spawns:
+  - archetype: {fileID: 11400000, guid: b9a67b487f9e30943b9ef21b79e21445, type: 2}
+    color: {fileID: 11400000, guid: 34262afa52d789a43b789e9241c2d5de, type: 2}
+    count: 14
+  - archetype: {fileID: 11400000, guid: 79d6bd4f2db01044a93588f0de64e3d0, type: 2}
+    color: {fileID: 11400000, guid: 34262afa52d789a43b789e9241c2d5de, type: 2}
+    count: 3
+  - archetype: {fileID: 11400000, guid: bbfbeaf047ccd8e41bf9c63d57c872e3, type: 2}
+    color: {fileID: 11400000, guid: 34262afa52d789a43b789e9241c2d5de, type: 2}
+    count: 2
+  spawnInterval: 0.436
+  modifiers: 00000000
+  isBossWave: 0
+  bossData: {fileID: 0}

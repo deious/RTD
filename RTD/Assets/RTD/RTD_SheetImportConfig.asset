@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d261b85b27156254b8a4c8018cbc78aa, type: 3}
+  m_Name: RTD_SheetImportConfig
+  m_EditorClassIdentifier: Assembly-CSharp::RTDSheetImportConfig
+  monstersArchetypeCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=474383091&single=true&output=csv
+  monstersColorCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=1706826114&single=true&output=csv
+  bossCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=653827935&single=true&output=csv
+  wavesCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=902675485&single=true&output=csv
+  towersCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=1538292908&single=true&output=csv
+  augmentsCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=386796400&single=true&output=csv
+  traitsCsvUrl: https://docs.google.com/spreadsheets/d/e/2PACX-1vSCdzVOevtWhWv7lscYM-xTyjnlJxA_wrVawt_KmA25nFwEzHaKn6RpLVLUQ6894FVP_jPsvrFhLuVb/pub?gid=1698966042&single=true&output=csv
+  archetypeFolder: Assets/RTD/Data/Monster/Archetype
+  colorFolder: Assets/RTD/Data/Monster/Color
+  bossFolder: Assets/RTD/Data/Monster/Boss
+  wavesFolder: Assets/RTD/Data/Waves
+  towersFolder: Assets/RTD/Data/Towers
+  augmentsFolder: Assets/RTD/Data/Augment
+  traitsFolder: Assets/RTD/Data/Trait
+  autoFillGameRuntimeWavePatterns: 1

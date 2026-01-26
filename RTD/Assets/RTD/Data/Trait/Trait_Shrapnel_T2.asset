@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
+  m_Name: Trait_Shrapnel_T2
+  m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
+  type: 6
+  tier: 2
+  allowed: 2
+  traitName: "\uD30C\uD3B8\uD0C4 II"
+  description: "\uC2A4\uD50C\uB798\uC2DC \uD53C\uD574 \uBE44\uC728 \uC99D\uAC00.
+    (value=\uBE44\uC728)"
+  value: 0.35
+  duration: 0
+  range: 0
+  count: 0

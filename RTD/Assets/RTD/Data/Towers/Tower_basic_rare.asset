@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b4cdb0b8719f5449fda55c767e57bf, type: 3}
+  m_Name: Tower_basic_rare
+  m_EditorClassIdentifier: Assembly-CSharp::TowerData
+  towerId: basic_rare
+  grade: 1
+  displayName: Basic (Rare)
+  damage: 10
+  attackSpeed: 1.37
+  range: 3.39
+  buildCost: 10
+  towerPrefab: {fileID: 1539728516898772, guid: 4cabf353daba91c49a1f18b333241d94, type: 3}
+  gradeColor: {r: 0, g: 0, b: 0, a: 0}

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f81231f3baa5d784780125b2a02adca6, type: 3}
+  m_Name: WavePattern_20
+  m_EditorClassIdentifier: Assembly-CSharp::RTD.Scripts.GamePlay.Wave.WavePatternSO
+  waveIndex: 20
+  spawns: []
+  spawnInterval: 0.384
+  modifiers: 02000000
+  isBossWave: 1
+  bossData: {fileID: 11400000, guid: abbec74d513c2c64fa4c61a12d3598aa, type: 2}

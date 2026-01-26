@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
+  m_Name: Trait_Critical_T2
+  m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
+  type: 0
+  tier: 2
+  allowed: -1
+  traitName: "\uCE58\uBA85\uD0C0 II"
+  description: "\uC77C\uC815 \uD655\uB960\uB85C \uD53C\uD574\uAC00 \uC99D\uAC00\uD569\uB2C8\uB2E4.
+    (\uD655\uB960=value, \uBC30\uC218=range)"
+  value: 0.18
+  duration: 0
+  range: 2
+  count: 0
