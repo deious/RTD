@@ -37,6 +37,25 @@ public class MonsterSpawner : MonoBehaviour
 
     private bool isSpawning;
     private bool spawnFinished;
+    
+    // ===== Debug counters =====
+    [SerializeField] private bool debugSpawnLog = true;
+
+    private int scheduledCount;   // "예약"한 스폰 수
+    private int canceledCount;    // Delay에서 cancel로 빠진 수
+    private int earlyReturnCount; // delay 이후 조건(isSpawning/waveId mismatch 등)으로 return된 수
+
+    private int startWaveCallCount;   // StartWaveTracking 중복 호출 감지
+    private int waveClearedCallCount; // OnWaveCleared 중복 호출 감지
+
+    private int currentWaveTokenId;   // CTS 구분용(간단히 증가)
+
+// log helper
+    private void DLog(string msg)
+    {
+        if (!debugSpawnLog) return;
+        Debug.Log(msg);
+    }
 
     private void Awake()
     {
@@ -51,10 +70,18 @@ public class MonsterSpawner : MonoBehaviour
     private void StartWaveTracking(int total)
     {
         currentWaveId++;
-        
+        ///
+        startWaveCallCount++;
+        int prevWaveId = currentWaveId;
+        int prevTokenId = currentWaveTokenId;
+        bool prevCtsCanceled = waveSpawnCts != null && waveSpawnCts.IsCancellationRequested;
+        ///
         waveSpawnCts?.Cancel();
         waveSpawnCts?.Dispose();
         waveSpawnCts = new CancellationTokenSource();
+
+        // currentWaveTokenId++ 추후 삭제
+        currentWaveTokenId++;
         
         totalThisWave = Mathf.Max(0, total);
 
@@ -63,9 +90,18 @@ public class MonsterSpawner : MonoBehaviour
         killedCount = 0;
         escapedCount = 0;
 
+        // 아래 3개 삭제
+        scheduledCount = 0;
+        canceledCount = 0;
+        earlyReturnCount = 0;
+        
         spawnFinished = false;
         isSpawning = true;
 
+        DLog($"[WaveStart] waveIndex? (pattern) | waveId={currentWaveId} (prev={prevWaveId}) " +
+             $"StartCalls={startWaveCallCount} prevCTS(tokenId={prevTokenId}) wasCanceled={prevCtsCanceled} " +
+             $"newCTS(tokenId={currentWaveTokenId}) totalThisWave={totalThisWave} time={Time.time:F2}");
+        
         RaiseMonsterCountChanged();
     }
 
@@ -184,14 +220,30 @@ public class MonsterSpawner : MonoBehaviour
             return;
         }
 
-        if (!isSpawning)
+        if (waveId != currentWaveId) 
             return;
         
-        if (waveId != currentWaveId)
-            return;
-
         spawnFinished = true;
+        
+        try
+        {
+            await UniTask.WhenAny(
+                UniTask.WaitUntil(() => spawnedCount >= totalThisWave, PlayerLoopTiming.Update, waveSpawnCts.Token),
+                UniTask.Delay(System.TimeSpan.FromSeconds(2.0f), DelayType.DeltaTime, PlayerLoopTiming.Update, waveSpawnCts.Token)
+            );
+        }
+        catch (System.OperationCanceledException)
+        {
+            return;
+        }
+        
         isSpawning = false;
+        
+        if (spawnedCount < totalThisWave)
+        {
+            DLog($"[FinishTimeout] waveId={waveId} spawned={spawnedCount}/{totalThisWave} " +
+                 $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
+        }
 
         TryNotifyWaveCleared();
     }
@@ -203,6 +255,12 @@ public class MonsterSpawner : MonoBehaviour
 
         spawnedCount++;
         activeCount++;
+        
+        DLog($"[Spawned] waveId={currentWaveId} tokenId={currentWaveTokenId} " +
+             $"spawned={spawnedCount}/{totalThisWave} scheduled={scheduledCount} " +
+             $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
+
+        
         RaiseMonsterCountChanged();
         
         if (miniMapMonsterUI != null)
@@ -331,6 +389,8 @@ public class MonsterSpawner : MonoBehaviour
         if (hasBoss) total += 1;
     
         StartWaveTracking(total);
+        DLog($"[SpawnPattern] waveIndex={waveIndex} waveId={currentWaveId} tokenId={currentWaveTokenId} " +
+             $"interval={interval:F2} totalComputed={total} hasBoss={hasBoss} time={Time.time:F2}");
         int waveId = currentWaveId;
         
         if (pattern.spawns != null)
@@ -347,6 +407,12 @@ public class MonsterSpawner : MonoBehaviour
                 {
                     float delay = seq * interval;
                     seq++;
+                    
+                    // 아래 두개 삭제
+                    scheduledCount++;
+                    DLog($"[Schedule] waveIndex={waveIndex} waveId={waveId} tokenId={currentWaveTokenId} " +
+                         $"seq={seq-1} delay={delay:F2} entryIndex={i} archetype={entry.archetype.id /*없으면 다른 id*/} " +
+                         $"color={(entry.color != null ? entry.color.name : "null")} scheduled={scheduledCount}/{totalThisWave}");
     
                     SpawnOneAfterAsync(
                         delay,
@@ -380,6 +446,9 @@ public class MonsterSpawner : MonoBehaviour
     
     public void StopAllSpawning(bool destroyAlive = false)
     {
+        DLog($"[StopAllSpawning] waveId={currentWaveId} tokenId={currentWaveTokenId} " +
+             $"destroyAlive={destroyAlive} BEFORE total={totalThisWave} scheduled={scheduledCount} spawned={spawnedCount} " +
+             $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
         isSpawning = false;
         spawnFinished = true;
 

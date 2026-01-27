@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class OrbitCamera : MonoBehaviour
 {
@@ -23,6 +26,9 @@ public class OrbitCamera : MonoBehaviour
     
     [Header("Mode")]
     [SerializeField] private bool useTransformAsInitialView = false;
+    
+    [Header("UI Block")]
+    [SerializeField] private ScrollRect blockZoomWhenPointerOver;
 
     private float _yaw = 45f;
     private float _pitch = 45f;
@@ -91,6 +97,9 @@ public class OrbitCamera : MonoBehaviour
     {
         if (Mouse.current == null) 
             return;
+        
+        if (IsPointerOver(blockZoomWhenPointerOver))
+            return;
 
         float scroll = Mouse.current.scroll.ReadValue().y;
         if (Mathf.Abs(scroll) > 0.01f)
@@ -144,6 +153,33 @@ public class OrbitCamera : MonoBehaviour
         
         _externalPosOffset = Vector3.zero;
     }
+    
+    private static bool IsPointerOver(ScrollRect sr)
+    {
+        if (sr == null) return false;
+        if (EventSystem.current == null) return false;
+        if (Mouse.current == null) return false;
+
+        var pointer = new PointerEventData(EventSystem.current)
+        {
+            position = Mouse.current.position.ReadValue()
+        };
+
+        var results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointer, results);
+
+        for (int i = 0; i < results.Count; i++)
+        {
+            var go = results[i].gameObject;
+            if (go == null) continue;
+            
+            if (go == sr.gameObject) return true;
+            if (go.transform.IsChildOf(sr.transform)) return true;
+        }
+
+        return false;
+    }
+
     
     [ContextMenu("Print Camera View")]
     private void PrintView()

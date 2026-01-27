@@ -191,7 +191,7 @@ public class GameRuntime : MonoBehaviour
     {
         if (gameOver) return;
 
-        Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
+        //Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
         WavePatternSO pattern = FindWavePattern(waveIndex);
 
         if (pattern == null)

@@ -16,9 +16,9 @@ MonoBehaviour:
   tier: 3
   allowed: 4
   traitName: "\uD654\uC0C1 III"
-  description: "\uACF5\uACA9 \uC2DC \uD654\uC0C1 DOT. (value=dpsRatio, duration=\uC9C0\uC18D,
-    count=maxStacks)"
-  value: 0.32
-  duration: 4.5
+  description: "\uACF5\uACA9 \uC2DC \uD654\uC0C1 DOT. (\uCD08\uB2F9 35% \uB300\uBBF8\uC9C0,
+    4\uCD08 \uC9C0\uC18D, \uCD5C\uB300 5\uC2A4\uD0DD)"
+  value: 0.35
+  duration: 4
   range: 0
   count: 5

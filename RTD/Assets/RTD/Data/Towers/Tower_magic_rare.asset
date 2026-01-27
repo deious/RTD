@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: magic_rare
   grade: 1
-  displayName: Magic (Rare)
+  displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 12.5
   attackSpeed: 1.13
-  range: 3.69
+  range: 18
   buildCost: 10
   towerPrefab: {fileID: 1064594759508384, guid: 2b2bca2994b2a0b4c93c38b81c7b04f7, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

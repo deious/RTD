@@ -17,8 +17,9 @@ MonoBehaviour:
   allowed: 1
   traitName: "\uC9D1\uC911 III"
   description: "\uAC19\uC740 \uB300\uC0C1 \uC5F0\uC18D \uACF5\uACA9 \uC2DC \uD53C\uD574
-    \uC99D\uAC00. (value=\uC2A4\uD0DD\uB2F9 \uC99D\uAC00, count=\uCD5C\uB300\uC2A4\uD0DD)"
-  value: 0.15
+    \uC99D\uAC00. (\uC2A4\uD0DD\uB2F9 20% \uB300\uBBF8\uC9C0 \uC99D\uAC00, \uCD5C\uB300
+    6\uC2A4\uD0DD)"
+  value: 0.2
   duration: 0
   range: 0
   count: 6

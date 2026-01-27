@@ -16,7 +16,7 @@ MonoBehaviour:
   prefab: {fileID: 1246070444819080, guid: 5509c5148b2db4643b62fbddc1216303, type: 3}
   scale: 2
   maxHp: 5200
-  moveSpeed: 1.15
+  moveSpeed: 14
   shieldHp: 150
   rewardGold: 85
   shakeDuration: 0.3

@@ -16,8 +16,8 @@ MonoBehaviour:
   tier: 2
   allowed: 4
   traitName: "\uC800\uC8FC II"
-  description: "\uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00. (value=\uCD94\uAC00\uBC30\uC728,
-    duration=\uC9C0\uC18D)"
+  description: "\uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00. (22% \uC99D\uAC00, 3\uCD08
+    \uC9C0\uC18D)"
   value: 0.22
   duration: 3
   range: 0

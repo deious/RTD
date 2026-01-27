@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: cannon_normal
   grade: 0
-  displayName: Cannon (Normal)
+  displayName: "\uACF5\uC131 \uD0C0\uC6CC"
   damage: 18
   attackSpeed: 0.65
-  range: 3.8
+  range: 18
   buildCost: 10
   towerPrefab: {fileID: 1473710097402076, guid: 0e6b4fff8caa01642babc3fdec16b15e, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

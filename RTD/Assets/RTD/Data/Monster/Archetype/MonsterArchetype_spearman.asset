@@ -15,6 +15,6 @@ MonoBehaviour:
   id: spearman
   prefab: {fileID: 1246070444819080, guid: 5509c5148b2db4643b62fbddc1216303, type: 3}
   baseHp: 100
-  baseMoveSpeed: 1.55
-  baseShieldHp: 0
-  canBeBossCandidate: 1
+  baseMoveSpeed: 10
+  baseShieldHp: 60
+  canBeBossCandidate: 0

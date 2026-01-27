@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: magic_epic
   grade: 2
-  displayName: Magic (Epic)
+  displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 15.5
-  attackSpeed: 1.34
-  range: 3.79
+  attackSpeed: 1.35
+  range: 21
   buildCost: 10
   towerPrefab: {fileID: 1980452956039334, guid: 996ad6673251d314f8cf21fda8ad68a6, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

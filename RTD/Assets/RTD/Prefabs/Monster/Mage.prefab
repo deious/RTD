@@ -220,8 +220,8 @@ MonoBehaviour:
   moveSpeed: 10
   stoppingDistance: 0.05
   maxHp: 20
-  _shieldHp: 0
-  shieldVfxPrefab: {fileID: 0}
+  shieldHp: 0
+  shieldVfxPrefab: {fileID: 3190805535892460893, guid: 20e0ae9bb867874428f9aaf317b31724, type: 3}
   dotDefaultTickInterval: 0.5
   dotStrongerOverrides: 1
   dotFasterTickPreferred: 1
@@ -244,4 +244,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90088b024edc5ec43b51d41b81539df3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterMaterialSlot
-  targetRenderer: {fileID: 0}
+  targets: []

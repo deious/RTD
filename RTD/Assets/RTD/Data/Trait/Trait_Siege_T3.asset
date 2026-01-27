@@ -16,9 +16,8 @@ MonoBehaviour:
   tier: 3
   allowed: 2
   traitName: "\uACF5\uC131 III"
-  description: "\uC2A4\uD50C\uB798\uC2DC \uBC18\uACBD \uC99D\uAC00. (range=\uCD94\uAC00
-    \uBC18\uACBD)"
+  description: "\uC2A4\uD50C\uB798\uC2DC \uBC18\uACBD \uC99D\uAC00. (+10)"
   value: 0
   duration: 0
-  range: 1.2
+  range: 10
   count: 0
