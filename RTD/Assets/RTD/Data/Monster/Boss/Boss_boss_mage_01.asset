@@ -15,9 +15,9 @@ MonoBehaviour:
   bossId: boss_mage_01
   prefab: {fileID: 1350674450777910, guid: 423ed8581f95cbe4f85de94b2c7d59b2, type: 3}
   scale: 2.2
-  maxHp: 8000
-  moveSpeed: 10
+  maxHp: 2000
+  moveSpeed: 17
   shieldHp: 500
-  rewardGold: 110
-  shakeDuration: 0.35
-  shakeStrength: 0.55
+  rewardGold: 100
+  shakeDuration: 0.5
+  shakeStrength: 0.7

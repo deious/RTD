@@ -7,50 +7,45 @@ using RTD.Scripts.GamePlay.Wave;
 public class MonsterSpawner : MonoBehaviour
 {
     public static MonsterSpawner Instance { get; private set; }
-
-    //[SerializeField] private GameObject monsterPrefab;
-    //[SerializeField] private int spawnCountPerWave = 5;
+    
     [SerializeField] private float spawnInterval = 0.6f;
 
     [Header("Wave Scaling")]
-    //[SerializeField] private int spawnAddPerWave = 1;
-    //[SerializeField] private int maxSpawnCount = 30;
     [SerializeField] private int hpAddPerWave = 2;
 
     [Header("MiniMap")]
     [SerializeField] private MiniMapMonsterUIRenderer miniMapMonsterUI;
 
-    private CancellationTokenSource waveSpawnCts;
+    private CancellationTokenSource _waveSpawnCts;
     public event System.Action<int, int> OnWaveMonsterCountChanged;
     public event System.Action OnWaveCleared;
 
-    public int ActiveCount => activeCount;
-    public int TotalThisWave => totalThisWave;
-    public bool IsSpawning => isSpawning;
+    public int ActiveCount => _activeCount;
+    public int TotalThisWave => _totalThisWave;
+    public bool IsSpawning => _isSpawning;
 
-    private int totalThisWave;
-    private int spawnedCount;
-    private int activeCount;
-    private int killedCount;
-    private int escapedCount;
-    private int currentWaveId;
+    private int _totalThisWave;
+    private int _spawnedCount;
+    private int _activeCount;
+    private int _killedCount;
+    private int _escapedCount;
+    private int _currentWaveId;
 
-    private bool isSpawning;
-    private bool spawnFinished;
+    private bool _isSpawning;
+    private bool _spawnFinished;
     
     // ===== Debug counters =====
     [SerializeField] private bool debugSpawnLog = true;
 
-    private int scheduledCount;   // "예약"한 스폰 수
-    private int canceledCount;    // Delay에서 cancel로 빠진 수
-    private int earlyReturnCount; // delay 이후 조건(isSpawning/waveId mismatch 등)으로 return된 수
+    private int _scheduledCount;   // 예약한 스폰 수
+    private int _canceledCount;    // Delay에서 cancel로 빠진 수
+    private int _earlyReturnCount; // delay 이후 조건(isSpawning/waveId mismatch 등)으로 return된 수
 
-    private int startWaveCallCount;   // StartWaveTracking 중복 호출 감지
-    private int waveClearedCallCount; // OnWaveCleared 중복 호출 감지
+    private int _startWaveCallCount;   // StartWaveTracking 중복 호출 감지
+    private int _waveClearedCallCount; // OnWaveCleared 중복 호출 감지
 
-    private int currentWaveTokenId;   // CTS 구분용(간단히 증가)
-
-// log helper
+    private int _currentWaveTokenId;   // CTS 구분용(간단히 증가)
+    
     private void DLog(string msg)
     {
         if (!debugSpawnLog) return;
@@ -69,38 +64,23 @@ public class MonsterSpawner : MonoBehaviour
 
     private void StartWaveTracking(int total)
     {
-        currentWaveId++;
-        ///
-        startWaveCallCount++;
-        int prevWaveId = currentWaveId;
-        int prevTokenId = currentWaveTokenId;
-        bool prevCtsCanceled = waveSpawnCts != null && waveSpawnCts.IsCancellationRequested;
-        ///
-        waveSpawnCts?.Cancel();
-        waveSpawnCts?.Dispose();
-        waveSpawnCts = new CancellationTokenSource();
+        _currentWaveId++;
+        _startWaveCallCount++;
 
-        // currentWaveTokenId++ 추후 삭제
-        currentWaveTokenId++;
+        _waveSpawnCts?.Cancel();
+        _waveSpawnCts?.Dispose();
+        _waveSpawnCts = new CancellationTokenSource();
         
-        totalThisWave = Mathf.Max(0, total);
-
-        spawnedCount = 0;
-        activeCount = 0;
-        killedCount = 0;
-        escapedCount = 0;
-
-        // 아래 3개 삭제
-        scheduledCount = 0;
-        canceledCount = 0;
-        earlyReturnCount = 0;
         
-        spawnFinished = false;
-        isSpawning = true;
+        _totalThisWave = Mathf.Max(0, total);
 
-        DLog($"[WaveStart] waveIndex? (pattern) | waveId={currentWaveId} (prev={prevWaveId}) " +
-             $"StartCalls={startWaveCallCount} prevCTS(tokenId={prevTokenId}) wasCanceled={prevCtsCanceled} " +
-             $"newCTS(tokenId={currentWaveTokenId}) totalThisWave={totalThisWave} time={Time.time:F2}");
+        _spawnedCount = 0;
+        _activeCount = 0;
+        _killedCount = 0;
+        _escapedCount = 0;
+        
+        _spawnFinished = false;
+        _isSpawning = true;
         
         RaiseMonsterCountChanged();
     }
@@ -120,15 +100,15 @@ public class MonsterSpawner : MonoBehaviour
                     System.TimeSpan.FromSeconds(delay),
                     DelayType.DeltaTime,
                     PlayerLoopTiming.Update,
-                    waveSpawnCts.Token);
+                    _waveSpawnCts.Token);
         }
         catch (System.OperationCanceledException)
         {
             return;
         }
 
-        if (!isSpawning) return;
-        if (waveId != currentWaveId) return;
+        if (!_isSpawning) return;
+        if (waveId != _currentWaveId) return;
 
         if (archetype == null || archetype.prefab == null)
         {
@@ -149,8 +129,9 @@ public class MonsterSpawner : MonoBehaviour
         {
             ai.ApplyArchetype(archetype, isBoss: false);
             ai.ApplyColor(color);
-            ai.AddBaseHp(hpAddPerWave * (waveIndex - 1));
-            ai.ApplyWaveModifiers(mods);
+            //ai.AddBaseHp(hpAddPerWave * (waveIndex - 1));
+            //ai.ApplyWaveModifiers(mods);
+            ai.ApplyWaveScaling(waveIndex, mods);
             ai.BeginRun();
         }
     }
@@ -169,17 +150,17 @@ public class MonsterSpawner : MonoBehaviour
                     System.TimeSpan.FromSeconds(delay),
                     DelayType.DeltaTime,
                     PlayerLoopTiming.Update,
-                    waveSpawnCts.Token);
+                    _waveSpawnCts.Token);
         }
         catch (System.OperationCanceledException)
         {
             return;
         }
 
-        if (!isSpawning)
+        if (!_isSpawning)
             return;
 
-        if (waveId != currentWaveId)
+        if (waveId != _currentWaveId)
             return;
 
         Debug.Log($"[SpawnFire] spawnWave={waveIndex} | currentWave={GameRuntime.Instance?.CurrentWave} | time={Time.time:F2}");
@@ -199,7 +180,8 @@ public class MonsterSpawner : MonoBehaviour
         if (ai != null)
         {
             ai.ApplyBaseStats(bossData.maxHp, bossData.moveSpeed, bossData.shieldHp, true);
-            ai.ApplyWaveModifiers(mods);
+            //ai.ApplyWaveModifiers(mods);
+            ai.ApplyWaveScaling(waveIndex, mods); 
             ai.BeginRun();
         }
     }
@@ -213,23 +195,23 @@ public class MonsterSpawner : MonoBehaviour
                     System.TimeSpan.FromSeconds(delay),
                     DelayType.DeltaTime,
                     PlayerLoopTiming.Update,
-                    waveSpawnCts.Token);
+                    _waveSpawnCts.Token);
         }
         catch (System.OperationCanceledException)
         {
             return;
         }
 
-        if (waveId != currentWaveId) 
+        if (waveId != _currentWaveId) 
             return;
         
-        spawnFinished = true;
+        _spawnFinished = true;
         
         try
         {
             await UniTask.WhenAny(
-                UniTask.WaitUntil(() => spawnedCount >= totalThisWave, PlayerLoopTiming.Update, waveSpawnCts.Token),
-                UniTask.Delay(System.TimeSpan.FromSeconds(2.0f), DelayType.DeltaTime, PlayerLoopTiming.Update, waveSpawnCts.Token)
+                UniTask.WaitUntil(() => _spawnedCount >= _totalThisWave, PlayerLoopTiming.Update, _waveSpawnCts.Token),
+                UniTask.Delay(System.TimeSpan.FromSeconds(2.0f), DelayType.DeltaTime, PlayerLoopTiming.Update, _waveSpawnCts.Token)
             );
         }
         catch (System.OperationCanceledException)
@@ -237,12 +219,12 @@ public class MonsterSpawner : MonoBehaviour
             return;
         }
         
-        isSpawning = false;
+        _isSpawning = false;
         
-        if (spawnedCount < totalThisWave)
+        if (_spawnedCount < _totalThisWave)
         {
-            DLog($"[FinishTimeout] waveId={waveId} spawned={spawnedCount}/{totalThisWave} " +
-                 $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
+            DLog($"[FinishTimeout] waveId={waveId} spawned={_spawnedCount}/{_totalThisWave} " +
+                 $"active={_activeCount} killed={_killedCount} escaped={_escapedCount} time={Time.time:F2}");
         }
 
         TryNotifyWaveCleared();
@@ -253,13 +235,8 @@ public class MonsterSpawner : MonoBehaviour
         if (go == null) 
             return;
 
-        spawnedCount++;
-        activeCount++;
-        
-        DLog($"[Spawned] waveId={currentWaveId} tokenId={currentWaveTokenId} " +
-             $"spawned={spawnedCount}/{totalThisWave} scheduled={scheduledCount} " +
-             $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
-
+        _spawnedCount++;
+        _activeCount++;
         
         RaiseMonsterCountChanged();
         
@@ -283,8 +260,8 @@ public class MonsterSpawner : MonoBehaviour
     {
         if (ai == null) return;
 
-        activeCount = Mathf.Max(0, activeCount - 1);
-        killedCount++;
+        _activeCount = Mathf.Max(0, _activeCount - 1);
+        _killedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
     }
@@ -293,70 +270,22 @@ public class MonsterSpawner : MonoBehaviour
     {
         if (ai == null) return;
 
-        activeCount = Mathf.Max(0, activeCount - 1);
-        escapedCount++;
+        _activeCount = Mathf.Max(0, _activeCount - 1);
+        _escapedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
     }
 
     private void RaiseMonsterCountChanged()
     {
-        OnWaveMonsterCountChanged?.Invoke(killedCount, totalThisWave);
+        OnWaveMonsterCountChanged?.Invoke(_killedCount, _totalThisWave);
     }
 
     private void TryNotifyWaveCleared()
     {
-        if (spawnFinished && (killedCount + escapedCount) >= totalThisWave)
+        if (_spawnFinished && (_killedCount + _escapedCount) >= _totalThisWave)
             OnWaveCleared?.Invoke();
     }
-
-    /*private class MonsterLifeReporter : MonoBehaviour
-    {
-        private MonsterSpawner _spawner;
-        private bool _done;
-        private bool _wasKilled;
-
-        public void Init(MonsterSpawner spawner)
-        {
-            _spawner = spawner;
-        }
-
-        public void MarkKilled()
-        {
-            _wasKilled = true;
-        }
-
-        private void OnDestroy()
-        {
-            if (_done) return;
-            _done = true;
-        }
-    }*/
-
-    /*public void SpawnWave(int waveIndex, WaveModifiers mods)
-    {
-        if (monsterPrefab == null)
-        {
-            Debug.LogError("MonsterSpawner: monsterPrefab is null");
-            return;
-        }
-
-        int count = spawnCountPerWave + (waveIndex - 1) * spawnAddPerWave;
-        if (count < 1) count = 1;
-        if (count > maxSpawnCount) count = maxSpawnCount;
-
-        StartWaveTracking(count);
-        int waveId = currentWaveId;
-
-        for (int i = 0; i < count; i++)
-        {
-            float delay = i * spawnInterval;
-            SpawnOneAfterAsync(delay, waveIndex, waveId, mods, null).Forget();
-        }
-
-        float lastDelay = (count > 0) ? ((count - 1) * spawnInterval) : 0f;
-        FinishSpawnAfterAsync(lastDelay + 0.01f, waveId).Forget();
-    }*/
 
     public void SpawnPattern(WavePatternSO pattern, WaveModifiers mods)
     {
@@ -386,12 +315,12 @@ public class MonsterSpawner : MonoBehaviour
         }
     
         bool hasBoss = pattern.isBossWave && pattern.bossData != null && pattern.bossData.prefab != null;
-        if (hasBoss) total += 1;
+        if (hasBoss) 
+            total++;
     
         StartWaveTracking(total);
-        DLog($"[SpawnPattern] waveIndex={waveIndex} waveId={currentWaveId} tokenId={currentWaveTokenId} " +
-             $"interval={interval:F2} totalComputed={total} hasBoss={hasBoss} time={Time.time:F2}");
-        int waveId = currentWaveId;
+
+        int waveId = _currentWaveId;
         
         if (pattern.spawns != null)
         {
@@ -407,12 +336,6 @@ public class MonsterSpawner : MonoBehaviour
                 {
                     float delay = seq * interval;
                     seq++;
-                    
-                    // 아래 두개 삭제
-                    scheduledCount++;
-                    DLog($"[Schedule] waveIndex={waveIndex} waveId={waveId} tokenId={currentWaveTokenId} " +
-                         $"seq={seq-1} delay={delay:F2} entryIndex={i} archetype={entry.archetype.id /*없으면 다른 id*/} " +
-                         $"color={(entry.color != null ? entry.color.name : "null")} scheduled={scheduledCount}/{totalThisWave}");
     
                     SpawnOneAfterAsync(
                         delay,
@@ -446,13 +369,13 @@ public class MonsterSpawner : MonoBehaviour
     
     public void StopAllSpawning(bool destroyAlive = false)
     {
-        DLog($"[StopAllSpawning] waveId={currentWaveId} tokenId={currentWaveTokenId} " +
-             $"destroyAlive={destroyAlive} BEFORE total={totalThisWave} scheduled={scheduledCount} spawned={spawnedCount} " +
-             $"active={activeCount} killed={killedCount} escaped={escapedCount} time={Time.time:F2}");
-        isSpawning = false;
-        spawnFinished = true;
+        DLog($"[StopAllSpawning] waveId={_currentWaveId} tokenId={_currentWaveTokenId} " +
+             $"destroyAlive={destroyAlive} BEFORE total={_totalThisWave} scheduled={_scheduledCount} spawned={_spawnedCount} " +
+             $"active={_activeCount} killed={_killedCount} escaped={_escapedCount} time={Time.time:F2}");
+        _isSpawning = false;
+        _spawnFinished = true;
 
-        waveSpawnCts?.Cancel();
+        _waveSpawnCts?.Cancel();
 
         if (destroyAlive)
         {
@@ -470,8 +393,8 @@ public class MonsterSpawner : MonoBehaviour
     
     private void OnDestroy()
     {
-        waveSpawnCts?.Cancel();
-        waveSpawnCts?.Dispose();
-        waveSpawnCts = null;
+        _waveSpawnCts?.Cancel();
+        _waveSpawnCts?.Dispose();
+        _waveSpawnCts = null;
     }
 }

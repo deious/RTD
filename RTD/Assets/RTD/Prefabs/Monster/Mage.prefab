@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: -8194612215805722891}
   - component: {fileID: -2577568078088643934}
   - component: {fileID: 1508799122996905213}
+  - component: {fileID: 2597885332769611266}
   m_Layer: 8
   m_Name: Mage
   m_TagString: Untagged
@@ -245,3 +246,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterMaterialSlot
   targets: []
+--- !u!114 &2597885332769611266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1350674450777910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd05c3ee55a329048a2c84691a27e640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PooledTransformReset
+  resetLocalScale: 1
+  resetLocalRotation: 0
+  resetLocalPosition: 0

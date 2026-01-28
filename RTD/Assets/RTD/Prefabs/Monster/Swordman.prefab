@@ -194,6 +194,7 @@ GameObject:
   - component: {fileID: -1203448606371372430}
   - component: {fileID: 6122008431793910441}
   - component: {fileID: 131645363759250264}
+  - component: {fileID: -1537093030216800859}
   m_Layer: 8
   m_Name: Swordman
   m_TagString: Untagged
@@ -337,6 +338,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterMaterialSlot
   targets: []
+--- !u!114 &-1537093030216800859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866944711882940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd05c3ee55a329048a2c84691a27e640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PooledTransformReset
+  resetLocalScale: 1
+  resetLocalRotation: 0
+  resetLocalPosition: 0
 --- !u!1 &1911990075883896
 GameObject:
   m_ObjectHideFlags: 0

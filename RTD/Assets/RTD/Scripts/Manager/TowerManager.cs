@@ -36,8 +36,8 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private int buildLevel = 1;
 
     [Header("Build Level Costs")]
-    [SerializeField] private int baseUpgradeCost = 50;
-    [SerializeField] private int upgradeCostStep = 50;
+    [SerializeField] private int baseUpgradeCost = 100;
+    [SerializeField] private int upgradeCostStep = 100;
     [SerializeField] private int maxBuildLevel = 10;
 
     [Header("GhostTower")]
@@ -163,7 +163,15 @@ public class TowerManager : MonoBehaviour
             GridTile tile = hitTile.collider.GetComponent<GridTile>();
             if (tile != null)
             {
-                OnTileClicked(tile);
+                if (_placeState == PlaceState.Placing)
+                {
+                    OnTileClicked(tile);
+                }
+                else
+                {
+                    ClearSelection();
+                }
+                
                 return;
             }
         }
@@ -473,6 +481,11 @@ public class TowerManager : MonoBehaviour
 
                     if (contextUI != null)
                         contextUI.ShowTower(_selectedTower);
+                    
+                    UniTask.NextFrame().ContinueWith(() =>
+                    {
+                        ClearSelection();
+                    });
                 }
             );
         }

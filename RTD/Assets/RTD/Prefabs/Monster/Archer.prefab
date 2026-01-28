@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 938574590985673565}
   - component: {fileID: 2130126255208588200}
   - component: {fileID: -3248647254133238171}
+  - component: {fileID: -2258334066104144045}
   m_Layer: 8
   m_Name: Archer
   m_TagString: Untagged
@@ -157,6 +158,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterMaterialSlot
   targets: []
+--- !u!114 &-2258334066104144045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032480660094732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd05c3ee55a329048a2c84691a27e640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PooledTransformReset
+  resetLocalScale: 1
+  resetLocalRotation: 0
+  resetLocalPosition: 0
 --- !u!1 &1746217340530736
 GameObject:
   m_ObjectHideFlags: 0

@@ -6881,8 +6881,8 @@ MonoBehaviour:
   traitDatabase: {fileID: 780817755}
   combineMode: 0
   buildLevel: 1
-  baseUpgradeCost: 50
-  upgradeCostStep: 50
+  baseUpgradeCost: 100
+  upgradeCostStep: 100
   maxBuildLevel: 10
   ghostPreviewPrefab: {fileID: 1376233406905130, guid: 161121c60f9f6d344801e7bf212dfa82, type: 3}
   previewAlpha: 0.35

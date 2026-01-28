@@ -15,9 +15,9 @@ MonoBehaviour:
   bossId: boss_archer_01
   prefab: {fileID: 1032480660094732, guid: 62d18f162f42f5b489d22fe1e7cfb210, type: 3}
   scale: 1.6
-  maxHp: 4800
+  maxHp: 2000
   moveSpeed: 15
   shieldHp: 250
-  rewardGold: 90
-  shakeDuration: 0.32
-  shakeStrength: 0.4
+  rewardGold: 500
+  shakeDuration: 0.4
+  shakeStrength: 0.55
