@@ -18,6 +18,7 @@ public class ContextUIController : MonoBehaviour
     [Header("Trait (optional)")]
     [SerializeField] private GameObject traitRow;
     [SerializeField] private TextMeshProUGUI txtTrait;
+    [SerializeField] private TextMeshProUGUI txtTraitDesc;
 
     [Header("Stats")]
     [SerializeField] private TextMeshProUGUI txtStats;
@@ -70,12 +71,12 @@ public class ContextUIController : MonoBehaviour
                 txtName.text = !string.IsNullOrEmpty(d.displayName) ? d.displayName : d.towerId;
 
             if (txtGrade != null)
-                txtGrade.text = GradeToKr(d.grade);
+                txtGrade.text = $"등급 : {GradeToKr(d.grade)}";
         }
         else
         {
             if (txtName != null)  txtName.text = "타워";
-            if (txtGrade != null) txtGrade.text = "-";
+            if (txtGrade != null) txtGrade.text = "등급 : -";
         }
 
         TowerTraitSO trait = TryGetTrait(tower);
@@ -83,12 +84,18 @@ public class ContextUIController : MonoBehaviour
 
         if (traitRow != null) traitRow.SetActive(hasTrait);
 
-        if (txtTrait != null)
+        if (hasTrait)
         {
-            if (hasTrait)
-                txtTrait.text = FormatTraitKr(trait);
-            else
-                txtTrait.text = "";
+            if (txtTrait != null)
+                txtTrait.text = $"특성 : {FormatTraitKr(trait)}";
+            
+            if (txtTraitDesc != null)
+                txtTraitDesc.text = GetTraitDesc(trait);
+        }
+        else
+        {
+            if (txtTrait != null) txtTrait.text = "";
+            if (txtTraitDesc != null) txtTraitDesc.text = "";
         }
 
         if (txtStats != null)
@@ -209,15 +216,6 @@ public class ContextUIController : MonoBehaviour
     {
         return tower != null ? tower.RuntimeTrait : null;
     }
-
-    private string BuildStatsText(TowerBase tower)
-    {
-        if (tower == null) return "-";
-
-        float aspd = (tower.attackInterval > 0.0001f) ? (1f / tower.attackInterval) : 0f;
-
-        return $"DMG: {tower.damage}\nASPD: {aspd:0.##}\nRNG: {tower.range:0.##}";
-    }
     
     private void ForceLayoutRebuild()
     {
@@ -294,14 +292,12 @@ public class ContextUIController : MonoBehaviour
     private static int TierToInt(TraitTier tier) => (int)tier;
     private static string FormatTraitKr(TowerTraitSO trait)
     {
-        if (trait == null) return "";
+        if (trait == null) 
+            return "";
 
         string name = !string.IsNullOrEmpty(trait.traitName) ? trait.traitName : trait.type.ToString();
 
-        int t = TierToInt(trait.tier);
-        if (t <= 0) return name;
-
-        return $"{name} 티어 {t}";
+        return $"{name}";
     }
 
     private string BuildStatsTextKr(TowerBase tower)
@@ -314,6 +310,14 @@ public class ContextUIController : MonoBehaviour
             $"대미지: {tower.damage}\n" +
             $"공격속도: {attacksPerSec:0.##}\n" +
             $"공격범위: {tower.range:0.##}";
+    }
+    
+    private static string GetTraitDesc(TowerTraitSO trait)
+    {
+        if (trait == null) 
+            return "";
+        
+        return trait.description; 
     }
 
     

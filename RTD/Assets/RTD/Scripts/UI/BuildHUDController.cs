@@ -8,8 +8,11 @@ public class BuildHUDController : MonoBehaviour
     [SerializeField] private Button btnBuild;
     [SerializeField] private Image btnBuildImage;
     [SerializeField] private TextMeshProUGUI btnBuildLabel;
-
     [SerializeField] private Button btnUpgrade;
+    
+    [SerializeField] private GameObject upgradeRow;
+    [SerializeField] private Image btnUpgradeImage;
+    [SerializeField] private TextMeshProUGUI btnUpgradeLabel;
     [SerializeField] private TextMeshProUGUI txtBuildLevel;
     [SerializeField] private TextMeshProUGUI txtUpgradeCost;
 
@@ -20,12 +23,23 @@ public class BuildHUDController : MonoBehaviour
     [Header("Build Button Colors")]
     [SerializeField] private Color buildOffColor = new Color(0.75f, 0.75f, 0.75f, 1f);
     [SerializeField] private Color buildOnColor  = new Color(0.25f, 1.00f, 0.25f, 1f);
+    
+    [Header("Upgrade Button Colors")]
+    [SerializeField] private Color upgradeOffColor = new Color(0.75f, 0.75f, 0.75f, 1f);
 
     [Header("Refresh")]
-    [SerializeField] private float uiRefreshInterval = 0.1f; // 0.1초마다만 체크(렉 방지)
+    //[SerializeField] private float uiRefreshInterval = 0.1f; // 0.1초마다만 체크(렉 방지)
+    
+    [Header("Build Cost Row")]
+    [SerializeField] private TextMeshProUGUI txtBuildCost;
+
+    [Header("Upgrade Max UI")]
+    [SerializeField] private string buildLevelMaxText = "Lv. Max";
+    [SerializeField] private string upgradeBlockedText = "강화불가";
 
     private float acc;
     private bool bound;
+    private bool lastIsMax;
 
     // 캐시(변경 있을 때만 갱신)
     private bool lastPlacing;
@@ -64,15 +78,16 @@ public class BuildHUDController : MonoBehaviour
     private void Start()
     {
         ForceRefreshAll();
+        InitBuildCostUI();
     }
 
     private void Update()
     {
-        acc += Time.unscaledDeltaTime;
+        /*acc += Time.unscaledDeltaTime;
         if (acc < uiRefreshInterval)
             return;
 
-        acc = 0f;
+        acc = 0f;*/
 
         // TowerManager/GameManager 아직 없으면 그냥 대기
         if (TM == null || GR == null)
@@ -100,10 +115,29 @@ public class BuildHUDController : MonoBehaviour
 
         // (3) 레벨/비용 변화 감지해서 텍스트만 갱신
         int levelNow = TM.BuildLevel;
-        if (levelNow != lastBuildLevel)
+        bool isMax = TM.IsBuildLevelMax;
+
+        if (levelNow != lastBuildLevel || isMax != lastIsMax)
         {
             lastBuildLevel = levelNow;
-            if (txtBuildLevel != null) txtBuildLevel.SetText("Lv. {0}", lastBuildLevel);
+            lastIsMax = isMax;
+            
+            if (txtBuildLevel != null)
+                txtBuildLevel.text = isMax ? buildLevelMaxText : $"Lv. {levelNow}";
+            
+            if (btnUpgradeLabel != null)
+                btnUpgradeLabel.text = isMax ? upgradeBlockedText : "타워 소환 확률 강화"; 
+            
+            if (upgradeRow != null)
+                upgradeRow.SetActive(!isMax);
+
+            if (btnUpgradeImage != null)
+                btnUpgradeImage.color = isMax ? upgradeOffColor : btnUpgradeImage.color;
+            
+            if (btnUpgrade != null)
+                btnUpgrade.enabled = !isMax;
+
+            RefreshInteractable(true);
         }
 
         int upgradeCostNow = TM.GetBuildUpgradeCost();
@@ -114,6 +148,17 @@ public class BuildHUDController : MonoBehaviour
             
             RefreshInteractable();
         }
+    }
+    
+    private void InitBuildCostUI()
+    {
+        if (TM == null)
+            return;
+
+        int cost = TM.BuildCost;
+
+        if (txtBuildCost != null)
+            txtBuildCost.SetText("{0}", cost);
     }
 
     public void OnClickBuild()

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: basic_legendary
   grade: 3
-  displayName: Basic (Legend)
-  damage: 15.6
-  attackSpeed: 1.97
-  range: 3.63
-  buildCost: 10
+  displayName: "\uAD81\uC218 \uD0C0\uC6CC"
+  damage: 20
+  attackSpeed: 2
+  range: 20
+  buildCost: 270
   towerPrefab: {fileID: 1989364573068550, guid: 3d7178ff73e471f4f83d97de3dbc9065, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

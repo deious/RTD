@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: basic_epic
   grade: 2
-  displayName: Basic (Epic)
-  damage: 12.4
-  attackSpeed: 1.62
-  range: 3.49
-  buildCost: 10
+  displayName: "\uAD81\uC218 \uD0C0\uC6CC"
+  damage: 13
+  attackSpeed: 1.6
+  range: 18
+  buildCost: 90
   towerPrefab: {fileID: 1059502961608188, guid: edbc041cd1e24e241b7c927d480aec34, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

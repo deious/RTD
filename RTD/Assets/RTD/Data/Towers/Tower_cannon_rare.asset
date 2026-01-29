@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: cannon_rare
   grade: 1
-  displayName: Cannon (Rare)
+  displayName: "\uACF5\uC131 \uD0C0\uC6CC"
   damage: 22.5
   attackSpeed: 0.77
-  range: 3.89
-  buildCost: 10
+  range: 22
+  buildCost: 30
   towerPrefab: {fileID: 1787649280074020, guid: 766399995769fac439b62bc1dc04bcd3, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

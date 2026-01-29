@@ -36,9 +36,12 @@ public class TowerManager : MonoBehaviour
     [SerializeField] private int buildLevel = 1;
 
     [Header("Build Level Costs")]
-    [SerializeField] private int baseUpgradeCost = 50;
-    [SerializeField] private int upgradeCostStep = 50;
+    [SerializeField] private int baseUpgradeCost = 100;
+    [SerializeField] private int upgradeCostStep = 100;
     [SerializeField] private int maxBuildLevel = 10;
+
+    [Header("Build Costs")] 
+    [SerializeField] private int buildCost = 10;
 
     [Header("GhostTower")]
     [SerializeField] private GameObject ghostPreviewPrefab;
@@ -72,7 +75,10 @@ public class TowerManager : MonoBehaviour
     
     public int BuildLevel => buildLevel;
     public bool IsPlacing => _placeState == PlaceState.Placing;
+    public bool IsBuildLevelMax => buildLevel >= maxBuildLevel;
+    public int MaxBuildLevel => maxBuildLevel;
     public event System.Action<bool> OnPlacingChanged;
+    public int BuildCost => buildCost;
 
     private void Awake()
     {
@@ -148,13 +154,16 @@ public class TowerManager : MonoBehaviour
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
 
-        if (Physics.Raycast(ray, out RaycastHit hitTower, 1000f, LayerMask.GetMask("Tower")))
+        if (_placeState != PlaceState.Placing)
         {
-            TowerBase tower = hitTower.collider.GetComponentInParent<TowerBase>();
-            if (tower != null)
+            if (Physics.Raycast(ray, out RaycastHit hitTower, 1000f, LayerMask.GetMask("Tower")))
             {
-                SelectTower(tower);
-                return;
+                TowerBase tower = hitTower.collider.GetComponentInParent<TowerBase>();
+                if (tower != null)
+                {
+                    SelectTower(tower);
+                    return;
+                }
             }
         }
         
@@ -163,7 +172,15 @@ public class TowerManager : MonoBehaviour
             GridTile tile = hitTile.collider.GetComponent<GridTile>();
             if (tile != null)
             {
-                OnTileClicked(tile);
+                if (_placeState == PlaceState.Placing)
+                {
+                    OnTileClicked(tile);
+                }
+                else
+                {
+                    ClearSelection();
+                }
+                
                 return;
             }
         }
@@ -473,6 +490,11 @@ public class TowerManager : MonoBehaviour
 
                     if (contextUI != null)
                         contextUI.ShowTower(_selectedTower);
+                    
+                    UniTask.NextFrame().ContinueWith(() =>
+                    {
+                        ClearSelection();
+                    });
                 }
             );
         }
@@ -541,7 +563,7 @@ public class TowerManager : MonoBehaviour
             return false;
         }
 
-        int cost = rolledData.buildCost;
+        int cost = buildCost;
 
         if (GameRuntime.Instance.Gold < cost)
         {

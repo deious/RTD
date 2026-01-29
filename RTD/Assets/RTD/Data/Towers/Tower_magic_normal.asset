@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: magic_normal
   grade: 0
-  displayName: Magic (Normal)
+  displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 10
   attackSpeed: 0.95
-  range: 3.6
+  range: 16
   buildCost: 10
   towerPrefab: {fileID: 1367997974350908, guid: 929d739386479ad44970b8b56f101075, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

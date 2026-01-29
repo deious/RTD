@@ -16,9 +16,9 @@ MonoBehaviour:
   tier: 3
   allowed: 1
   traitName: "\uCC98\uD615 III"
-  description: "HP\uAC00 threshold \uC774\uD558\uC778 \uC801\uC5D0\uAC8C \uCD94\uAC00
-    \uD53C\uD574. (range=threshold, value=\uCD94\uAC00\uBE44\uC728)"
+  description: "HP\uAC00 60% \uC774\uD558\uC778 \uC801\uC5D0\uAC8C \uCD94\uAC00 \uD53C\uD574.
+    (100% \uCD94\uAC00\uD53C\uD574)"
   value: 1
   duration: 0
-  range: 0.35
+  range: 0.6
   count: 0

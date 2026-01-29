@@ -135,3 +135,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c336cc4c73ca424398795516ee0c690, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
+  moveType: 1
+  modelForward: 2
+  homingTurnSpeed: 20
+  gravity: 25
+  ballisticFlightTime: 0.55
+  arcHeight: 2

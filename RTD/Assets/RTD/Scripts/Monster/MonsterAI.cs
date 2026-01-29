@@ -8,7 +8,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     [Header("Stats")]
     public float maxHp = 20;
-    private float currentHp;
+    [SerializeField]private float currentHp;                // 인스펙터에서 편하게 확인하기 위해 시리얼라이즈
     [SerializeField] private float shieldHp;
 
     [SerializeField] private Transform shieldVfxPrefab;
@@ -29,25 +29,25 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
     [Header("Status: Stun")]
     [SerializeField] private bool showStunDebug = false;
-    private float stunTimer;
+    private float _stunTimer;
 
     [Header("Status: Burn")]
     [SerializeField] private bool allowBurnStack = true;
-    private int burnStacks;
-    private int burnMaxStacks;
-    private float burnTimer;
-    private float burnTickTimer;
-    private int burnDps; // 초당 데미지(정수)
+    private int _burnStacks;
+    private int _burnMaxStacks;
+    private float _burnTimer;
+    private float _burnTickTimer;
+    private int _burnDps; // 초당 데미지(정수)
 
     [Header("Status: Curse (Damage Taken Mul)")]
-    private float curseTimer;
-    private float curseExtraMul;
+    private float _curseTimer;
+    private float _curseExtraMul;
     
     [Header("Lane")]
     [SerializeField] private bool randomLane = true;
     [SerializeField] private int fixedLaneIndex = 1;
-    private int laneIndex;
-    private Vector3 currentTargetPos;
+    private int _laneIndex;
+    private Vector3 _currentTargetPos;
     
     public enum ModelForwardAxis
     {
@@ -57,33 +57,52 @@ public class MonsterAI : MonoBehaviour, IPoolable
     [Header("Facing")]
     [SerializeField] private ModelForwardAxis modelForward = ModelForwardAxis.Zp;
     [SerializeField] private Vector3 modelRotationOffsetEuler = Vector3.zero;
+    
+    [Header("Wave Scaling (Exponential HP)")]
+    [SerializeField] private float hpGrowth = 1.085f;
+    [SerializeField] private bool applyWaveHpExp = true;
 
-    private float dotTimer = 0f;       // 남은 DOT 시간
-    private float dotTickTimer = 0f;   // 다음 틱까지 남은 시간
-    private float dotTickInterval = 0.5f;
-    private float dotDamagePerTick = 0;
+    [Header("Shield Option (Only when modifier enabled)")]
+    [SerializeField] private int shieldAddPerWave = 10;
+    [SerializeField] private bool shieldUseLinearAdd = false;
+    [SerializeField] private float shieldGrowth = 1.10f;
+    [SerializeField] private bool shieldUseExp = true;
     
-    private int currentIndex = 0;
-    private float baseMoveSpeed;
-    private float slowMul = 1f;
-    private float slowTimer = 0f;
-    private Transform currentTarget;
-    private MonsterSpawner spawner;
-    private bool ended;
-    private bool released;
-    public bool IsEnded => ended;
+    [Header("Wave Scaling (Move Speed)")]
+    [SerializeField] private float moveSpeedAddPerWave = 0.15f;
+    [SerializeField] private float maxMoveSpeed = 25.0f;
+
+    private int _baseMaxHp;
+    private int _baseShieldHp;
+    private float _baseMoveSpeed;
+    private Vector3 _baseLocalScale;
+
+    private float _dotTimer = 0f;       // 남은 DOT 시간
+    private float _dotTickTimer = 0f;   // 다음 틱까지 남은 시간
+    private float _dotTickInterval = 0.5f;
+    private float _dotDamagePerTick = 0;
     
-    public void SetSpawner(MonsterSpawner spawner) => this.spawner = spawner;
+    private int _currentIndex = 0;
+    private float _slowMul = 1f;
+    private float _slowTimer = 0f;
+    private Transform _currentTarget;
+    private MonsterSpawner _spawner;
+    private bool _ended;
+    private bool _released;
+    public bool IsEnded => _ended;
+    
+    public void SetSpawner(MonsterSpawner spawner) => this._spawner = spawner;
     
     public bool IsBoss { get; private set; }
     public static System.Action OnBossDied;
 
     private void Awake()
     {
-        baseMoveSpeed = moveSpeed;
+        _baseLocalScale = transform.localScale;
+        _baseMoveSpeed = moveSpeed;
         currentHp = maxHp;
         shieldHp = 0;
-        ended = false;
+        _ended = false;
         UpdateShieldVfx();
     }
 
@@ -91,53 +110,54 @@ public class MonsterAI : MonoBehaviour, IPoolable
     {
         UpdateDot();
         
-        if (stunTimer > 0f)
+        if (_stunTimer > 0f)
         {
-            stunTimer -= Time.deltaTime;
-            if (stunTimer < 0f) stunTimer = 0f;
+            _stunTimer -= Time.deltaTime;
+            if (_stunTimer < 0f)
+                _stunTimer = 0f;
         }
         
-        if (burnTimer > 0f && burnDps > 0)
+        if (_burnTimer > 0f && _burnDps > 0)
         {
-            burnTimer -= Time.deltaTime;
-            burnTickTimer += Time.deltaTime;
+            _burnTimer -= Time.deltaTime;
+            _burnTickTimer += Time.deltaTime;
 
-            if (burnTickTimer >= 1f)
+            if (_burnTickTimer >= 1f)
             {
-                burnTickTimer -= 1f;
-                TakeDamage(burnDps);
+                _burnTickTimer -= 1f;
+                TakeDamage(_burnDps);
             }
 
-            if (burnTimer <= 0f)
+            if (_burnTimer <= 0f)
             {
-                burnTimer = 0f;
-                burnTickTimer = 0f;
-                burnDps = 0;
-                burnStacks = 0;
-                burnMaxStacks = 0;
+                _burnTimer = 0f;
+                _burnTickTimer = 0f;
+                _burnDps = 0;
+                _burnStacks = 0;
+                _burnMaxStacks = 0;
             }
         }
         
-        if (curseTimer > 0f)
+        if (_curseTimer > 0f)
         {
-            curseTimer -= Time.deltaTime;
-            if (curseTimer <= 0f)
+            _curseTimer -= Time.deltaTime;
+            if (_curseTimer <= 0f)
             {
-                curseTimer = 0f;
-                curseExtraMul = 0f;
+                _curseTimer = 0f;
+                _curseExtraMul = 0f;
             }
         }
         
-        if (stunTimer > 0f)
+        if (_stunTimer > 0f)
             return;
         
-        if (slowTimer > 0f)
+        if (_slowTimer > 0f)
         {
-            slowTimer -= Time.deltaTime;
-            if (slowTimer <= 0f)
+            _slowTimer -= Time.deltaTime;
+            if (_slowTimer <= 0f)
             {
-                slowTimer = 0f;
-                slowMul = 1f;
+                _slowTimer = 0f;
+                _slowMul = 1f;
             }
         }
 
@@ -146,17 +166,17 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     private void MoveAlongPath()
     {
-        Vector3 targetPos = currentTargetPos;
+        Vector3 targetPos = _currentTargetPos;
         Vector3 dir = targetPos - transform.position;
         dir.y = 0f;
 
         float distanceToTarget = dir.magnitude;
-        float effectiveSpeed = moveSpeed * slowMul;
+        float effectiveSpeed = moveSpeed * _slowMul;
         float moveThisFrame = effectiveSpeed * Time.deltaTime;
 
         if (distanceToTarget <= moveThisFrame + stoppingDistance)
         {
-            currentIndex++;
+            _currentIndex++;
             SetNextTarget();
             return;
         }
@@ -173,20 +193,20 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
     private void SetNextTarget()
     {
-        if (currentIndex >= GridManager.Instance.WaypointCount)
+        if (_currentIndex >= GridManager.Instance.WaypointCount)
         {
             ReachGoal();
             return;
         }
 
-        currentTargetPos = GridManager.Instance.GetLaneTargetPos(currentIndex, laneIndex);
+        _currentTargetPos = GridManager.Instance.GetLaneTargetPos(_currentIndex, _laneIndex);
     }
 
     private void ReachGoal()
     {
-        if (ended || released)
+        if (_ended || _released)
             return;
-        ended = true;
+        _ended = true;
         
         if (GameRuntime.Instance != null)
             GameRuntime.Instance.ChangeLife(-1);
@@ -197,7 +217,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
         if (IsBoss)
             OnBossDied?.Invoke();
 
-        spawner?.NotifyMonsterEscaped(this);
+        _spawner?.NotifyMonsterEscaped(this);
         ReleaseToPool();
     }
     
@@ -256,9 +276,9 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
     private void Die()
     {
-        if (ended || released)
+        if (_ended || _released)
             return;
-        ended = true;
+        _ended = true;
         
         if (GameRuntime.Instance != null)
         {
@@ -275,34 +295,34 @@ public class MonsterAI : MonoBehaviour, IPoolable
             OnBossDied?.Invoke();
         }
         
-        spawner?.NotifyMonsterKilled(this);
+        _spawner?.NotifyMonsterKilled(this);
         ReleaseToPool();
     }
     
     private void ResetState()
     {
-        ended = false;
-        released = false;
-        spawner = null;
+        _ended = false;
+        _released = false;
+        _spawner = null;
         
-        dotTimer = 0f;
-        dotTickTimer = 0f;
-        dotTickInterval = dotDefaultTickInterval;
-        dotDamagePerTick = 0f;
+        _dotTimer = 0f;
+        _dotTickTimer = 0f;
+        _dotTickInterval = dotDefaultTickInterval;
+        _dotDamagePerTick = 0f;
         
-        stunTimer = 0f;
+        _stunTimer = 0f;
         
-        slowMul = 1f;
-        slowTimer = 0f;
+        _slowMul = 1f;
+        _slowTimer = 0f;
         
-        burnStacks = 0;
-        burnMaxStacks = 0;
-        burnTimer = 0f;
-        burnTickTimer = 0f;
-        burnDps = 0;
+        _burnStacks = 0;
+        _burnMaxStacks = 0;
+        _burnTimer = 0f;
+        _burnTickTimer = 0f;
+        _burnDps = 0;
         
-        curseTimer = 0f;
-        curseExtraMul = 0f;
+        _curseTimer = 0f;
+        _curseExtraMul = 0f;
     }
 
     
@@ -319,39 +339,38 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     private void UpdateDot()
     {
-        if (dotTimer <= 0f) 
+        if (_dotTimer <= 0f) 
             return;
 
-        dotTimer -= Time.deltaTime;
-        dotTickTimer -= Time.deltaTime;
+        _dotTimer -= Time.deltaTime;
+        _dotTickTimer -= Time.deltaTime;
 
         // 프레임이 길어졌을 때 틱이 여러 번 돌아야 하는 경우도 처리
-        while (dotTickTimer <= 0f && dotTimer > 0f)
+        while (_dotTickTimer <= 0f && _dotTimer > 0f)
         {
-            dotTickTimer += dotTickInterval;
+            _dotTickTimer += _dotTickInterval;
 
-            if (dotDamagePerTick > 0)
-                TakeDamage(dotDamagePerTick);
-
-            // 죽었으면 더 돌 필요 없음
+            if (_dotDamagePerTick > 0)
+                TakeDamage(_dotDamagePerTick);
+            
             if (currentHp <= 0)
                 return;
         }
 
-        if (dotTimer <= 0f)
+        if (_dotTimer <= 0f)
         {
-            dotTimer = 0f;
-            dotTickTimer = 0f;
-            dotDamagePerTick = 0;
-            dotTickInterval = dotDefaultTickInterval;
+            _dotTimer = 0f;
+            _dotTickTimer = 0f;
+            _dotDamagePerTick = 0;
+            _dotTickInterval = dotDefaultTickInterval;
         }
     }
     
     private void ReleaseToPool()
     {
-        if (released) 
+        if (_released) 
             return;
-        released = true;
+        _released = true;
         
         if (SimplePool.Instance != null)
             SimplePool.Instance.Release(gameObject);
@@ -369,31 +388,31 @@ public class MonsterAI : MonoBehaviour, IPoolable
             ? Mathf.Max(0.05f, tickIntervalOverride.Value) 
             : Mathf.Max(0.05f, dotDefaultTickInterval);
         
-        if (dotTimer <= 0f)
+        if (_dotTimer <= 0f)
         {
-            dotDamagePerTick = damagePerTick;
-            dotTimer = duration;
-            dotTickInterval = newTick;
-            dotTickTimer = dotTickInterval;
+            _dotDamagePerTick = damagePerTick;
+            _dotTimer = duration;
+            _dotTickInterval = newTick;
+            _dotTickTimer = _dotTickInterval;
             return;
         }
         
         if (dotStrongerOverrides)
         {
-            if (damagePerTick > dotDamagePerTick)
-                dotDamagePerTick = damagePerTick;
+            if (damagePerTick > _dotDamagePerTick)
+                _dotDamagePerTick = damagePerTick;
         }
         else
         {
-            dotDamagePerTick = damagePerTick;
+            _dotDamagePerTick = damagePerTick;
         }
 
-        dotTimer = Mathf.Max(dotTimer, duration);
+        _dotTimer = Mathf.Max(_dotTimer, duration);
 
         if (dotFasterTickPreferred)
-            dotTickInterval = Mathf.Min(dotTickInterval, newTick);
+            _dotTickInterval = Mathf.Min(_dotTickInterval, newTick);
         else
-            dotTickInterval = Mathf.Max(dotTickInterval, newTick);
+            _dotTickInterval = Mathf.Max(_dotTickInterval, newTick);
     }
 
 
@@ -408,70 +427,32 @@ public class MonsterAI : MonoBehaviour, IPoolable
             return;
 
         maxHp += add;
-        if (maxHp < 1) maxHp = 1;
+        if (maxHp < 1) 
+            maxHp = 1;
 
         currentHp = maxHp;
-    }
-    
-    public void ApplyWaveModifiers(WaveModifiers mods)
-    {
-        if (mods.speedMul > 0.01f)
-            moveSpeed *= mods.speedMul;
-        
-        if (mods.hpMul > 0.01f)
-        {
-            int newMaxHp = Mathf.RoundToInt(maxHp * mods.hpMul);
-            if (newMaxHp < 1) newMaxHp = 1;
-
-            maxHp = newMaxHp;
-            currentHp = maxHp;
-        }
-        
-        if (mods.shieldHp > 0)
-        {
-            shieldHp += mods.shieldHp;
-        }
-
-        if (GameRuntime.Instance != null)
-        {
-            float spMul = GameRuntime.Instance.EnemySpeedMul;
-            if (spMul > 0.01f)
-                moveSpeed *= spMul;
-
-            float hpMul = GameRuntime.Instance.EnemyHpMul;
-            if (hpMul > 0.01f)
-            {
-                int newMaxHp = Mathf.RoundToInt(maxHp * hpMul);
-                if (newMaxHp < 1) newMaxHp = 1;
-
-                maxHp = newMaxHp;
-                currentHp = maxHp;
-            }
-        }
-        
-        UpdateShieldVfx();
     }
     
     public void ApplySlow(float slowRate, float duration)
     {
         float mul = Mathf.Clamp01(1f - slowRate);
         
-        if (mul < slowMul) 
-            slowMul = mul;
+        if (mul < _slowMul) 
+            _slowMul = mul;
         
-        slowTimer = Mathf.Max(slowTimer, duration);
+        _slowTimer = Mathf.Max(_slowTimer, duration);
     }
     
     public void TakeDamage(float amount)
     {
-        if (ended || released) 
+        if (_ended || _released) 
             return;
         
         if (amount <= 0) 
             return;
         
-        if (curseExtraMul > 0f)
-            amount = Mathf.Max(1, Mathf.RoundToInt(amount * (1f + curseExtraMul)));
+        if (_curseExtraMul > 0f)
+            amount = Mathf.Max(1, Mathf.RoundToInt(amount * (1f + _curseExtraMul)));
         
         float effectiveDamage = 0;
 
@@ -507,12 +488,16 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     public void ApplyBaseStats(int newMaxHp, float newMoveSpeed, int newShieldHp, bool isBoss)
     {
-        maxHp = Mathf.Max(1, newMaxHp);
+        _baseMaxHp = Mathf.Max(1, newMaxHp);
+        _baseMoveSpeed = Mathf.Max(0.01f, newMoveSpeed);
+        _baseShieldHp = Mathf.Max(0, newShieldHp);
+
+        maxHp = _baseMaxHp;
         currentHp = maxHp;
 
-        moveSpeed = Mathf.Max(0.01f, newMoveSpeed);
+        moveSpeed = _baseMoveSpeed;
 
-        shieldHp = Mathf.Max(0, newShieldHp);
+        shieldHp = _baseShieldHp;
         UpdateShieldVfx();
 
         SetIsBoss(isBoss);
@@ -520,8 +505,9 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     public void ApplyStun(float duration)
     {
-        stunTimer = Mathf.Max(stunTimer, duration);
-        if (showStunDebug) Debug.Log($"[Stun] {duration:0.00}s");
+        _stunTimer = Mathf.Max(_stunTimer, duration);
+        if (showStunDebug) 
+            Debug.Log($"[Stun] {duration:0.00}s");
     }
     
     public void ApplyBurn(int hitDamage, float dpsRatio, float duration, int maxStacks)
@@ -530,43 +516,45 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
         if (!allowBurnStack)
         {
-            burnDps = Mathf.Max(burnDps, dps);
-            burnTimer = Mathf.Max(burnTimer, duration);
-            burnMaxStacks = 1;
-            burnStacks = 1;
+            _burnDps = Mathf.Max(_burnDps, dps);
+            _burnTimer = Mathf.Max(_burnTimer, duration);
+            _burnMaxStacks = 1;
+            _burnStacks = 1;
             return;
         }
 
-        burnMaxStacks = Mathf.Max(1, maxStacks);
+        _burnMaxStacks = Mathf.Max(1, maxStacks);
 
-        if (burnStacks < burnMaxStacks)
-            burnStacks++;
+        if (_burnStacks < _burnMaxStacks)
+            _burnStacks++;
 
         // 스택이 늘면 dps를 누적 강화 (단순 설계)
-        burnDps = Mathf.Max(burnDps, 0) + dps;
+        _burnDps = Mathf.Max(_burnDps, 0) + dps;
 
-        burnTimer = Mathf.Max(burnTimer, duration);
+        _burnTimer = Mathf.Max(_burnTimer, duration);
     }
 
     public void ApplyCurse(float extraMul, float duration)
     {
         // 더 강한 저주만 덮어쓰기
-        curseExtraMul = Mathf.Max(curseExtraMul, extraMul);
-        curseTimer = Mathf.Max(curseTimer, duration);
+        _curseExtraMul = Mathf.Max(_curseExtraMul, extraMul);
+        _curseTimer = Mathf.Max(_curseTimer, duration);
     }
     
     public void ApplyArchetype(MonsterArchetypeSO archetype, bool isBoss = false)
     {
-        if (archetype == null) return;
+        if (archetype == null) 
+            return;
 
-        // 베이스 스탯 통일
-        maxHp = Mathf.Max(1, archetype.baseHp);
+        _baseMaxHp = Mathf.Max(1, archetype.baseHp);
+        _baseShieldHp = Mathf.Max(0, archetype.baseShieldHp);
+        _baseMoveSpeed = Mathf.Max(0.01f, archetype.baseMoveSpeed);
+        
+        maxHp = _baseMaxHp;
         currentHp = maxHp;
 
-        moveSpeed = Mathf.Max(0.01f, archetype.baseMoveSpeed);
-        baseMoveSpeed = moveSpeed;
-
-        shieldHp = Mathf.Max(0, archetype.baseShieldHp);
+        moveSpeed = _baseMoveSpeed;
+        shieldHp = _baseShieldHp;
         UpdateShieldVfx();
 
         SetIsBoss(isBoss);
@@ -581,6 +569,69 @@ public class MonsterAI : MonoBehaviour, IPoolable
         if (slot != null)
             slot.Apply(color.material);
     }
+    
+    public void ApplyWaveScaling(int waveIndex, WaveModifiers mods)
+    {
+        int w = Mathf.Max(1, waveIndex);
+        int hp = _baseMaxHp;
+
+        if (applyWaveHpExp)
+        {
+            float mul = Mathf.Pow(hpGrowth, (w - 1));
+            hp = Mathf.Max(1, Mathf.RoundToInt(_baseMaxHp * mul));
+        }
+        
+        if (mods.hpMul > 0.01f)
+            hp = Mathf.Max(1, Mathf.RoundToInt(hp * mods.hpMul));
+        
+        if (GameRuntime.Instance != null)
+        {
+            float gHp = GameRuntime.Instance.EnemyHpMul;
+            if (gHp > 0.01f)
+                hp = Mathf.Max(1, Mathf.RoundToInt(hp * gHp));
+        }
+
+        maxHp = hp;
+        currentHp = maxHp;
+        
+        float speed = _baseMoveSpeed;
+        speed += (w - 1) * moveSpeedAddPerWave;
+
+        if (mods.speedMul > 0.01f)
+            speed *= mods.speedMul;
+
+        if (GameRuntime.Instance != null)
+        {
+            float gSp = GameRuntime.Instance.EnemySpeedMul;
+            if (gSp > 0.01f)
+                speed *= gSp;
+        }
+
+        moveSpeed = Mathf.Min(speed, maxMoveSpeed);
+        
+        int shield = 0;
+        bool shieldEnabled = (mods.shieldHp > 0); 
+
+        if (shieldEnabled)
+        {
+            shield = _baseShieldHp;
+
+            if (shieldUseLinearAdd)
+                shield += (w - 1) * shieldAddPerWave;
+
+            if (shieldUseExp)
+            {
+                float smul = Mathf.Pow(shieldGrowth, (w - 1));
+                shield = Mathf.RoundToInt(shield * smul);
+            }
+            
+            shield += mods.shieldHp;
+        }
+
+        shieldHp = Mathf.Max(0, shield);
+        UpdateShieldVfx();
+    }
+
 
     public void BeginRun()
     {
@@ -601,29 +652,35 @@ public class MonsterAI : MonoBehaviour, IPoolable
         enabled = true;
 
         if (randomLane)
-            laneIndex = Random.Range(0, GridManager.Instance.LaneCount);
+            _laneIndex = Random.Range(0, GridManager.Instance.LaneCount);
         else
-            laneIndex = Mathf.Clamp(fixedLaneIndex, 0, GridManager.Instance.LaneCount - 1);
+            _laneIndex = Mathf.Clamp(fixedLaneIndex, 0, GridManager.Instance.LaneCount - 1);
 
-        transform.position = GridManager.Instance.GetLaneTargetPos(0, laneIndex);
+        transform.position = GridManager.Instance.GetLaneTargetPos(0, _laneIndex);
 
-        currentIndex = 1;
+        _currentIndex = 1;
         SetNextTarget();
     }
     
     public void OnSpawned()
     {
-        ended = false;
-        released = false;
+        _ended = false;
+        _released = false;
+        
+        transform.localScale = _baseLocalScale;
+        
+        shieldHp = 0;
+        UpdateShieldVfx();
     }
 
     public void OnDespawned()
     {
         ResetState();
         enabled = false;
-        
-        if (_shieldVfxInstance != null)
-            _shieldVfxInstance.gameObject.SetActive(false);
+        transform.localScale = _baseLocalScale;
+
+        shieldHp = 0;
+        UpdateShieldVfx();
         
         IsBoss = false;
     }

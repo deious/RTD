@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
   type: 0
   tier: 2
-  allowed: -1
+  allowed: 7
   traitName: "\uCE58\uBA85\uD0C0 II"
   description: "\uC77C\uC815 \uD655\uB960\uB85C \uD53C\uD574\uAC00 \uC99D\uAC00\uD569\uB2C8\uB2E4.
-    (\uD655\uB960=value, \uBC30\uC218=range)"
-  value: 0.18
+    (30%, 2\uBC30 \uB300\uBBF8\uC9C0)"
+  value: 0.3
   duration: 0
   range: 2
   count: 0

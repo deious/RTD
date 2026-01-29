@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: cannon_epic
   grade: 2
-  displayName: Cannon (Epic)
-  damage: 27.9
+  displayName: "\uACF5\uC131 \uD0C0\uC6CC"
+  damage: 28
   attackSpeed: 0.92
-  range: 3.99
-  buildCost: 10
+  range: 25
+  buildCost: 90
   towerPrefab: {fileID: 1957591423995574, guid: 67f8038789bedd54a9860450bf921586, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

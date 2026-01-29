@@ -16,9 +16,8 @@ MonoBehaviour:
   tier: 2
   allowed: 2
   traitName: "\uAE30\uC808 II"
-  description: "\uACF5\uACA9 \uC2DC \uC77C\uC815 \uC2DC\uAC04 \uAE30\uC808. (duration=\uC2DC\uAC04,
-    value=\uD655\uB960)"
-  value: 0.22
+  description: "\uACF5\uACA9 \uC2DC 25% \uD655\uB960\uB85C 0.9\uCD08 \uAE30\uC808."
+  value: 0.25
   duration: 0.9
   range: 0
   count: 0

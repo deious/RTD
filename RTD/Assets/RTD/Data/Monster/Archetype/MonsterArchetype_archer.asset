@@ -15,6 +15,6 @@ MonoBehaviour:
   id: archer
   prefab: {fileID: 1032480660094732, guid: 62d18f162f42f5b489d22fe1e7cfb210, type: 3}
   baseHp: 85
-  baseMoveSpeed: 1.75
-  baseShieldHp: 0
+  baseMoveSpeed: 11
+  baseShieldHp: 30
   canBeBossCandidate: 0

@@ -135,7 +135,7 @@ public class GameRuntime : MonoBehaviour
         // 디버그용 키
         if (keyboard.gKey.wasPressedThisFrame)
         {
-            AddGold(10);
+            AddGold(1000);
         }
 
         /*if (keyboard.hKey.wasPressedThisFrame)
@@ -191,7 +191,7 @@ public class GameRuntime : MonoBehaviour
     {
         if (gameOver) return;
 
-        Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
+        //Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
         WavePatternSO pattern = FindWavePattern(waveIndex);
 
         if (pattern == null)

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   towerId: magic_legendary
   grade: 3
-  displayName: Magic (Legend)
+  displayName: "\uB9C8\uBC95 \uD0C0\uC6CC"
   damage: 19.5
-  attackSpeed: 1.63
-  range: 3.93
-  buildCost: 10
+  attackSpeed: 1.7
+  range: 25
+  buildCost: 270
   towerPrefab: {fileID: 1442357279516786, guid: c61c63390c8221546a288027e1e9fc83, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

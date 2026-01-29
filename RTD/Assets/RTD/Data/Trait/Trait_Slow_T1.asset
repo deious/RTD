@@ -16,7 +16,8 @@ MonoBehaviour:
   tier: 1
   allowed: 4
   traitName: "\uB454\uD654 I"
-  description: "\uACF5\uACA9 \uC2DC \uB454\uD654. (value=\uB454\uD654\uC728, duration=\uC9C0\uC18D)"
+  description: "\uACF5\uACA9 \uC2DC \uB454\uD654. (\uC774\uB3D9\uC18D\uB3C4 25% \uC800\uD558,
+    1.8\uCD08 \uC9C0\uC18D)"
   value: 0.25
   duration: 1.8
   range: 0

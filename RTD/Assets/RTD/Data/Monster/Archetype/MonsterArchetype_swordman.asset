@@ -15,6 +15,6 @@ MonoBehaviour:
   id: swordman
   prefab: {fileID: 1866944711882940, guid: 31821b0ec3098544e8b64b4ec053c4c5, type: 3}
   baseHp: 120
-  baseMoveSpeed: 1.35
-  baseShieldHp: 0
-  canBeBossCandidate: 1
+  baseMoveSpeed: 9
+  baseShieldHp: 50
+  canBeBossCandidate: 0

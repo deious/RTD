@@ -15,6 +15,6 @@ MonoBehaviour:
   id: mage
   prefab: {fileID: 1350674450777910, guid: 423ed8581f95cbe4f85de94b2c7d59b2, type: 3}
   baseHp: 95
-  baseMoveSpeed: 1.45
-  baseShieldHp: 10
+  baseMoveSpeed: 8
+  baseShieldHp: 200
   canBeBossCandidate: 0
