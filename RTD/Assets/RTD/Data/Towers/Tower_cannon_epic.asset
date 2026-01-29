@@ -18,6 +18,6 @@ MonoBehaviour:
   damage: 28
   attackSpeed: 0.92
   range: 25
-  buildCost: 10
+  buildCost: 90
   towerPrefab: {fileID: 1957591423995574, guid: 67f8038789bedd54a9860450bf921586, type: 3}
   gradeColor: {r: 0, g: 0, b: 0, a: 0}

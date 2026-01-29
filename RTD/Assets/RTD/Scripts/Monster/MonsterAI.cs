@@ -66,7 +66,11 @@ public class MonsterAI : MonoBehaviour, IPoolable
     [SerializeField] private int shieldAddPerWave = 10;
     [SerializeField] private bool shieldUseLinearAdd = false;
     [SerializeField] private float shieldGrowth = 1.10f;
-    [SerializeField] private bool shieldUseExp = true; 
+    [SerializeField] private bool shieldUseExp = true;
+    
+    [Header("Wave Scaling (Move Speed)")]
+    [SerializeField] private float moveSpeedAddPerWave = 0.15f;
+    [SerializeField] private float maxMoveSpeed = 25.0f;
 
     private int _baseMaxHp;
     private int _baseShieldHp;
@@ -429,47 +433,6 @@ public class MonsterAI : MonoBehaviour, IPoolable
         currentHp = maxHp;
     }
     
-    /*public void ApplyWaveModifiers(WaveModifiers mods)
-    {
-        if (mods.speedMul > 0.01f)
-            moveSpeed *= mods.speedMul;
-        
-        if (mods.hpMul > 0.01f)
-        {
-            int newMaxHp = Mathf.RoundToInt(maxHp * mods.hpMul);
-            if (newMaxHp < 1) 
-                newMaxHp = 1;
-
-            maxHp = newMaxHp;
-            currentHp = maxHp;
-        }
-        
-        if (mods.shieldHp > 0)
-        {
-            shieldHp += mods.shieldHp;
-        }
-
-        if (GameRuntime.Instance != null)
-        {
-            float spMul = GameRuntime.Instance.EnemySpeedMul;
-            if (spMul > 0.01f)
-                moveSpeed *= spMul;
-
-            float hpMul = GameRuntime.Instance.EnemyHpMul;
-            if (hpMul > 0.01f)
-            {
-                int newMaxHp = Mathf.RoundToInt(maxHp * hpMul);
-                if (newMaxHp < 1) 
-                    newMaxHp = 1;
-
-                maxHp = newMaxHp;
-                currentHp = maxHp;
-            }
-        }
-        
-        UpdateShieldVfx();
-    }*/
-    
     public void ApplySlow(float slowRate, float duration)
     {
         float mul = Mathf.Clamp01(1f - slowRate);
@@ -630,17 +593,21 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
         maxHp = hp;
         currentHp = maxHp;
-        moveSpeed = _baseMoveSpeed;
+        
+        float speed = _baseMoveSpeed;
+        speed += (w - 1) * moveSpeedAddPerWave;
 
         if (mods.speedMul > 0.01f)
-            moveSpeed *= mods.speedMul;
+            speed *= mods.speedMul;
 
         if (GameRuntime.Instance != null)
         {
             float gSp = GameRuntime.Instance.EnemySpeedMul;
             if (gSp > 0.01f)
-                moveSpeed *= gSp;
+                speed *= gSp;
         }
+
+        moveSpeed = Mathf.Min(speed, maxMoveSpeed);
         
         int shield = 0;
         bool shieldEnabled = (mods.shieldHp > 0); 

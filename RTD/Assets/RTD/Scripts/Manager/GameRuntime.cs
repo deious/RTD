@@ -135,7 +135,7 @@ public class GameRuntime : MonoBehaviour
         // 디버그용 키
         if (keyboard.gKey.wasPressedThisFrame)
         {
-            AddGold(10);
+            AddGold(1000);
         }
 
         /*if (keyboard.hKey.wasPressedThisFrame)

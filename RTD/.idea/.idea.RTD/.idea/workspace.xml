@@ -6,35 +6,29 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_archer_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_archer_01.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_mage_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_mage_01.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_spearman_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_spearman_01.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_swordman_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Monster/Boss/Boss_boss_swordman_01.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_epic.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_epic.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_legendary.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_legendary.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_rare.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_basic_rare.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_epic.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_epic.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_legendary.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_legendary.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_rare.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_rare.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_epic.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_epic.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_legendary.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_legendary.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_rare.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_magic_rare.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T1.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T1.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T2.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T2.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T3.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Chain_T3.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T1.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T1.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T2.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T2.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T3.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Critical_T3.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_01.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_01.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_02.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_02.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_03.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_03.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_04.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_04.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_05.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/OldData/WavePattern_05.asset.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Archer.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Archer.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Mage.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Mage.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Spearman.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Spearman.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Swordman.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Swordman.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T1.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T1.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T2.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T2.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T3.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Trait/Trait_Shrapnel_T3.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Effects/Chain.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Effects/Chain.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/MonsterSpawner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/MonsterSpawner.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/TowerManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/BasicTower.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/BasicTower.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/UI/BuildHUDController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/UI/BuildHUDController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -158,6 +152,7 @@
       <workItem from="1768881975949" duration="11217000" />
       <workItem from="1769217687213" duration="38776000" />
       <workItem from="1769461569110" duration="31761000" />
+      <workItem from="1769610527088" duration="16918000" />
     </task>
     <servers />
   </component>

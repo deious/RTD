@@ -16,9 +16,9 @@ MonoBehaviour:
   tier: 3
   allowed: 2
   traitName: "\uD30C\uD3B8\uD0C4 III"
-  description: "\uC2A4\uD50C\uB798\uC2DC \uD53C\uD574 \uBE44\uC728 \uC99D\uAC00.
-    (60%)"
-  value: 0.6
+  description: "\uC8FC\uC704\uC5D0 \uD30C\uD3B8\uD0C4\uC774 \uBC1C\uC0DD\uD569\uB2C8\uB2E4.
+    (70% \uB300\uBBF8\uC9C0, 4\uAC1C)"
+  value: 0.7
   duration: 0
-  range: 0
-  count: 0
+  range: 3
+  count: 4

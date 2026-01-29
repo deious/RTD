@@ -108,6 +108,28 @@ public abstract class TowerBase : MonoBehaviour
         proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
         return true;
     }
+    
+    protected bool TryFireProjectile(MonsterAI target, Vector3 spawnOffset, float splashRadius = 0f, float splashRatio = 0f)
+    {
+        if (target == null) return false;
+        if (projectilePrefab == null) return false;
+
+        if (ProjectilePool.Instance == null) return false;
+
+        Vector3 spawnPos = (firePoint != null) 
+            ? firePoint.position 
+            : (transform.position + Vector3.up * 0.7f);
+
+        spawnPos += spawnOffset;
+
+        Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
+        if (proj == null) return false;
+
+        IProjectileHitListener listener = this as IProjectileHitListener;
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
+        return true;
+    }
+
 
     public int ApplyHitAndReturnDamage(MonsterAI target, int baseDamage)
     {
