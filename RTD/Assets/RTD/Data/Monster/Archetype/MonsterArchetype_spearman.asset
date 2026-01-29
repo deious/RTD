@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 829e54c0e7e156141816d559be15dc9d, type: 3}
+  m_Name: MonsterArchetype_spearman
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterArchetypeSO
+  id: spearman
+  prefab: {fileID: 1246070444819080, guid: 5509c5148b2db4643b62fbddc1216303, type: 3}
+  baseHp: 100
+  baseMoveSpeed: 10
+  baseShieldHp: 60
+  canBeBossCandidate: 0

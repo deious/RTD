@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 829e54c0e7e156141816d559be15dc9d, type: 3}
+  m_Name: MonsterArchetype_mage
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterArchetypeSO
+  id: mage
+  prefab: {fileID: 1350674450777910, guid: 423ed8581f95cbe4f85de94b2c7d59b2, type: 3}
+  baseHp: 95
+  baseMoveSpeed: 8
+  baseShieldHp: 200
+  canBeBossCandidate: 0

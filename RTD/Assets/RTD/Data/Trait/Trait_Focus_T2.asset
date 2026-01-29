@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 975aef8d31e1a0d4396b3540bdcfdc8d, type: 3}
+  m_Name: Trait_Focus_T2
+  m_EditorClassIdentifier: Assembly-CSharp::TowerTraitSO
+  type: 4
+  tier: 2
+  allowed: 1
+  traitName: "\uC9D1\uC911 II"
+  description: "\uAC19\uC740 \uB300\uC0C1 \uC5F0\uC18D \uACF5\uACA9 \uC2DC \uD53C\uD574
+    \uC99D\uAC00. (\uC2A4\uD0DD\uB2F9 12% \uB300\uBBF8\uC9C0 \uC99D\uAC00, \uCD5C\uB300
+    5\uC2A4\uD0DD)"
+  value: 0.12
+  duration: 0
+  range: 0
+  count: 5
