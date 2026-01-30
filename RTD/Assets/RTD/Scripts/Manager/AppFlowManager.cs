@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Netcode;
 
 public class AppFlowManager : MonoBehaviour
 {
@@ -29,6 +30,24 @@ public class AppFlowManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
     
+    public void LoadGameScene()
+    {
+        if (mode == Mode.Single)
+        {
+            SceneManager.LoadScene(gameSceneName);
+            return;
+        }
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+        }
+        else
+        {
+            Debug.LogWarning("[AppFlow] LoadGameScene called but not host/server.");
+        }
+    }
+    
     public void StartSingleGame()
     {
         mode = Mode.Single;
@@ -39,8 +58,13 @@ public class AppFlowManager : MonoBehaviour
     
     public void RestartSingleGame()
     {
+        mode = Mode.Single;
         _endingHandled = false;
         Time.timeScale = 1f;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
+
         SceneManager.LoadScene(gameSceneName);
     }
     
@@ -48,6 +72,13 @@ public class AppFlowManager : MonoBehaviour
     {
         _endingHandled = false;
         Time.timeScale = 1f;
+
+        if (mode == Mode.Multi && NetworkManager.Singleton != null)
+        {
+            if (NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
+        }
+
         SceneManager.LoadScene(titleSceneName);
     }
     
@@ -71,6 +102,25 @@ public class AppFlowManager : MonoBehaviour
         // - reachedWave 비교로 승패 확정
         // - 결과창 띄우기
         // - 로비 씬 이동
-        // SceneManager.LoadScene(lobbySceneName);
+    }
+    
+    public void StartMultiLobby()
+    {
+        mode = Mode.Multi;
+        _endingHandled = false;
+        Time.timeScale = 1f;
+        
+        SceneManager.LoadScene(lobbySceneName);
+    }
+    
+    public void StartMultiGameFromHost()
+    {
+        if (mode != Mode.Multi)
+            mode = Mode.Multi;
+
+        _endingHandled = false;
+        Time.timeScale = 1f;
+
+        LoadGameScene();
     }
 }
