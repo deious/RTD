@@ -9,20 +9,29 @@ public class NetworkBootstrap : MonoBehaviour
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
-        
+
         if (NetworkManager.Singleton != null)
             return;
-        
+
+        NetworkManager nm;
+
         if (networkManagerPrefab != null)
         {
-            var nm = Instantiate(networkManagerPrefab);
+            nm = Instantiate(networkManagerPrefab);
             DontDestroyOnLoad(nm.gameObject);
-            return;
+        }
+        else
+        {
+            var go = new GameObject("NetworkManager");
+            go.AddComponent<UnityTransport>();
+            nm = go.AddComponent<NetworkManager>();
+            DontDestroyOnLoad(go);
         }
         
-        var go = new GameObject("NetworkManager");
-        go.AddComponent<UnityTransport>();
-        go.AddComponent<NetworkManager>();
-        DontDestroyOnLoad(go);
+        var utp = nm.GetComponent<UnityTransport>();
+        if (utp != null && nm.NetworkConfig != null && nm.NetworkConfig.NetworkTransport == null)
+        {
+            nm.NetworkConfig.NetworkTransport = utp;
+        }
     }
 }

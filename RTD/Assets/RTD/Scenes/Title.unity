@@ -1154,6 +1154,7 @@ GameObject:
   m_Component:
   - component: {fileID: 963174559}
   - component: {fileID: 963174560}
+  - component: {fileID: 963174561}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -1189,6 +1190,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkBootstrap
   networkManagerPrefab: {fileID: 4255354241773778974, guid: 38e5a1359a73ece49add6180c6a4c312, type: 3}
+--- !u!114 &963174561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963174558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a494b4f1ef18efa459e4601d14fa9a93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RelayConnector
+  networkManager: {fileID: 0}
+  connectionType: dtls
+  dumpRelayByteMembersOnFail: 1
 --- !u!1 &1115559743
 GameObject:
   m_ObjectHideFlags: 0

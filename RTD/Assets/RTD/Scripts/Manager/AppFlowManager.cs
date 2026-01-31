@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
@@ -17,6 +18,7 @@ public class AppFlowManager : MonoBehaviour
     [SerializeField] private string lobbySceneName = "Lobby";
 
     private bool _endingHandled;
+    private bool _loadingGameScene;
 
     private void Awake()
     {
@@ -28,10 +30,17 @@ public class AppFlowManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        
+        SceneManager.sceneLoaded += (_, __) => { _loadingGameScene = false; };
     }
     
     public void LoadGameScene()
     {
+        if (_loadingGameScene) return;
+        _loadingGameScene = true;
+
+        Debug.Log($"[AppFlow] LoadGameScene mode={mode} IsServer={(NetworkManager.Singleton!=null && NetworkManager.Singleton.IsServer)}");
+
         if (mode == Mode.Single)
         {
             SceneManager.LoadScene(gameSceneName);
@@ -40,11 +49,13 @@ public class AppFlowManager : MonoBehaviour
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
         {
+            Debug.Log("[AppFlow] Multi -> NGO SceneManager.LoadScene");
             NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
         }
         else
         {
             Debug.LogWarning("[AppFlow] LoadGameScene called but not host/server.");
+            _loadingGameScene = false;
         }
     }
     
@@ -113,7 +124,7 @@ public class AppFlowManager : MonoBehaviour
         SceneManager.LoadScene(lobbySceneName);
     }
     
-    public void StartMultiGameFromHost()
+    /*public void StartMultiGameFromHost()
     {
         if (mode != Mode.Multi)
             mode = Mode.Multi;
@@ -122,5 +133,51 @@ public class AppFlowManager : MonoBehaviour
         Time.timeScale = 1f;
 
         LoadGameScene();
+    }*/
+    
+    public async UniTask StartMultiGameFromHostAsync(int expectedPlayers, float timeoutSec = 15f)
+    {
+        if (mode != Mode.Multi) mode = Mode.Multi;
+
+        _endingHandled = false;
+        Time.timeScale = 1f;
+
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer)
+        {
+            Debug.LogWarning("[AppFlow] StartMultiGameFromHostAsync called but not server.");
+            return;
+        }
+
+        float end = Time.realtimeSinceStartup + timeoutSec;
+        
+        void OnClientConnected(ulong id)
+        {
+            Debug.Log($"[AppFlow] OnClientConnected id={id} now={nm.ConnectedClientsList.Count}/{expectedPlayers}");
+        }
+        nm.OnClientConnectedCallback += OnClientConnected;
+
+        try
+        {
+            while (Time.realtimeSinceStartup < end)
+            {
+                int connected = nm.ConnectedClientsList.Count;
+                Debug.Log($"[AppFlow] Waiting NGO clients... {connected}/{expectedPlayers} ids=[{string.Join(",", nm.ConnectedClientsIds)}]");
+
+                if (connected >= expectedPlayers)
+                {
+                    LoadGameScene();
+                    return;
+                }
+
+                await UniTask.Delay(300);
+            }
+
+            Debug.LogWarning("[AppFlow] Timeout waiting clients. NOT starting game.");
+        }
+        finally
+        {
+            nm.OnClientConnectedCallback -= OnClientConnected;
+        }
     }
 }

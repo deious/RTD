@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8986358523899318846}
   - component: {fileID: 1316160897458323473}
   - component: {fileID: 4255354241773778974}
+  - component: {fileID: 1688437612258224895}
+  - component: {fileID: 6232400525408862340}
   m_Layer: 0
   m_Name: NetworkManagerPrefab
   m_TagString: Untagged
@@ -78,7 +80,7 @@ MonoBehaviour:
   NetworkManagerExpanded: 0
   NetworkConfig:
     ProtocolVersion: 0
-    NetworkTransport: {fileID: 0}
+    NetworkTransport: {fileID: 1316160897458323473}
     PlayerPrefab: {fileID: 0}
     Prefabs:
       NetworkPrefabsLists:
@@ -105,3 +107,27 @@ MonoBehaviour:
     OldPrefabList: []
   RunInBackground: 1
   LogLevel: 1
+--- !u!114 &1688437612258224895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6399173714750224860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e3fbec529a34546a892b7727c1aef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NgoDebugHooks
+--- !u!114 &6232400525408862340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6399173714750224860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76304f346bb509341a3a9290346b8aa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NgoSceneTrace
