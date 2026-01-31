@@ -1,5 +1,8 @@
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Netcode;
+using System.Collections.Generic;
 
 public class AppFlowManager : MonoBehaviour
 {
@@ -16,6 +19,7 @@ public class AppFlowManager : MonoBehaviour
     [SerializeField] private string lobbySceneName = "Lobby";
 
     private bool _endingHandled;
+    private bool _loadingGameScene;
 
     private void Awake()
     {
@@ -27,30 +31,155 @@ public class AppFlowManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // 싱글 모드에서만 유효한 보조용 (멀티는 NGO 이벤트로 해제)
+        SceneManager.sceneLoaded += OnUnitySceneLoaded;
+
+        // NGO 이벤트 후킹(있으면)
+        HookNgoSceneEvents();
     }
-    
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnUnitySceneLoaded;
+        UnhookNgoSceneEvents();
+    }
+
+    private void OnUnitySceneLoaded(Scene scene, LoadSceneMode loadMode)
+    {
+        // ✅ 싱글 흐름에서만 플래그 해제용
+        if (mode == Mode.Single && scene.name == gameSceneName)
+            _loadingGameScene = false;
+    }
+
+    private void HookNgoSceneEvents()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.SceneManager == null) return;
+
+        nm.SceneManager.OnLoadEventCompleted -= OnNgoLoadEventCompleted;
+        nm.SceneManager.OnLoadEventCompleted += OnNgoLoadEventCompleted;
+    }
+
+    private void UnhookNgoSceneEvents()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.SceneManager == null) return;
+
+        nm.SceneManager.OnLoadEventCompleted -= OnNgoLoadEventCompleted;
+    }
+
+    private void OnNgoLoadEventCompleted(string sceneName, LoadSceneMode mode,
+        List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+    {
+        // ✅ 멀티 로딩 종료(성공/타임아웃 모두)에서 플래그 해제
+        if (sceneName == gameSceneName)
+        {
+            _loadingGameScene = false;
+
+            if (clientsTimedOut != null && clientsTimedOut.Count > 0)
+            {
+                Debug.LogError($"[AppFlow][NGO] Load timed out. scene={sceneName} timeout=[{string.Join(",", clientsTimedOut)}]");
+            }
+            else
+            {
+                Debug.Log($"[AppFlow][NGO] Load completed. scene={sceneName} ok=[{string.Join(",", clientsCompleted)}]");
+            }
+        }
+    }
+
+    // ---------------------------
+    // Scene Load
+    // ---------------------------
+
+    public void LoadGameScene()
+    {
+        if (_loadingGameScene) return;
+
+        if (mode == Mode.Single)
+        {
+            _loadingGameScene = true;
+            SceneManager.LoadScene(gameSceneName);
+            return;
+        }
+
+        LoadGameSceneServerOnly();
+    }
+
+    public void LoadGameSceneServerOnly()
+    {
+        if (_loadingGameScene) return;
+
+        var nm = NetworkManager.Singleton;
+
+        if (mode != Mode.Multi)
+        {
+            // (사실상 싱글인데 여길 타면 이상하니) 안전 처리
+            _loadingGameScene = true;
+            SceneManager.LoadScene(gameSceneName);
+            return;
+        }
+
+        if (nm == null)
+        {
+            Debug.LogError("[AppFlow] NetworkManager.Singleton is null.");
+            return;
+        }
+
+        // ✅ 멀티는 서버/호스트만 NGO로 씬 전환
+        if (nm.IsServer && nm.IsListening)
+        {
+            _loadingGameScene = true;
+            nm.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+        }
+        else
+        {
+            Debug.LogWarning($"[AppFlow] Not server/host or not listening. IsServer={nm.IsServer} IsListening={nm.IsListening}");
+        }
+    }
+
+    // ---------------------------
+    // Single Flow
+    // ---------------------------
+
     public void StartSingleGame()
     {
         mode = Mode.Single;
         _endingHandled = false;
         Time.timeScale = 1f;
+
+        _loadingGameScene = true;
         SceneManager.LoadScene(gameSceneName);
     }
-    
+
     public void RestartSingleGame()
     {
+        mode = Mode.Single;
         _endingHandled = false;
         Time.timeScale = 1f;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
+
+        _loadingGameScene = true;
         SceneManager.LoadScene(gameSceneName);
     }
-    
+
     public void GoTitle()
     {
         _endingHandled = false;
         Time.timeScale = 1f;
+
+        if (mode == Mode.Multi && NetworkManager.Singleton != null)
+        {
+            if (NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
+        }
+
+        _loadingGameScene = false;
         SceneManager.LoadScene(titleSceneName);
     }
-    
+
     public void OnGameEnd(GameResult result)
     {
         if (_endingHandled) return;
@@ -62,15 +191,64 @@ public class AppFlowManager : MonoBehaviour
 
             if (UIManager.Instance != null)
                 UIManager.Instance.ShowResultPanel(result);
+        }
 
+        // 멀티 결과처리(나중)
+    }
+
+    // ---------------------------
+    // Multi Flow
+    // ---------------------------
+
+    public void StartMultiLobby()
+    {
+        mode = Mode.Multi;
+        _endingHandled = false;
+        Time.timeScale = 1f;
+
+        _loadingGameScene = false;
+        SceneManager.LoadScene(lobbySceneName);
+    }
+
+    /// <summary>
+    /// ✅ 호스트 전용: NGO ConnectedClientsList.Count 가 expectedPlayers(호스트 포함) 이상 될 때까지 대기 후 씬 로드
+    /// </summary>
+    public async UniTask StartMultiGameFromHostAsync(int expectedPlayers, float timeoutSec = 15f)
+    {
+        mode = Mode.Multi;
+        _endingHandled = false;
+        Time.timeScale = 1f;
+
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer || !nm.IsListening)
+        {
+            Debug.LogWarning($"[AppFlow] StartMultiGameFromHostAsync called but not host/listening. IsServer={nm != null && nm.IsServer} IsListening={nm != null && nm.IsListening}");
             return;
         }
 
-        // 멀티(나중):
-        // - 상대방 종료 기다림
-        // - reachedWave 비교로 승패 확정
-        // - 결과창 띄우기
-        // - 로비 씬 이동
-        // SceneManager.LoadScene(lobbySceneName);
+        expectedPlayers = Mathf.Max(1, expectedPlayers);
+
+        if (_loadingGameScene)
+        {
+            Debug.LogWarning("[AppFlow] Already loading game scene.");
+            return;
+        }
+
+        float end = Time.realtimeSinceStartup + timeoutSec;
+
+        while (Time.realtimeSinceStartup < end)
+        {
+            int connected = nm.ConnectedClientsList.Count;
+
+            if (connected >= expectedPlayers)
+            {
+                LoadGameSceneServerOnly();
+                return;
+            }
+
+            await UniTask.Delay(200, ignoreTimeScale: true);
+        }
+
+        Debug.LogError("[AppFlow] Timeout waiting all clients. Game start aborted.");
     }
 }
