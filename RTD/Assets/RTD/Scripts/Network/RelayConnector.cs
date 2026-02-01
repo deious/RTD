@@ -16,11 +16,14 @@ namespace RTD.Scripts.Network
         [SerializeField] private NetworkManager networkManager;
 
         [Header("Relay Settings")]
-        [Tooltip("보통 dtls 권장.")]
+        [Tooltip("dtls 권장.")]
         [SerializeField] private string relayProtocol = "dtls";
 
         [Tooltip("클라이언트 연결 대기 타임아웃(초)")]
         [SerializeField] private float connectTimeoutSec = 15f;
+        
+        [Header("Chat Settings")]
+        [SerializeField] private ChatNetworkBridge chatNetworkBridgePrefab;
 
         private UnityTransport _utp;
 
@@ -57,6 +60,34 @@ namespace RTD.Scripts.Network
                 return;
             }
         }
+        
+        private void SpawnChatNetworkBridgeIfNeeded()
+        {
+            if (!networkManager.IsServer)
+                return;
+
+            if (ChatNetworkBridge.Instance != null &&
+                ChatNetworkBridge.Instance.IsSpawned)
+                return;
+
+            if (chatNetworkBridgePrefab == null)
+            {
+                Debug.LogError("[RelayConnector] chatNetworkBridgePrefab is null (Inspector에 프리팹 할당 필요)");
+                return;
+            }
+
+            var bridge = Instantiate(chatNetworkBridgePrefab);
+            var no = bridge.GetComponent<NetworkObject>();
+            if (no == null)
+            {
+                Debug.LogError("[RelayConnector] ChatNetworkBridge prefab에 NetworkObject가 없음");
+                Destroy(bridge.gameObject);
+                return;
+            }
+
+            no.Spawn(true);
+            Debug.Log("[RelayConnector] ChatNetworkBridge spawned");
+        }
 
         public async UniTask EnsureServicesReadyAsync()
         {
@@ -75,16 +106,12 @@ namespace RTD.Scripts.Network
             ValidateReady();
             await EnsureServicesReadyAsync();
             await ShutdownIfListeningAsync();
-
-            // Relay는 "호스트 제외 접속 인원"을 받음
+            
             maxConn = Mathf.Max(1, maxConn);
-
-            // 1) Relay Allocation 생성 + JoinCode 발급
+            
             Allocation alloc = await RelayService.Instance.CreateAllocationAsync(maxConn);
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(alloc.AllocationId);
-
-            // ✅ 핵심 변경: Unity6/패키지 호환용 변환 API 사용
-            // - RelayServerData 직접 구성/필드 세팅/구 생성자 방식 전부 배제
+            
             var relayServerData = alloc.ToRelayServerData(relayProtocol);
             _utp.SetRelayServerData(relayServerData);
 
@@ -100,7 +127,8 @@ namespace RTD.Scripts.Network
             if (!networkManager.StartHost())
                 throw new Exception("[RelayConnector] Host 시작 실패");
 
-            // (네 기존 로직 유지)
+            SpawnChatNetworkBridgeIfNeeded();
+            
             if (AppFlowManager.Instance != null)
             {
                 int expectedPlayers = 1 + maxConn;

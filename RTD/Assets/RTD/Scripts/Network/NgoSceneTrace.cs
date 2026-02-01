@@ -37,9 +37,10 @@ public class NgoSceneTrace : MonoBehaviour
         Debug.Log("[TRACE] NGO Scene hooks attached");
     }
 
-    private void OnUnitySceneLoaded(Scene scene, LoadSceneMode mode)
+    private void OnUnitySceneLoaded(Scene scene, LoadSceneMode loadMode)
     {
-        Debug.Log($"[TRACE] Unity sceneLoaded: {scene.name} mode={mode}");
+        var appMode = AppFlowManager.Instance != null ? AppFlowManager.Instance.CurrentMode.ToString() : "null";
+        Debug.Log($"[TRACE] Unity sceneLoaded: {scene.name} loadMode={loadMode} appMode={appMode}");
     }
 
     private void OnNgoSceneEvent(SceneEvent sceneEvent)

@@ -20,6 +20,10 @@ public class LobbyUI : MonoBehaviour
     [Header("Bottom")]
     [SerializeField] private Button btnReady;
     [SerializeField] private Button btnStart;
+    
+    [Header("Nickname")]
+    [SerializeField] private TMP_InputField inputNickname;
+    [SerializeField] private Button btnSaveNickname;
 
     [Header("Status")]
     [SerializeField] private TMP_Text txtStatus;
@@ -34,13 +38,24 @@ public class LobbyUI : MonoBehaviour
     {
         ApplyIdleUI();
 
-        if (btnCreate != null) btnCreate.onClick.AddListener(() => lobbySystem.CreateLobby().Forget());
-        if (btnJoin != null) btnJoin.onClick.AddListener(() => lobbySystem.JoinByCode(GetJoinCode()).Forget());
-        if (btnReady != null) btnReady.onClick.AddListener(() => lobbySystem.ToggleReady().Forget());
-        if (btnStart != null) btnStart.onClick.AddListener(() => lobbySystem.StartGame().Forget());
-        if (btnLeave != null) btnLeave.onClick.AddListener(() => lobbySystem.OnClickLeave().Forget());
-
-        if (btnCopyCode != null) btnCopyCode.onClick.AddListener(CopyRoomCodeToClipboard);
+        if (btnCreate != null) 
+            btnCreate.onClick.AddListener(() => lobbySystem.CreateLobby().Forget());
+        if (btnJoin != null) 
+            btnJoin.onClick.AddListener(() => lobbySystem.JoinByCode(GetJoinCode()).Forget());
+        if (btnReady != null) 
+            btnReady.onClick.AddListener(() => lobbySystem.ToggleReady().Forget());
+        if (btnStart != null) 
+            btnStart.onClick.AddListener(() => lobbySystem.StartGame().Forget());
+        if (btnLeave != null) 
+            btnLeave.onClick.AddListener(() => lobbySystem.OnClickLeave().Forget());
+        if (btnCopyCode != null) 
+            btnCopyCode.onClick.AddListener(CopyRoomCodeToClipboard);
+        
+        if (inputNickname != null)
+            inputNickname.text = NicknameStore.Get();
+        
+        if (btnSaveNickname != null)
+            btnSaveNickname.onClick.AddListener(OnClickSaveNickname);
     }
 
     private string GetJoinCode()
@@ -54,6 +69,29 @@ public class LobbyUI : MonoBehaviour
         GUIUtility.systemCopyBuffer = code;
         SetStatus("코드가 복사됐습니다.");
     }
+    
+    private void OnClickSaveNickname()
+    {
+        string raw = inputNickname != null ? inputNickname.text : "";
+        string nick = NicknameStore.Sanitize(raw, "Player");
+
+        NicknameStore.Set(nick);
+
+        if (inputNickname != null)
+            inputNickname.text = nick;
+
+        SetStatus($"닉네임 저장됨: {nick}");
+        
+        if (lobbySystem != null)
+            lobbySystem.RefreshMyNameFromLocal();
+        
+        if (ChatManager.Instance != null)
+            ChatManager.Instance.SetNickname(nick);
+
+        if (ChatNetworkBridge.Instance != null && ChatNetworkBridge.Instance.IsSpawned)
+            ChatNetworkBridge.Instance.RegisterMyNicknameNow();
+    }
+
 
     public void ApplyIdleUI()
     {
