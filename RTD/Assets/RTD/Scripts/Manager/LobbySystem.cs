@@ -31,6 +31,7 @@ public class LobbySystem : MonoBehaviour
     private float _nextRelayTryTime;
     private int _relayTryCount;
     private bool _refreshing;
+    private bool _connectedForChat;
 
     private const string KEY_READY = "ready";
     private const string KEY_NAME = "name";
@@ -44,6 +45,7 @@ public class LobbySystem : MonoBehaviour
     public UniTask ToggleReady() => ToggleReadyAsync();
     public UniTask StartGame() => StartGameAsync();
     public UniTask LeaveToTitle() => LeaveToTitleAsync();
+    public UniTask RefreshMyNameFromLocal() => RefreshMyNameFromLocalAsync();
 
     private void Start()
     {
@@ -71,10 +73,34 @@ public class LobbySystem : MonoBehaviour
         ui.ApplyInSessionUI(_session.Code, _session.IsHost);
         ui.SetReadyButtonText(_isReady);
 
+        await EnsureRelayConnectedForLobbyChatHostAsync();
         StartPolling();
 
         Debug.Log($"[Lobby] Created Session: Id={_session.Id}, Code={_session.Code}");
     }
+    
+    private async UniTask EnsureRelayConnectedForLobbyChatHostAsync()
+    {
+        if (_session == null) return;
+        if (!_session.IsHost) return;
+        if (_connectedForChat) return;
+
+        ui.SetStatus("로비 채팅 연결 중... (Host Relay 시작)");
+        
+        int maxConn = Mathf.Max(1, maxPlayers - 1);
+        
+        string joinCode = await RelayConnector.Instance.StartHostWithRelayAsync(maxConn);
+        
+        var host = _session.AsHost();
+        host.SetProperty(KEY_RELAY_CODE, new SessionProperty(joinCode, VisibilityPropertyOptions.Member));
+        host.SetProperty(KEY_GAME_START, new SessionProperty("0", VisibilityPropertyOptions.Member)); // 아직 시작 아님
+        host.SetProperty(KEY_SCENE_NAME, new SessionProperty("Lobby", VisibilityPropertyOptions.Member));
+        await host.SavePropertiesAsync().AsUniTask();
+
+        _connectedForChat = true;
+        ui.SetStatus("로비 채팅 연결 완료 (플레이어 접속 대기)");
+    }
+
 
     private async UniTask OnClickLeaveAsync()
     {
@@ -112,6 +138,13 @@ public class LobbySystem : MonoBehaviour
 
         ui.ApplyIdleUI();
         ui.SetStatus("방을 생성하거나 코드를 입력해 참가하세요.");
+        
+        _connectedForChat = false;
+        _lastTriedRelayCode = null;
+        _nextRelayTryTime = 0f;
+        _relayTryCount = 0;
+        _clientConnectInProgress = false;
+        _connectingToGame = false;
     }
 
     private async UniTask JoinByCodeAsync(string code)
@@ -130,14 +163,85 @@ public class LobbySystem : MonoBehaviour
 
         _isReady = false;
         await SavePlayerPropsAsync();
+        
+        try
+        {
+            await _session.RefreshAsync().AsUniTask();
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Lobby] Refresh after join failed (will retry in polling). {e.Message}");
+        }
 
         ui.ApplyInSessionUI(_session.Code, _session.IsHost);
         ui.SetReadyButtonText(_isReady);
-
+        
         StartPolling();
+        RefreshUIFromSession(_session);
+        EnsureRelayConnectedForLobbyChatClientAsync().Forget();
 
         Debug.Log($"[Lobby] Joined Session: Id={_session.Id}, Code={_session.Code}");
     }
+    
+    private async UniTask EnsureRelayConnectedForLobbyChatClientAsync()
+    {
+        if (_session == null) return;
+        if (_session.IsHost) return;
+        if (_connectedForChat) return;
+        if (_clientConnectInProgress) return;
+
+        _clientConnectInProgress = true;
+
+        try
+        {
+            ui.SetStatus("채팅 시스템 준비 중... (Relay 코드 확인)");
+
+            float end = Time.realtimeSinceStartup + 10f;
+
+            while (Time.realtimeSinceStartup < end)
+            {
+                try
+                {
+                    await _session.RefreshAsync().AsUniTask();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[LobbyChat] Refresh failed: {e.Message}");
+                }
+
+                if (_session.Properties.TryGetValue(KEY_RELAY_CODE, out var relayProp) &&
+                    !string.IsNullOrWhiteSpace(relayProp.Value))
+                {
+                    string code = relayProp.Value.Trim().ToUpperInvariant();
+
+                    ui.SetStatus("채팅 시스템 준비 중... (Relay 접속)");
+                    await RelayConnector.Instance.StartClientWithRelayAsync(code);
+
+                    _connectedForChat = true;
+                    
+                    if (ChatNetworkBridge.Instance != null && ChatNetworkBridge.Instance.IsSpawned)
+                        ChatNetworkBridge.Instance.RegisterMyNicknameNow();
+
+                    ui.SetStatus("채팅 시스템 준비 완료");
+                    return;
+                }
+
+                await UniTask.Delay(1000, ignoreTimeScale: true);
+            }
+
+            ui.SetStatus("채팅 연결 대기 중 (코드 준비 전)");
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            ui.SetStatus("채팅 시스템 준비 실패(로비는 계속 진행)");
+        }
+        finally
+        {
+            _clientConnectInProgress = false;
+        }
+    }
+
 
     private async UniTask ToggleReadyAsync()
     {
@@ -155,81 +259,76 @@ public class LobbySystem : MonoBehaviour
     }
 
     private async UniTask StartGameAsync()
-{
-    if (_session == null)
     {
-        ui.SetStatus("세션이 없습니다.");
-        return;
-    }
-
-    if (!_session.IsHost)
-    {
-        ui.SetStatus("호스트만 시작할 수 있습니다.");
-        return;
-    }
-
-    if (!IsAllReady(_session))
-    {
-        ui.SetStatus("아직 준비 안 된 플레이어가 있습니다.");
-        return;
-    }
-
-    // ✅ 호스트는 시작 누르는 순간부터 폴링 중지 (429 방지)
-    StopPolling();
-
-    _connectingToGame = true;
-    ui.SetStatus("Relay 생성/시작 중...");
-
-    try
-    {
-        int maxConn = Mathf.Max(1, _session.Players.Count - 1);
-
-        Debug.Log($"[HostStart] cloudProjectId={Application.cloudProjectId} state={UnityServices.State} players={_session.Players.Count} maxConn={maxConn}");
-
-        // 1) Relay+NGO Host 시작
-        string relayJoinCode = await RelayConnector.Instance.StartHostWithRelayAsync(maxConn);
-        Debug.Log($"[Lobby] Host created Relay joinCode={relayJoinCode}");
-
-        // 2) 세션에 "게임 시작 신호" 저장
-        var host = _session.AsHost();
-        host.SetProperty(KEY_RELAY_CODE, new SessionProperty(relayJoinCode, VisibilityPropertyOptions.Member));
-        host.SetProperty(KEY_GAME_START, new SessionProperty("1", VisibilityPropertyOptions.Member));
-        host.SetProperty(KEY_SCENE_NAME, new SessionProperty("InGame", VisibilityPropertyOptions.Member));
-
-        await host.SavePropertiesAsync().AsUniTask();
-
-        // 3) 저장 검증 (여기도 Refresh 스팸 안 나게 약간 텀을 줌)
-        bool saved = false;
-        for (int i = 0; i < 10; i++)
+        if (_session == null)
         {
-            await UniTask.Delay(300, ignoreTimeScale: true);
-            await _session.RefreshAsync().AsUniTask();
-
-            if (_session.Properties.TryGetValue(KEY_RELAY_CODE, out var prop) &&
-                !string.IsNullOrWhiteSpace(prop.Value))
-            {
-                saved = true;
-                break;
-            }
+            ui.SetStatus("세션이 없습니다.");
+            return;
         }
+    
+        if (!_session.IsHost)
+        {
+            ui.SetStatus("호스트만 시작할 수 있습니다.");
+            return;
+        }
+    
+        if (!IsAllReady(_session))
+        {
+            ui.SetStatus("아직 준비 안 된 플레이어가 있습니다.");
+            return;
+        }
+        
+        StopPolling();
+    
+        _connectingToGame = true;
+        ui.SetStatus("Relay 생성/시작 중...");
+    
+        try
+        {
+            int maxConn = Mathf.Max(1, _session.Players.Count - 1);
+    
+            Debug.Log($"[HostStart] cloudProjectId={Application.cloudProjectId} state={UnityServices.State} players={_session.Players.Count} maxConn={maxConn}");
+            
+            string relayJoinCode = await RelayConnector.Instance.StartHostWithRelayAsync(maxConn);
+            Debug.Log($"[Lobby] Host created Relay joinCode={relayJoinCode}");
+            
+            var host = _session.AsHost();
+            host.SetProperty(KEY_RELAY_CODE, new SessionProperty(relayJoinCode, VisibilityPropertyOptions.Member));
+            host.SetProperty(KEY_GAME_START, new SessionProperty("1", VisibilityPropertyOptions.Member));
+            host.SetProperty(KEY_SCENE_NAME, new SessionProperty("InGame", VisibilityPropertyOptions.Member));
+    
+            await host.SavePropertiesAsync().AsUniTask();
 
-        if (!saved)
-            throw new Exception("Relay joinCode가 세션에 저장되지 않았습니다.");
-
-        ui.SetStatus("클라이언트 접속 대기 중... (모두 붙으면 자동 시작)");
-
-        AppFlowManager.Instance.StartMultiGameFromHostAsync(_session.Players.Count, 20f).Forget();
+            bool saved = false;
+            for (int i = 0; i < 10; i++)
+            {
+                await UniTask.Delay(300, ignoreTimeScale: true);
+                await _session.RefreshAsync().AsUniTask();
+    
+                if (_session.Properties.TryGetValue(KEY_RELAY_CODE, out var prop) &&
+                    !string.IsNullOrWhiteSpace(prop.Value))
+                {
+                    saved = true;
+                    break;
+                }
+            }
+    
+            if (!saved)
+                throw new Exception("Relay joinCode가 세션에 저장되지 않았습니다.");
+    
+            ui.SetStatus("클라이언트 접속 대기 중... (모두 붙으면 자동 시작)");
+    
+            AppFlowManager.Instance.StartMultiGameFromHostAsync(_session.Players.Count, 20f).Forget();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            ui.SetStatus("게임 시작 실패. 로그 확인");
+            _connectingToGame = false;
+            
+            StartPolling();
+        }
     }
-    catch (Exception e)
-    {
-        Debug.LogException(e);
-        ui.SetStatus("게임 시작 실패. 로그 확인");
-        _connectingToGame = false;
-
-        // ✅ 실패 시 폴링 복구
-        StartPolling();
-    }
-}
 
 
     private async UniTask LeaveToTitleAsync()
@@ -269,7 +368,6 @@ public class LobbySystem : MonoBehaviour
 
     private async UniTaskVoid PollLoop()
     {
-        // 첫 루프는 즉시 Refresh 가능하게
         _nextSessionRefreshTime = 0f;
 
         while (_polling)
@@ -278,24 +376,20 @@ public class LobbySystem : MonoBehaviour
             {
                 try
                 {
-                    // ✅ 세션 Refresh는 최소 간격으로만 실행 (429 방지)
                     float now = Time.realtimeSinceStartup;
                     if (now >= _nextSessionRefreshTime)
                     {
                         _nextSessionRefreshTime = now + sessionRefreshMinInterval;
                         await _session.RefreshAsync().AsUniTask();
                     }
-
-                    // ✅ 클라이언트 자동 시작 시도 (세션 프로퍼티 확인)
+                    
                     await TryAutoStartClientAsync(_session);
-
-                    // ✅ 게임 시작 중(호스트/클라 모두)은 로비 UI 갱신하지 않음
+                    
                     if (!_connectingToGame)
                         RefreshUIFromSession(_session);
                 }
                 catch (Exception e)
                 {
-                    // 429/네트워크 흔들림은 일단 상태만 표시하고 계속 폴링
                     Debug.LogException(e);
                     ui.SetStatus("세션 갱신 실패(재시도 중)...");
                 }
@@ -304,7 +398,13 @@ public class LobbySystem : MonoBehaviour
             await UniTask.Delay(TimeSpan.FromSeconds(pollIntervalSeconds), ignoreTimeScale: true);
         }
     }
-
+    
+    private async UniTask RefreshMyNameFromLocalAsync()
+    {
+        if (_session == null) return;
+        
+        await SavePlayerPropsAsync();
+    }
 
     private async UniTask TryAutoStartClientAsync(ISession session)
     {
@@ -437,10 +537,14 @@ public class LobbySystem : MonoBehaviour
     {
         if (_session == null) return;
 
+        string nick = NicknameStore.Get();
+        if (string.IsNullOrWhiteSpace(nick))
+            nick = GetDefaultName();
+        
         var props = new Dictionary<string, PlayerProperty>
         {
             { KEY_READY, new PlayerProperty(_isReady ? "1" : "0") },
-            { KEY_NAME,  new PlayerProperty(GetDefaultName()) }
+            { KEY_NAME, new PlayerProperty(nick) }
         };
 
         _session.CurrentPlayer.SetProperties(props);

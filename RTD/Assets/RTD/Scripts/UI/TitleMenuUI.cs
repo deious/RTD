@@ -44,10 +44,18 @@ public class TitleMenuUI : MonoBehaviour
 
     private void OnClickMulti()
     {
-        if (AppFlowManager.Instance != null)
+        /*if (AppFlowManager.Instance != null)
             AppFlowManager.Instance.StartMultiLobby();
         else
-            SceneManager.LoadScene(lobbySceneName);
+            SceneManager.LoadScene(lobbySceneName);*/
+        
+        if (AppFlowManager.Instance == null)
+        {
+            Debug.LogError("[TitleMenuUI] AppFlowManager.Instance is null. Title 씬에 AppFlowManager가 존재해야 합니다.");
+            return;
+        }
+
+        AppFlowManager.Instance.StartMultiLobby();
     }
 
     private void OnClickSettings()

@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,6 +11,8 @@ public class AppFlowManager : MonoBehaviour
 
     public enum Mode { Single, Multi }
 
+    public static event Action<string> OnSceneBecameActive;
+    
     [Header("Mode")]
     [SerializeField] private Mode mode = Mode.Single;
 
@@ -20,6 +23,9 @@ public class AppFlowManager : MonoBehaviour
 
     private bool _endingHandled;
     private bool _loadingGameScene;
+    
+    public Mode CurrentMode => mode;
+    public bool IsMultiMode => mode == Mode.Multi;
 
     private void Awake()
     {
@@ -47,9 +53,10 @@ public class AppFlowManager : MonoBehaviour
 
     private void OnUnitySceneLoaded(Scene scene, LoadSceneMode loadMode)
     {
-        // ✅ 싱글 흐름에서만 플래그 해제용
         if (mode == Mode.Single && scene.name == gameSceneName)
             _loadingGameScene = false;
+        
+        OnSceneBecameActive?.Invoke(scene.name);
     }
 
     private void HookNgoSceneEvents()
@@ -72,7 +79,6 @@ public class AppFlowManager : MonoBehaviour
     private void OnNgoLoadEventCompleted(string sceneName, LoadSceneMode mode,
         List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
-        // ✅ 멀티 로딩 종료(성공/타임아웃 모두)에서 플래그 해제
         if (sceneName == gameSceneName)
         {
             _loadingGameScene = false;
@@ -86,6 +92,8 @@ public class AppFlowManager : MonoBehaviour
                 Debug.Log($"[AppFlow][NGO] Load completed. scene={sceneName} ok=[{string.Join(",", clientsCompleted)}]");
             }
         }
+        
+        OnSceneBecameActive?.Invoke(sceneName);
     }
 
     // ---------------------------
