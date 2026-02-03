@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using RTD.Scripts.Network;
 
 public abstract class TowerBase : MonoBehaviour
 {
@@ -68,13 +69,18 @@ public abstract class TowerBase : MonoBehaviour
     {
         MonsterAI[] monsters = FindObjectsOfType<MonsterAI>();
 
+        int mySlot = MultiplayerContext.MyLaneId;
+
         MonsterAI closest = null;
         float closestDist = Mathf.Infinity;
         Vector3 myPos = transform.position;
 
         foreach (var m in monsters)
         {
+            if (m == null) continue;
             if (!m.isActiveAndEnabled) continue;
+            
+            if (m.WorldSlotId != mySlot) continue;
 
             float dist = Vector3.Distance(myPos, m.transform.position);
             if (dist <= range && dist < closestDist)

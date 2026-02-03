@@ -1,4 +1,5 @@
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 public class SpectatorCameraController : MonoBehaviour
 {
@@ -12,13 +13,38 @@ public class SpectatorCameraController : MonoBehaviour
     [SerializeField] private bool smoothMove = true;
     [SerializeField] private float smoothSpeed = 12f;
 
+    [Header("Debug")]
+    [SerializeField] private bool debugLog = true;
+
     private Vector3 _goalPos;
     private bool _moving;
+
+    public int CurrentSlot { get; private set; } = 0;
 
     private void Awake()
     {
         if (cameraTarget != null)
             _goalPos = cameraTarget.position;
+    }
+
+    private void Start()
+    {
+        // ✅ 코루틴 대신 UniTask
+        StartSpectateMyLaneAsync().Forget();
+    }
+
+    private async UniTaskVoid StartSpectateMyLaneAsync()
+    {
+        // NGO 연결/ConnectedClientsList 정착까지 프레임 몇 번 대기 (너 부트스트랩이 콜백에서 갱신하니까)
+        await UniTask.NextFrame();
+        await UniTask.NextFrame();
+
+        int my = MultiplayerContext.MyLaneId;
+
+        if (debugLog)
+            Debug.Log($"[Spectator] StartSpectateMyLaneAsync => MyLaneId={my}");
+
+        Spectate(my);
     }
 
     private void Update()
@@ -31,22 +57,50 @@ public class SpectatorCameraController : MonoBehaviour
         {
             cameraTarget.position = _goalPos;
             _moving = false;
+
+            if (debugLog)
+                Debug.Log($"[Spectator] MoveDone => slot={CurrentSlot} pos={_goalPos}");
         }
     }
 
     public void Spectate(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= points.Length) return;
-        var p = points[slotIndex];
-        if (p == null) return;
-
-        if (cameraTarget == null)
+        if (slotIndex < 0 || slotIndex >= points.Length)
         {
-            Debug.LogWarning("[SpectatorCameraController] cameraTarget not assigned.");
+            if (debugLog) Debug.LogWarning($"[Spectator] Spectate ignored: invalid slotIndex={slotIndex}");
             return;
         }
 
+        var p = points[slotIndex];
+        if (p == null)
+        {
+            if (debugLog) Debug.LogWarning($"[Spectator] Spectate ignored: points[{slotIndex}] is null");
+            return;
+        }
+
+        if (cameraTarget == null)
+        {
+            Debug.LogWarning("[Spectator] cameraTarget not assigned.");
+            return;
+        }
+
+        CurrentSlot = slotIndex;
         _goalPos = p.position;
+        SpectateContext.ViewLaneId = slotIndex;
+
+        if (debugLog)
+            Debug.Log($"[Spectator] Spectate => slot={slotIndex} goal={_goalPos}");
+
+        // ✅ 여기서 “관전 레인 스냅샷 요청” 같이 쏘면 제일 깔끔함
+        if (LaneCombatBridge.Instance != null)
+        {
+            if (debugLog) Debug.Log($"[Spectator] RequestSyncLane => lane={slotIndex}");
+            LaneCombatBridge.Instance.RequestSyncLane(slotIndex);
+        }
+        else
+        {
+            if (debugLog) Debug.LogWarning("[Spectator] LaneCombatBridge.Instance is null (cannot RequestSyncLane)");
+        }
 
         if (!smoothMove)
         {
@@ -56,6 +110,24 @@ public class SpectatorCameraController : MonoBehaviour
         else
         {
             _moving = true;
+        }
+    }
+
+    public void SpectateNext()
+    {
+        for (int i = 1; i <= points.Length; i++)
+        {
+            int idx = (CurrentSlot + i) % points.Length;
+            if (points[idx] != null) { Spectate(idx); return; }
+        }
+    }
+
+    public void SpectatePrev()
+    {
+        for (int i = 1; i <= points.Length; i++)
+        {
+            int idx = (CurrentSlot - i + points.Length) % points.Length;
+            if (points[idx] != null) { Spectate(idx); return; }
         }
     }
 }

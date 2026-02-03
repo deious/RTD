@@ -94,6 +94,9 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public void SetSpawner(MonsterSpawner spawner) => this._spawner = spawner;
     
     public bool IsBoss { get; private set; }
+    public int WorldSlotId { get; private set; } = 0;
+    public int NetId { get; private set; } = -1;
+    public int PathLaneIndex => _laneIndex;
     public static System.Action OnBossDied;
 
     private void Awake()
@@ -684,5 +687,29 @@ public class MonsterAI : MonoBehaviour, IPoolable
         
         IsBoss = false;
     }
+    
+    public void ConfigureIdentity(int worldSlotId, int netId)
+    {
+        WorldSlotId = Mathf.Clamp(worldSlotId, 0, 3);
+        NetId = netId;
+    }
+    
+    public void ConfigurePathLane(int pathLaneIndex, bool force = true)
+    {
+        if (GridManager.Instance == null)
+            return;
 
+        int max = Mathf.Max(1, GridManager.Instance.LaneCount);
+        int idx = Mathf.Clamp(pathLaneIndex, 0, max - 1);
+
+        if (force)
+        {
+            randomLane = false;
+            fixedLaneIndex = idx;
+        }
+        else
+        {
+            fixedLaneIndex = idx;
+        }
+    }
 }

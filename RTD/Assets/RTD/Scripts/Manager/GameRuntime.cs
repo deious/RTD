@@ -4,6 +4,7 @@ using RTD.Scripts.GamePlay.Wave;
 using Cysharp.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Threading;
+using RTD.Scripts.Network;
 
 public class GameRuntime : MonoBehaviour
 {
@@ -79,6 +80,7 @@ public class GameRuntime : MonoBehaviour
     private void Start()
     {
         PlayCameraIntro().Forget();
+        MultiplayerContext.ResolveMyLaneIdFromNgo();
         
         if (orbitCamera != null && grid != null)
         {

@@ -48,6 +48,7 @@ public class BuildHUDController : MonoBehaviour
     private int lastUpgradeCost = int.MinValue;
     private bool lastBuildInteractable;
     private bool lastUpgradeInteractable;
+    private bool _spectating;
 
     private TowerManager TM => TowerManager.Instance;
     private GameRuntime GR => GameRuntime.Instance;
@@ -88,7 +89,7 @@ public class BuildHUDController : MonoBehaviour
             return;
 
         acc = 0f;*/
-
+        
         // TowerManager/GameManager 아직 없으면 그냥 대기
         if (TM == null || GR == null)
         {
@@ -255,5 +256,16 @@ public class BuildHUDController : MonoBehaviour
             lastUpgradeInteractable = upgradeInteractable;
             btnUpgrade.interactable = upgradeInteractable;
         }
+    }
+    
+    public void SetSpectating(bool spectating)
+    {
+        _spectating = spectating;
+
+        if (btnBuild != null) btnBuild.interactable = !spectating;
+        if (btnUpgrade != null) btnUpgrade.interactable = !spectating;
+        
+        if (spectating && TowerManager.Instance != null && TowerManager.Instance.IsPlacing)
+            TowerManager.Instance.CancelPlaceMode();
     }
 }

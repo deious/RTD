@@ -470,6 +470,19 @@ public class TowerManager : MonoBehaviour
                         }
                     }
                     
+                    int ownerLane = MultiplayerContext.MyLaneId;
+
+                    for (int i = 0; i < mergeList.Count; i++)
+                    {
+                        var t = mergeList[i];
+                        if (t != null && t.CurrentTile != null && TowerCombatBridge.Instance != null && ShouldSendTowerNetEvent())
+                        {
+                            Vector2Int gp = t.CurrentTile.GridPos;
+                            int towerId = MakeTowerId(gp);
+                            TowerCombatBridge.Instance.SendRemove(ownerLane, towerId);
+                        }
+                    }
+                    
                     for (int i = 0; i < mergeList.Count; i++)
                         RemoveTowerSafe(mergeList[i]);
                     
@@ -483,6 +496,23 @@ public class TowerManager : MonoBehaviour
 
                     if (newTower == null)
                         return;
+
+                    if (newTower != null && tile != null && TowerCombatBridge.Instance != null)
+                    {
+                        Vector2Int gp = tile.GridPos;
+                        int towerId = MakeTowerId(gp);
+
+                        var snap = new TowerCombatBridge.TowerSnapshot
+                        {
+                            worldSlotId = ownerLane,
+                            towerId = towerId,
+                            towerTypeId = resultData.towerId,
+                            gx = gp.x,
+                            gy = gp.y,
+                            level = 1
+                        };
+                        TowerCombatBridge.Instance.SendSpawnOrUpdate(snap);
+                    }
                     
                     _selectedTower = newTower;
                     _selectedTower.SetSelected(true);
@@ -590,10 +620,37 @@ public class TowerManager : MonoBehaviour
 
         GameRuntime.Instance.AddGold(-cost);
 
-        Debug.Log($"[Build] Rolled: {rolledData.towerId} ({rolledData.grade}), cost={cost}");
+        int ownerLane = MultiplayerContext.MyLaneId;
+        Vector2Int gp = tile.GridPos;
+        int towerId = MakeTowerId(gp);
+
+        if (TowerCombatBridge.Instance != null && ShouldSendTowerNetEvent())
+        {
+            var snap = new TowerCombatBridge.TowerSnapshot
+            {
+                worldSlotId = ownerLane,
+                towerId = towerId,
+                towerTypeId = rolledData.towerId,
+                gx = gp.x,
+                gy = gp.y,
+                level = 1
+            };
+            TowerCombatBridge.Instance.SendSpawnOrUpdate(snap);
+        }
+        
         return true;
     }
 
+    private int MakeTowerIdFromTile(GridTile tile)
+    {
+        // ✅ GridPos가 있다면 이 방식이 가장 안정적
+        // return tile.GridPos.x * 1000 + tile.GridPos.y;
+        
+        Vector3 p = tile.transform.position;
+        int gx = Mathf.RoundToInt(p.x);
+        int gy = Mathf.RoundToInt(p.z);
+        return gx * 1000 + gy;
+    }
     
     public void OnTileClicked(GridTile tile)
     {
@@ -893,11 +950,21 @@ public class TowerManager : MonoBehaviour
         return g;
     }
     
+    private int MakeTowerId(Vector2Int gp)
+    {
+        unchecked
+        {
+            return (gp.x << 16) ^ (gp.y & 0xFFFF);
+        }
+    }
+    
     public bool TrySellTower(TowerBase tower)
     {
         if (tower == null)
             return false;
         
+        GridTile tile = tower.CurrentTile;
+
         if (_selectedTower == tower)
         {
             _selectedTower.SetSelected(false);
@@ -906,13 +973,21 @@ public class TowerManager : MonoBehaviour
 
         int refund = CalculateSellRefund(tower);
         
-        tower.SetTile(null);
+        if (tile != null && TowerCombatBridge.Instance != null && ShouldSendTowerNetEvent())
+        {
+            int ownerLane = MultiplayerContext.MyLaneId;
+            Vector2Int gp = tile.GridPos;
+            int towerId = MakeTowerId(gp);
+
+            TowerCombatBridge.Instance.SendRemove(ownerLane, towerId);
+        }
         
+        tower.SetTile(null);
+
         if (GameRuntime.Instance != null && refund > 0)
             GameRuntime.Instance.AddGold(refund);
-        
-        Destroy(tower.gameObject);
 
+        Destroy(tower.gameObject);
         return true;
     }
     
@@ -957,6 +1032,19 @@ public class TowerManager : MonoBehaviour
         tower.SetTile(null);
         Destroy(tower.gameObject);
     }
+    
+    private bool ShouldSendTowerNetEvent()
+    {
+        if (AppFlowManager.Instance == null || !AppFlowManager.Instance.IsMultiMode)
+            return false;
+
+        if (Unity.Netcode.NetworkManager.Singleton == null ||
+            !Unity.Netcode.NetworkManager.Singleton.IsListening)
+            return false;
+
+        return true;
+    }
+
     
     public string GetBuildLevelChanceLabel()
     {

@@ -317,7 +317,7 @@ public class LobbySystem : MonoBehaviour
                 throw new Exception("Relay joinCode가 세션에 저장되지 않았습니다.");
     
             ui.SetStatus("클라이언트 접속 대기 중... (모두 붙으면 자동 시작)");
-    
+            MultiplayerContext.SetPlayersCount(_session.Players.Count);
             AppFlowManager.Instance.StartMultiGameFromHostAsync(_session.Players.Count, 20f).Forget();
         }
         catch (Exception e)
