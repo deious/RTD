@@ -10,9 +10,9 @@ public class MonsterArchetypeSO : ScriptableObject
     public GameObject prefab;
 
     [Header("Base Stats")]
-    public int baseHp = 20;
+    public float baseHp = 20;
     public float baseMoveSpeed = 2f;
-    public int baseShieldHp = 0;
+    public float baseShieldHp = 0;
 
     [Header("Optional")]
     public bool canBeBossCandidate = false;

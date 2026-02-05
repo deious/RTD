@@ -1191,6 +1191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkBootstrap
   networkManagerPrefab: {fileID: 4255354241773778974, guid: 38e5a1359a73ece49add6180c6a4c312, type: 3}
+  chatNetworkBridgePrefab: {fileID: 952626500650327942, guid: de598ec2d5a597f43a3f68454956d1d2, type: 3}
 --- !u!114 &963174561
 MonoBehaviour:
   m_ObjectHideFlags: 0

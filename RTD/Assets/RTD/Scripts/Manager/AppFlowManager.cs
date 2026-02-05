@@ -217,10 +217,7 @@ public class AppFlowManager : MonoBehaviour
         _loadingGameScene = false;
         SceneManager.LoadScene(lobbySceneName);
     }
-
-    /// <summary>
-    /// ✅ 호스트 전용: NGO ConnectedClientsList.Count 가 expectedPlayers(호스트 포함) 이상 될 때까지 대기 후 씬 로드
-    /// </summary>
+    
     public async UniTask StartMultiGameFromHostAsync(int expectedPlayers, float timeoutSec = 15f)
     {
         mode = Mode.Multi;

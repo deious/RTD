@@ -15,9 +15,15 @@ public sealed class ChatNetworkBridge : NetworkBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
-            return;
+            if (Instance.IsSpawned)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            
+            Destroy(Instance.gameObject);
         }
+
         Instance = this;
     }
 
@@ -29,6 +35,8 @@ public sealed class ChatNetworkBridge : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        DontDestroyOnLoad(gameObject);
+        
         if (IsServer)
         {
             DontDestroyOnLoad(gameObject);

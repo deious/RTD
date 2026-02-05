@@ -21,9 +21,6 @@ namespace RTD.Scripts.Network
 
         [Tooltip("클라이언트 연결 대기 타임아웃(초)")]
         [SerializeField] private float connectTimeoutSec = 15f;
-        
-        [Header("Chat Settings")]
-        [SerializeField] private ChatNetworkBridge chatNetworkBridgePrefab;
 
         private UnityTransport _utp;
 
@@ -59,34 +56,6 @@ namespace RTD.Scripts.Network
                 Debug.LogError("[RelayConnector] Transport가 UnityTransport가 아닙니다.");
                 return;
             }
-        }
-        
-        private void SpawnChatNetworkBridgeIfNeeded()
-        {
-            if (!networkManager.IsServer)
-                return;
-
-            if (ChatNetworkBridge.Instance != null &&
-                ChatNetworkBridge.Instance.IsSpawned)
-                return;
-
-            if (chatNetworkBridgePrefab == null)
-            {
-                Debug.LogError("[RelayConnector] chatNetworkBridgePrefab is null (Inspector에 프리팹 할당 필요)");
-                return;
-            }
-
-            var bridge = Instantiate(chatNetworkBridgePrefab);
-            var no = bridge.GetComponent<NetworkObject>();
-            if (no == null)
-            {
-                Debug.LogError("[RelayConnector] ChatNetworkBridge prefab에 NetworkObject가 없음");
-                Destroy(bridge.gameObject);
-                return;
-            }
-
-            no.Spawn(true);
-            Debug.Log("[RelayConnector] ChatNetworkBridge spawned");
         }
 
         public async UniTask EnsureServicesReadyAsync()
@@ -126,8 +95,6 @@ namespace RTD.Scripts.Network
 
             if (!networkManager.StartHost())
                 throw new Exception("[RelayConnector] Host 시작 실패");
-
-            SpawnChatNetworkBridgeIfNeeded();
             
             if (AppFlowManager.Instance != null)
             {

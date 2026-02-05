@@ -1,4 +1,3 @@
-// LobbySystem.cs
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
@@ -19,19 +18,20 @@ public class LobbySystem : MonoBehaviour
     [Header("Config")]
     [SerializeField] private int maxPlayers = 4;
 
-    [SerializeField] private float pollIntervalSeconds = 0.8f;
-    [SerializeField] private float sessionRefreshMinInterval = 2.0f;
-    private float _nextSessionRefreshTime;
+    [SerializeField] private float pollIntervalSeconds = 2.0f;
+    [SerializeField] private float sessionRefreshMinInterval = 5.0f;
+    private bool _refreshing;
+    private bool _connectedForChat;
     private bool _clientConnectInProgress;
-    private ISession _session;
     private bool _isReady;
     private bool _polling;
     private bool _connectingToGame;
-    private string _lastTriedRelayCode;
+    private float _nextSessionRefreshTime;
     private float _nextRelayTryTime;
+    private float _refreshBackoffSec = 0f;
     private int _relayTryCount;
-    private bool _refreshing;
-    private bool _connectedForChat;
+    private string _lastTriedRelayCode;
+    private ISession _session;
 
     private const string KEY_READY = "ready";
     private const string KEY_NAME = "name";
@@ -200,16 +200,11 @@ public class LobbySystem : MonoBehaviour
 
             while (Time.realtimeSinceStartup < end)
             {
-                try
-                {
-                    await _session.RefreshAsync().AsUniTask();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[LobbyChat] Refresh failed: {e.Message}");
-                }
+                // ✅ PollLoop가 이미 주기적으로 _session.RefreshAsync()를 하고 있으니
+                // 여기서는 Refresh를 직접 호출하지 않는다.
 
-                if (_session.Properties.TryGetValue(KEY_RELAY_CODE, out var relayProp) &&
+                if (_session != null &&
+                    _session.Properties.TryGetValue(KEY_RELAY_CODE, out var relayProp) &&
                     !string.IsNullOrWhiteSpace(relayProp.Value))
                 {
                     string code = relayProp.Value.Trim().ToUpperInvariant();
@@ -218,7 +213,7 @@ public class LobbySystem : MonoBehaviour
                     await RelayConnector.Instance.StartClientWithRelayAsync(code);
 
                     _connectedForChat = true;
-                    
+
                     if (ChatNetworkBridge.Instance != null && ChatNetworkBridge.Instance.IsSpawned)
                         ChatNetworkBridge.Instance.RegisterMyNicknameNow();
 
@@ -226,7 +221,8 @@ public class LobbySystem : MonoBehaviour
                     return;
                 }
 
-                await UniTask.Delay(1000, ignoreTimeScale: true);
+                // ✅ 1초 대기 대신 더 짧게 "확인만" 반복 (Refresh는 PollLoop가 함)
+                await UniTask.Delay(250, ignoreTimeScale: true);
             }
 
             ui.SetStatus("채팅 연결 대기 중 (코드 준비 전)");
@@ -241,8 +237,7 @@ public class LobbySystem : MonoBehaviour
             _clientConnectInProgress = false;
         }
     }
-
-
+    
     private async UniTask ToggleReadyAsync()
     {
         if (_session == null)
@@ -265,71 +260,62 @@ public class LobbySystem : MonoBehaviour
             ui.SetStatus("세션이 없습니다.");
             return;
         }
-    
+
         if (!_session.IsHost)
         {
             ui.SetStatus("호스트만 시작할 수 있습니다.");
             return;
         }
-    
+
         if (!IsAllReady(_session))
         {
             ui.SetStatus("아직 준비 안 된 플레이어가 있습니다.");
             return;
         }
-        
+
         StopPolling();
-    
         _connectingToGame = true;
+
         ui.SetStatus("Relay 생성/시작 중...");
-    
+
         try
         {
             int maxConn = Mathf.Max(1, _session.Players.Count - 1);
-    
-            Debug.Log($"[HostStart] cloudProjectId={Application.cloudProjectId} state={UnityServices.State} players={_session.Players.Count} maxConn={maxConn}");
+
+            Debug.Log($"[HostStart] players={_session.Players.Count} maxConn={maxConn}");
             
-            string relayJoinCode = await RelayConnector.Instance.StartHostWithRelayAsync(maxConn);
+            string relayJoinCode =
+                await RelayConnector.Instance.StartHostWithRelayAsync(maxConn);
+
             Debug.Log($"[Lobby] Host created Relay joinCode={relayJoinCode}");
             
             var host = _session.AsHost();
-            host.SetProperty(KEY_RELAY_CODE, new SessionProperty(relayJoinCode, VisibilityPropertyOptions.Member));
-            host.SetProperty(KEY_GAME_START, new SessionProperty("1", VisibilityPropertyOptions.Member));
-            host.SetProperty(KEY_SCENE_NAME, new SessionProperty("InGame", VisibilityPropertyOptions.Member));
-    
+            host.SetProperty(KEY_RELAY_CODE,
+                new SessionProperty(relayJoinCode, VisibilityPropertyOptions.Member));
+            host.SetProperty(KEY_GAME_START,
+                new SessionProperty("1", VisibilityPropertyOptions.Member));
+            host.SetProperty(KEY_SCENE_NAME,
+                new SessionProperty("InGame", VisibilityPropertyOptions.Member));
+            
             await host.SavePropertiesAsync().AsUniTask();
 
-            bool saved = false;
-            for (int i = 0; i < 10; i++)
-            {
-                await UniTask.Delay(300, ignoreTimeScale: true);
-                await _session.RefreshAsync().AsUniTask();
-    
-                if (_session.Properties.TryGetValue(KEY_RELAY_CODE, out var prop) &&
-                    !string.IsNullOrWhiteSpace(prop.Value))
-                {
-                    saved = true;
-                    break;
-                }
-            }
-    
-            if (!saved)
-                throw new Exception("Relay joinCode가 세션에 저장되지 않았습니다.");
-    
-            ui.SetStatus("클라이언트 접속 대기 중... (모두 붙으면 자동 시작)");
-    
-            AppFlowManager.Instance.StartMultiGameFromHostAsync(_session.Players.Count, 20f).Forget();
+            ui.SetStatus("클라이언트 접속 대기 중...");
+
+            MultiplayerContext.SetPlayersCount(_session.Players.Count);
+            
+            AppFlowManager.Instance
+                .StartMultiGameFromHostAsync(_session.Players.Count, 20f)
+                .Forget();
         }
         catch (Exception e)
         {
             Debug.LogException(e);
             ui.SetStatus("게임 시작 실패. 로그 확인");
+
             _connectingToGame = false;
-            
             StartPolling();
         }
     }
-
 
     private async UniTask LeaveToTitleAsync()
     {
@@ -369,6 +355,7 @@ public class LobbySystem : MonoBehaviour
     private async UniTaskVoid PollLoop()
     {
         _nextSessionRefreshTime = 0f;
+        _refreshBackoffSec = 0f;
 
         while (_polling)
         {
@@ -377,9 +364,11 @@ public class LobbySystem : MonoBehaviour
                 try
                 {
                     float now = Time.realtimeSinceStartup;
+                    float minInterval = sessionRefreshMinInterval + _refreshBackoffSec;
+                    
                     if (now >= _nextSessionRefreshTime)
                     {
-                        _nextSessionRefreshTime = now + sessionRefreshMinInterval;
+                        _nextSessionRefreshTime = now + minInterval;
                         await _session.RefreshAsync().AsUniTask();
                     }
                     
@@ -387,11 +376,26 @@ public class LobbySystem : MonoBehaviour
                     
                     if (!_connectingToGame)
                         RefreshUIFromSession(_session);
+                    
+                    _refreshBackoffSec = 0f;
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
-                    ui.SetStatus("세션 갱신 실패(재시도 중)...");
+
+                    // 메시지 기반(임시): 패키지에 따라 예외 타입이 다를 수 있어서
+                    bool tooMany = e.Message.Contains("Too Many Requests", StringComparison.OrdinalIgnoreCase);
+
+                    if (tooMany)
+                    {
+                        // 2초 -> 4초 -> 8초 (최대 20초)
+                        _refreshBackoffSec = Mathf.Clamp(_refreshBackoffSec <= 0f ? 2f : _refreshBackoffSec * 2f, 2f, 20f);
+                        ui.SetStatus($"세션 갱신 제한(429). {_refreshBackoffSec:0}s 후 재시도...");
+                    }
+                    else
+                    {
+                        ui.SetStatus("세션 갱신 실패(재시도 중)...");
+                    }
                 }
             }
 

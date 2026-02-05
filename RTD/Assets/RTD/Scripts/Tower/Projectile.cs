@@ -251,4 +251,27 @@ public class Projectile : MonoBehaviour
 
         return Quaternion.FromToRotation(modelAxis, Vector3.forward);
     }
+    
+    public void InitSpectate(
+        Transform targetTransform,
+        float speed,
+        float lifeTime,
+        IProjectileHitListener hitListener = null)
+    {
+        targetMonster = null;
+        target = targetTransform;
+
+        this.speed = Mathf.Max(0.01f, speed);
+        this.damage = 0;
+        this.lifeTime = Mathf.Max(0.01f, lifeTime);
+        this.lifeTimer = 0f;
+
+        this.sourceTower = null;
+        this.hitListener = hitListener;
+
+        this.splashRadius = 0f;
+        this.splashRatio = 0f;
+
+        ballisticInited = false;
+    }
 }
