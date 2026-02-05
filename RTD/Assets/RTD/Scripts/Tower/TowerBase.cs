@@ -41,6 +41,7 @@ public abstract class TowerBase : MonoBehaviour
     
     public GridTile CurrentTile { get; private set; }
     public TowerTraitSO RuntimeTrait { get; private set; }
+    public System.Action OnStatsChanged;
 
     protected virtual void Start()
     {

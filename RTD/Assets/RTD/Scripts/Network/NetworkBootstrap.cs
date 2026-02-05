@@ -5,14 +5,16 @@ using UnityEngine;
 public class NetworkBootstrap : MonoBehaviour
 {
     [SerializeField] private NetworkManager networkManagerPrefab;
+    
+    [Header("Chat")]
+    [SerializeField] private ChatNetworkBridge chatNetworkBridgePrefab;
 
     private NetworkManager _nm;
 
     private void Awake()
     {
         DontDestroyOnLoad(gameObject);
-
-        // 1) NetworkManager 확보
+        
         if (NetworkManager.Singleton != null)
         {
             _nm = NetworkManager.Singleton;
@@ -79,6 +81,7 @@ public class NetworkBootstrap : MonoBehaviour
         var list = NetworkManager.Singleton != null ? NetworkManager.Singleton.ConnectedClientsList : null;
         int count = (list != null) ? list.Count : 1;
         MultiplayerContext.SetPlayersCount(count);
+        EnsureChatBridgeServer();
 
         Debug.Log($"[NGO] ClientConnected clientId={clientId} MyLaneId={MultiplayerContext.MyLaneId} PlayersCount={MultiplayerContext.PlayersCount}");
     }
@@ -92,5 +95,55 @@ public class NetworkBootstrap : MonoBehaviour
         MultiplayerContext.SetPlayersCount(count);
 
         Debug.Log($"[NGO] ClientDisconnected clientId={clientId} MyLaneId={MultiplayerContext.MyLaneId} PlayersCount={MultiplayerContext.PlayersCount}");
+    }
+   
+    private void EnsureChatBridgeServer()
+    {
+        if (_nm == null) return;
+        if (!_nm.IsServer || !_nm.IsListening) return;
+
+        if (ChatNetworkBridge.Instance != null && ChatNetworkBridge.Instance.IsSpawned)
+            return;
+
+        if (chatNetworkBridgePrefab == null)
+        {
+            Debug.LogError("[NetworkBootstrap] chatNetworkBridgePrefab is null");
+            return;
+        }
+        
+        if (_nm.NetworkConfig != null)
+        {
+            var prefabs = _nm.NetworkConfig.Prefabs;
+            bool found = false;
+
+            for (int i = 0; i < prefabs.Prefabs.Count; i++)
+            {
+                if (prefabs.Prefabs[i].Prefab == chatNetworkBridgePrefab.gameObject)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                prefabs.Add(new NetworkPrefab { Prefab = chatNetworkBridgePrefab.gameObject });
+                Debug.Log("[NetworkBootstrap] ChatNetworkBridge prefab added to NetworkConfig (runtime)");
+            }
+        }
+
+        var bridge = Instantiate(chatNetworkBridgePrefab);
+        var no = bridge.GetComponent<NetworkObject>();
+        if (no == null)
+        {
+            Debug.LogError("[NetworkBootstrap] ChatNetworkBridge prefab has no NetworkObject");
+            Destroy(bridge.gameObject);
+            return;
+        }
+
+        no.DestroyWithScene = false;
+        no.Spawn(true);
+
+        Debug.Log("[NetworkBootstrap] ChatNetworkBridge spawned/ensured");
     }
 }

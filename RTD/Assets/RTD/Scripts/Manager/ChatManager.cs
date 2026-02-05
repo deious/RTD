@@ -38,15 +38,25 @@ public sealed class ChatManager : MonoBehaviour
         if (string.IsNullOrWhiteSpace(text))
             return;
 
+        var nm = NetworkManager.Singleton;
+        var bridge = ChatNetworkBridge.Instance;
+
+        Debug.Log(
+            $"[Chat][Send] scene={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name} " +
+            $"listening={(nm != null && nm.IsListening)} " +
+            $"bridge={(bridge != null ? bridge.name : "null")} " +
+            $"spawned={(bridge != null && bridge.IsSpawned)} " +
+            $"isClient={(nm != null && nm.IsClient)} isHost={(nm != null && nm.IsHost)}");
+
         text = text.Trim();
-        
-        if (IsNetworkChatAvailable(out var bridge))
+
+        if (IsNetworkChatAvailable(out var b))
         {
-            bridge.SendToServer(text);
+            b.SendToServer(text);
             return;
         }
 
-        // 싱글/오프라인: 로컬 에코
+        // 로컬 에코...
         var msg = new ChatMessage("Me", text, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
         ReceiveLocal(msg);
     }

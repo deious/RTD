@@ -6,32 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/WavePattern_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Waves/WavePattern_01.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Boss.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Boss.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Monster.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Monster/Monster.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/BasicTower.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/Ghost.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/Ghost.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/GhostTower.prefab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Tower/GhostTower.prefab.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Editer/RTDSheetImporter.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Editer/RTDSheetImporter.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/MiniMapPathRenderer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/MiniMapPathRenderer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/SpectatorCameraController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/SpectatorCameraController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GridManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GridManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/MonsterSpawner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/MonsterSpawner.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterArchetypeSO.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterArchetypeSO.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/ProxyMonster.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/ProxyMonster.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/LaneCombatBridge.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/LaneCombatBridge.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/MonsterTypeRegistry.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/MonsterTypeRegistry.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RemoteLaneWorld.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RemoteLaneWorld.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/UI/MiniMapMonsterUIRenderer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/UI/MiniMapMonsterUIRenderer.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/CurrentMaximizeLayout.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/CurrentMaximizeLayout.dwlt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Network/ChatNetworkBridge.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Network/ChatNetworkBridge.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/LobbySystem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/LobbySystem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatNetworkBridge.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatNetworkBridge.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/NetworkBootstrap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/NetworkBootstrap.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RelayConnector.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RelayConnector.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +167,7 @@
       <workItem from="1769988569920" duration="22459000" />
       <workItem from="1770075174303" duration="18455000" />
       <workItem from="1770161560373" duration="21645000" />
-      <workItem from="1770248480984" duration="7070000" />
+      <workItem from="1770248480984" duration="17403000" />
     </task>
     <servers />
   </component>
