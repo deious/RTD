@@ -8,7 +8,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     [Header("Stats")]
     public float maxHp = 20;
-    [SerializeField]private float currentHp;                // 인스펙터에서 편하게 확인하기 위해 시리얼라이즈
+    [SerializeField] private float currentHp;                // 인스펙터에서 편하게 확인하기 위해 시리얼라이즈
     [SerializeField] private float shieldHp;
 
     [SerializeField] private Transform shieldVfxPrefab;
@@ -26,6 +26,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public float Hp01 => (maxHp <= 0) ? 0f : Mathf.Clamp01((float)currentHp / maxHp);
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
+    public float ShieldHp => shieldHp;
 
     [Header("Status: Stun")]
     [SerializeField] private bool showStunDebug = false;
@@ -72,8 +73,8 @@ public class MonsterAI : MonoBehaviour, IPoolable
     [SerializeField] private float moveSpeedAddPerWave = 0.15f;
     [SerializeField] private float maxMoveSpeed = 25.0f;
 
-    private int _baseMaxHp;
-    private int _baseShieldHp;
+    private float _baseMaxHp;
+    private float _baseShieldHp;
     private float _baseMoveSpeed;
     private Vector3 _baseLocalScale;
 
@@ -576,7 +577,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public void ApplyWaveScaling(int waveIndex, WaveModifiers mods)
     {
         int w = Mathf.Max(1, waveIndex);
-        int hp = _baseMaxHp;
+        float hp = _baseMaxHp;
 
         if (applyWaveHpExp)
         {
@@ -612,7 +613,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
         moveSpeed = Mathf.Min(speed, maxMoveSpeed);
         
-        int shield = 0;
+        float shield = 0;
         bool shieldEnabled = (mods.shieldHp > 0); 
 
         if (shieldEnabled)
@@ -711,5 +712,16 @@ public class MonsterAI : MonoBehaviour, IPoolable
         {
             fixedLaneIndex = idx;
         }
+    }
+    
+    public void SetAsProxyMode()
+    {
+        enabled = false;
+    }
+    
+    public void SetShieldForProxy(float newShieldHp)
+    {
+        shieldHp = Mathf.Max(0f, newShieldHp);
+        UpdateShieldVfx();
     }
 }

@@ -129,7 +129,7 @@ public class MonsterSpawner : MonoBehaviour
         GameObject go = (SimplePool.Instance != null)
             ? SimplePool.Instance.Get(archetype.prefab)
             : Instantiate(archetype.prefab);
-    
+        
         RegisterSpawnedMonster(go);
     
         // ✅ 멀티 확장 포인트: 이 몬스터가 속한 "플레이어 슬롯(P1~P4)"
@@ -165,6 +165,31 @@ public class MonsterSpawner : MonoBehaviour
     
         // ✅ 출발
         ai.BeginRun();
+        
+        var bridge = LaneCombatBridge.Instance;
+        if (bridge != null)
+        {
+            if (MonsterTypeRegistry.TryGetTypeId(archetype.prefab, out int typeId))
+            {
+                bridge.SpawnMonsterServerRpc(
+                    worldSlotId,            // laneId
+                    netId,
+                    typeId,
+                    ai.transform.position,
+                    ai.MaxHp,
+                    ai.CurrentHp,
+                    ai.ShieldHp
+                );
+            }
+            else
+            {
+                Debug.LogError($"[MonsterSpawner] typeId not found for prefab={archetype.prefab.name}. MonsterTypeRegistry prefabs 배열 매칭 필요");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[MonsterSpawner] LaneCombatBridge.Instance is null. (Bridge가 씬에 존재 + NetworkObject로 스폰되어야 RPC 가능)");
+        }
     
         // (선택) 여기서 네트워크 이벤트 발행할 거면 이 지점이 "정답 위치"임
         // LaneCombatBridge.Instance?.SpawnMonster(worldSlotId, netId, archetypeId, pathLaneIndex, ai.transform.position, ai.MaxHp, ai.CurrentHp);
@@ -275,13 +300,21 @@ public class MonsterSpawner : MonoBehaviour
         
         RaiseMonsterCountChanged();
         
-        if (miniMapMonsterUI != null)
+        var laneId = MultiplayerContext.MyLaneId;
+        MiniMapMonsterUIRenderer rendererForMyLane =
+            (MiniMapLaneRegistry.Instance != null)
+                ? MiniMapLaneRegistry.Instance.GetMonsterRenderer(laneId)
+                : miniMapMonsterUI;
+        
+        if (rendererForMyLane == null)
+            rendererForMyLane = miniMapMonsterUI;
+
+        if (rendererForMyLane != null)
         {
             var mm = go.GetComponent<MiniMapMonsterReporter>();
-            if (mm == null)
-                mm = go.AddComponent<MiniMapMonsterReporter>();
+            if (mm == null) mm = go.AddComponent<MiniMapMonsterReporter>();
 
-            mm.Init(miniMapMonsterUI, go.transform);
+            mm.Init(rendererForMyLane, go.transform);
         }
 
         var ai = go.GetComponent<MonsterAI>();
@@ -299,6 +332,10 @@ public class MonsterSpawner : MonoBehaviour
         _killedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
+        
+        var bridge = LaneCombatBridge.Instance;
+        if (bridge != null)
+            bridge.DespawnMonsterServerRpc(MultiplayerContext.MyLaneId, ai.NetId);
     }
 
     internal void NotifyMonsterEscaped(MonsterAI ai)
@@ -309,6 +346,10 @@ public class MonsterSpawner : MonoBehaviour
         _escapedCount++;
         RaiseMonsterCountChanged();
         TryNotifyWaveCleared();
+        
+        var bridge = LaneCombatBridge.Instance;
+        if (bridge != null)
+            bridge.DespawnMonsterServerRpc(MultiplayerContext.MyLaneId, ai.NetId);
     }
 
     private void RaiseMonsterCountChanged()

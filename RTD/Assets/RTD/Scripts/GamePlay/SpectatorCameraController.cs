@@ -88,11 +88,8 @@ public class SpectatorCameraController : MonoBehaviour
         _goalPos = p.position;
         SpectateContext.ViewLaneId = slotIndex;
 
-        if (debugLog)
-            Debug.Log($"[Spectator] Spectate => slot={slotIndex} goal={_goalPos}");
-
         // ✅ 여기서 “관전 레인 스냅샷 요청” 같이 쏘면 제일 깔끔함
-        if (LaneCombatBridge.Instance != null)
+        /*if (LaneCombatBridge.Instance != null)
         {
             if (debugLog) Debug.Log($"[Spectator] RequestSyncLane => lane={slotIndex}");
             LaneCombatBridge.Instance.RequestSyncLane(slotIndex);
@@ -100,7 +97,7 @@ public class SpectatorCameraController : MonoBehaviour
         else
         {
             if (debugLog) Debug.LogWarning("[Spectator] LaneCombatBridge.Instance is null (cannot RequestSyncLane)");
-        }
+        }*/
 
         if (!smoothMove)
         {
@@ -111,6 +108,12 @@ public class SpectatorCameraController : MonoBehaviour
         {
             _moving = true;
         }
+        
+        if (TowerCombatBridge.Instance != null)
+            TowerCombatBridge.Instance.RequestSyncLane(SpectateContext.ViewLaneId);
+
+        if (LaneCombatBridge.Instance != null)
+            LaneCombatBridge.Instance.RequestSyncLane(SpectateContext.ViewLaneId);
     }
 
     public void SpectateNext()

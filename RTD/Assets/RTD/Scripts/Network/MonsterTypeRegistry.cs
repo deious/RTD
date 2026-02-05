@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MonsterTypeRegistry : MonoBehaviour
@@ -6,6 +7,8 @@ public class MonsterTypeRegistry : MonoBehaviour
 
     [Header("typeId = index")]
     [SerializeField] private GameObject[] prefabs;
+    
+    private Dictionary<GameObject, int> _prefabToTypeId;
 
     private void Awake()
     {
@@ -15,6 +18,37 @@ public class MonsterTypeRegistry : MonoBehaviour
             return;
         }
         Instance = this;
+    }
+    
+    private void BuildReverseMap()
+    {
+        _prefabToTypeId = new Dictionary<GameObject, int>(prefabs != null ? prefabs.Length : 0);
+
+        if (prefabs == null) return;
+        for (int i = 0; i < prefabs.Length; i++)
+        {
+            var p = prefabs[i];
+            if (!p) continue;
+            _prefabToTypeId[p] = i;
+        }
+    }
+
+    public static bool TryGetTypeId(GameObject prefab, out int typeId)
+    {
+        typeId = -1;
+
+        if (prefab == null) return false;
+
+        if (Instance == null)
+        {
+            Debug.LogError("[MonsterTypeRegistry] Instance is null. Add MonsterTypeRegistry to scene.");
+            return false;
+        }
+
+        if (Instance._prefabToTypeId == null)
+            Instance.BuildReverseMap();
+
+        return Instance._prefabToTypeId != null && Instance._prefabToTypeId.TryGetValue(prefab, out typeId);
     }
 
     public static GameObject GetPrefab(int typeId)

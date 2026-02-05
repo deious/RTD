@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,28 +7,37 @@ public class LaneCombatBridge : NetworkBehaviour
 {
     public static LaneCombatBridge Instance { get; private set; }
     public static Func<int, byte[]> BuildPackedLaneSnapshot;
-
-    private void Awake()
+    private readonly Dictionary<int, byte[]> _lastPackedByLane = new Dictionary<int, byte[]>(4);
+    
+    public override void OnNetworkSpawn()
     {
         Instance = this;
     }
 
+    public override void OnNetworkDespawn()
+    {
+        if (Instance == this)
+            Instance = null;
+        
+        _lastPackedByLane.Clear();
+    }
+
     [ServerRpc(RequireOwnership = false)]
     public void SpawnMonsterServerRpc(
-        int laneId, int netId, int typeId, Vector3 pos, int hpMax, int hp)
+        int laneId, int netId, int typeId, Vector3 pos, float hpMax, float hp, float shieldHp)
     {
-        SpawnMonsterClientRpc(laneId, netId, typeId, pos, hpMax, hp);
+        SpawnMonsterClientRpc(laneId, netId, typeId, pos, hpMax, hp, shieldHp);
     }
 
     [ClientRpc]
     private void SpawnMonsterClientRpc(
-        int laneId, int netId, int typeId, Vector3 pos, int hpMax, int hp)
+        int laneId, int netId, int typeId, Vector3 pos, float hpMax, float hp, float shieldHp)
     {
         if (laneId == MultiplayerContext.MyLaneId)
             return;
 
         RemoteLaneWorld.Instance?
-            .OnRemoteSpawnMonster(laneId, netId, typeId, pos, hpMax, hp);
+            .OnRemoteSpawnMonster(laneId, netId, typeId, pos, hpMax, hp, shieldHp);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -53,6 +63,16 @@ public class LaneCombatBridge : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void SyncMonstersServerRpc(int laneId, byte[] packedData)
     {
+        if (IsServer && packedData != null && packedData.Length >= 4)
+        {
+            var copy = new byte[packedData.Length];
+            Buffer.BlockCopy(packedData, 0, copy, 0, packedData.Length);
+            _lastPackedByLane[laneId] = copy;
+            
+            SyncMonstersClientRpc(laneId, copy);
+            return;
+        }
+        
         SyncMonstersClientRpc(laneId, packedData);
     }
 
@@ -80,13 +100,22 @@ public class LaneCombatBridge : NetworkBehaviour
     private void RequestSyncLaneServerRpc(int laneId)
     {
         if (!IsServer) return;
-
+        
+        if (_lastPackedByLane.TryGetValue(laneId, out var cached) && cached != null && cached.Length >= 4)
+        {
+            SyncMonstersClientRpc(laneId, cached);
+            return;
+        }
+        
         byte[] packed = BuildPackedLaneSnapshot?.Invoke(laneId);
 
-        // 안전 처리
-        if (packed == null || packed.Length < 4)
-            packed = BitConverter.GetBytes(0);
+        if (packed != null && packed.Length >= 4)
+        {
+            var copy = new byte[packed.Length];
+            Buffer.BlockCopy(packed, 0, copy, 0, packed.Length);
+            _lastPackedByLane[laneId] = copy;
 
-        SyncMonstersClientRpc(laneId, packed);
+            SyncMonstersClientRpc(laneId, copy);
+        }
     }
 }

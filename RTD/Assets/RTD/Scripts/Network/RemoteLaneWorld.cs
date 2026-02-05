@@ -16,6 +16,10 @@ public class RemoteLaneWorld : MonoBehaviour
 
     [Tooltip("Sync에 포함된 위치로 이동할 때, 이 거리 이상이면 텔레포트")]
     [SerializeField] private float teleportIfFartherThan = 6.0f;
+    
+    [Header("Disable On Proxy Spawn")]
+    [SerializeField] private bool disableMonsterAIOnProxy = true;
+    [SerializeField] private bool disableCollidersOnProxy = true;
 
     // key: (laneId, netId)
     private readonly Dictionary<long, ProxyMonster> _monsters = new();
@@ -33,6 +37,8 @@ public class RemoteLaneWorld : MonoBehaviour
             return;
         }
         Instance = this;
+        
+        //DontDestroyOnLoad(gameObject);
     }
 
     // ✅ laneId + netId를 유니크 키로
@@ -45,7 +51,7 @@ public class RemoteLaneWorld : MonoBehaviour
     // Spawn / Despawn (이벤트 기반)
     // ---------------------------
 
-    public void OnRemoteSpawnMonster(int laneId, int netId, int typeId, Vector3 pos, int hpMax, int hp)
+    public void OnRemoteSpawnMonster(int laneId, int netId, int typeId, Vector3 pos, float hpMax, float hp, float shieldHp)
     {
         // 내 레인은 리모트로 만들지 않음
         if (laneId == MyLaneId) return;
@@ -54,7 +60,7 @@ public class RemoteLaneWorld : MonoBehaviour
 
         if (_monsters.TryGetValue(k, out var existing) && existing != null)
         {
-            existing.SetHP(hpMax, hp);
+            existing.SetVitals(hpMax, hp, shieldHp);
             existing.Teleport(pos);
             return;
         }
@@ -87,12 +93,15 @@ public class RemoteLaneWorld : MonoBehaviour
             }
             go = Instantiate(proxyMonsterPrefab.gameObject, pos, Quaternion.identity);
         }
-
+        
+        ApplyProxyDisable(go);
         var pm = go.GetComponent<ProxyMonster>();
         if (pm == null) pm = go.AddComponent<ProxyMonster>();
 
-        pm.Init(laneId, netId, typeId, hpMax, hp);
+        pm.Init(laneId, netId, typeId, hpMax, hp, shieldHp);
         pm.Teleport(pos);
+        
+        AttachMiniMapReporter(go.transform, laneId);
 
         _monsters[k] = pm;
     }
@@ -106,7 +115,8 @@ public class RemoteLaneWorld : MonoBehaviour
         if (_monsters.TryGetValue(k, out var pm))
         {
             _monsters.Remove(k);
-            if (pm != null) Destroy(pm.gameObject);
+            if (pm != null) 
+                Destroy(pm.gameObject);
         }
     }
 
@@ -120,8 +130,9 @@ public class RemoteLaneWorld : MonoBehaviour
     /// 반복 count번:
     ///   netId:int
     ///   x:float y:float z:float
-    ///   hp:int
-    ///   hpMax:int
+    ///   hp:float
+    ///   hpMax:float
+    ///   shieldHp:float
     /// </summary>
     public void OnRemoteSyncMonsters(int laneId, byte[] packedData)
     {
@@ -147,8 +158,9 @@ public class RemoteLaneWorld : MonoBehaviour
             if (!TryReadFloat(packedData, ref offset, out float x)) break;
             if (!TryReadFloat(packedData, ref offset, out float y)) break;
             if (!TryReadFloat(packedData, ref offset, out float z)) break;
-            if (!TryReadInt(packedData, ref offset, out int hp)) break;
-            if (!TryReadInt(packedData, ref offset, out int hpMax)) break;
+            if (!TryReadFloat(packedData, ref offset, out float hp)) break;
+            if (!TryReadFloat(packedData, ref offset, out float hpMax)) break;
+            if (!TryReadFloat(packedData, ref offset, out float shieldHp)) break;
 
             long k = Key(laneId, netId);
             _seenInLastSync.Add(k);
@@ -157,7 +169,7 @@ public class RemoteLaneWorld : MonoBehaviour
 
             if (_monsters.TryGetValue(k, out var pm) && pm != null)
             {
-                pm.SetHP(hpMax, hp);
+                pm.SetVitals(hpMax, hp, shieldHp);
 
                 // 너무 멀면 텔레포트, 아니면 스무스
                 float sqr = (pm.transform.position - pos).sqrMagnitude;
@@ -170,7 +182,7 @@ public class RemoteLaneWorld : MonoBehaviour
             {
                 // Sync에 있는데 로컬에 없으면 "유실된 몬스터" → 최소 프록시로 생성
                 // (typeId가 packedData에 없다면 Init typeId는 -1로 둠)
-                SpawnProxyFallbackFromSync(laneId, netId, pos, hpMax, hp);
+                SpawnProxyFallbackFromSync(laneId, netId, pos, hpMax, hp, shieldHp);
             }
         }
 
@@ -178,7 +190,7 @@ public class RemoteLaneWorld : MonoBehaviour
             CleanupMissingAfterSync(laneId, _seenInLastSync);
     }
 
-    private void SpawnProxyFallbackFromSync(int laneId, int netId, Vector3 pos, int hpMax, int hp)
+    private void SpawnProxyFallbackFromSync(int laneId, int netId, Vector3 pos, float hpMax, float hp, float shieldHp)
     {
         if (proxyMonsterPrefab == null)
         {
@@ -189,16 +201,51 @@ public class RemoteLaneWorld : MonoBehaviour
         long k = Key(laneId, netId);
 
         var pm = Instantiate(proxyMonsterPrefab, pos, Quaternion.identity);
-        pm.Init(laneId, netId, typeId: -1, hpMax, hp);
+        pm.Init(laneId, netId, typeId: -1, hpMax, hp, shieldHp);
         pm.Teleport(pos);
 
         _monsters[k] = pm;
     }
+    
+    private void AttachMiniMapReporter(Transform monsterRoot, int laneId)
+    {
+        if (!monsterRoot) return;
 
-    /// <summary>
-    /// ✅ 유령 몹 방지 핵심:
-    /// Sync에 포함되지 않은 (laneId의) 몬스터는 제거한다.
-    /// </summary>
+        MiniMapMonsterUIRenderer renderer =
+            (MiniMapLaneRegistry.Instance != null)
+                ? MiniMapLaneRegistry.Instance.GetMonsterRenderer(laneId)
+                : null;
+
+        if (renderer == null) return;
+
+        var rep = monsterRoot.GetComponent<MiniMapMonsterReporter>();
+        if (!rep) rep = monsterRoot.gameObject.AddComponent<MiniMapMonsterReporter>();
+
+        rep.Init(renderer, monsterRoot);
+    }
+    
+    private void ApplyProxyDisable(GameObject go)
+    {
+        if (go == null) return;
+
+        if (disableMonsterAIOnProxy)
+        {
+            var ai = go.GetComponent<MonsterAI>();
+            if (ai != null)
+            {
+                try { ai.SetAsProxyMode(); }
+                catch { ai.enabled = false; }
+            }
+        }
+
+        if (disableCollidersOnProxy)
+        {
+            var cols = go.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < cols.Length; i++)
+                cols[i].enabled = false;
+        }
+    }
+    
     private void CleanupMissingAfterSync(int laneId, HashSet<long> seenKeys)
     {
         // Dictionary 순회 중 삭제하면 터지니까 리스트로 수집
