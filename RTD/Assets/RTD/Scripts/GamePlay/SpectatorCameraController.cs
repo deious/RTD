@@ -86,7 +86,7 @@ public class SpectatorCameraController : MonoBehaviour
 
         CurrentSlot = slotIndex;
         _goalPos = p.position;
-        SpectateContext.ViewLaneId = slotIndex;
+        SpectatorContext.ViewLaneId = slotIndex;
 
         // ✅ 여기서 “관전 레인 스냅샷 요청” 같이 쏘면 제일 깔끔함
         /*if (LaneCombatBridge.Instance != null)
@@ -110,10 +110,10 @@ public class SpectatorCameraController : MonoBehaviour
         }
         
         if (TowerCombatBridge.Instance != null)
-            TowerCombatBridge.Instance.RequestSyncLane(SpectateContext.ViewLaneId);
+            TowerCombatBridge.Instance.RequestSyncLane(SpectatorContext.ViewLaneId);
 
         if (LaneCombatBridge.Instance != null)
-            LaneCombatBridge.Instance.RequestSyncLane(SpectateContext.ViewLaneId);
+            LaneCombatBridge.Instance.RequestSyncLane(SpectatorContext.ViewLaneId);
     }
 
     public void SpectateNext()

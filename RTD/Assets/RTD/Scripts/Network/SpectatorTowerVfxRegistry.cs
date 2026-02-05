@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SpectateTowerVfxRegistry : MonoBehaviour
+public class SpectatorTowerVfxRegistry : MonoBehaviour
 {
-    public static SpectateTowerVfxRegistry Instance { get; private set; }
+    public static SpectatorTowerVfxRegistry Instance { get; private set; }
 
     [Serializable]
     public class Entry
