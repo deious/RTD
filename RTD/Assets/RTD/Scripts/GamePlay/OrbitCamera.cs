@@ -68,6 +68,9 @@ public class OrbitCamera : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (UIState.BlockWorldInput) 
+            return;
+        
         if (IsTyping())
             return;
         

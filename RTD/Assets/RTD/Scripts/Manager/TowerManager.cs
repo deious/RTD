@@ -99,6 +99,9 @@ public class TowerManager : MonoBehaviour
 
     private void Update()
     {
+        if (UIState.BlockWorldInput) 
+            return;
+        
         if (_combineBusy) 
             return;
         
@@ -611,6 +614,10 @@ public class TowerManager : MonoBehaviour
             Destroy(towerObj);
             return false;
         }
+        
+        var own = towerObj.GetComponent<TowerOwnership>();
+        if (own == null) own = towerObj.AddComponent<TowerOwnership>();
+        own.ownerLane = MultiplayerContext.MyLaneId;
 
         tower.SetData(rolledData);
         AssignTraitIfNeeded(tower);
@@ -643,9 +650,6 @@ public class TowerManager : MonoBehaviour
 
     private int MakeTowerIdFromTile(GridTile tile)
     {
-        // ✅ GridPos가 있다면 이 방식이 가장 안정적
-        // return tile.GridPos.x * 1000 + tile.GridPos.y;
-        
         Vector3 p = tile.transform.position;
         int gx = Mathf.RoundToInt(p.x);
         int gy = Mathf.RoundToInt(p.z);
@@ -1013,6 +1017,10 @@ public class TowerManager : MonoBehaviour
             Destroy(go);
             return null;
         }
+        
+        var own = go.GetComponent<TowerOwnership>();
+        if (own == null) own = go.AddComponent<TowerOwnership>();
+        own.ownerLane = MultiplayerContext.MyLaneId;
 
         tower.SetData(data);
         tower.SetTrait(trait);
