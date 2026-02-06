@@ -6,16 +6,17 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/DefaultNetworkPrefabs.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Network/ChatNetworkBridge.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Network/ChatNetworkBridge.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Prefabs/Effects/DamageText.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Prefabs/Effects/DamageText.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/OrbitCamera.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/LobbySystem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/LobbySystem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatNetworkBridge.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatNetworkBridge.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/NetworkBootstrap.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/NetworkBootstrap.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RelayConnector.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/RelayConnector.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/DamageText.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/DamageText.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/AppFlowManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/AppFlowManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/DamageTextManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/DamageTextManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Tower/TowerBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/EditorUserSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +27,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Assets/RTD/Data/Towers/Tower_cannon_rare.asset" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Editer/EmptyGridGeneratorWindow.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/Augment/AugmentSystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/IPoolable.cs" root0="FORCE_HIGHLIGHTING" />
@@ -41,20 +43,12 @@
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/GamePlay/WaveModifiers.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Manager/LobbySystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Manager/MonsterSpawner.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Monster/ProxyMonster.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/LaneCombatBridge.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/MonsterTypeRegistry.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/MultiplayerContext.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/NgoDebugHooks.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/RelayConnector.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/RemoteLaneWorld.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Network/SpectateTowerVfxRegistry.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Tower/CannonTower.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Tower/MagicTower.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/Tower/SpectatorProjectile.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/UI/MiniMapLaneRegistry.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/UI/MiniMapModeSync.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/RTD/Scripts/UI/TitleMenuUI.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.netcode.gameobjects@0ad4bf5f3728/Runtime/Core/NetworkManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.render-pipelines.universal@d9aadd996b24/Shaders/Lit.shader" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProblemsViewState">
@@ -75,7 +69,7 @@
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/Add__Multi__Minimap&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/Add__Multi__Combat&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -167,7 +161,8 @@
       <workItem from="1769988569920" duration="22459000" />
       <workItem from="1770075174303" duration="18455000" />
       <workItem from="1770161560373" duration="21645000" />
-      <workItem from="1770248480984" duration="17403000" />
+      <workItem from="1770248480984" duration="29709000" />
+      <workItem from="1770355688830" duration="12014000" />
     </task>
     <servers />
   </component>

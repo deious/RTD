@@ -118,4 +118,66 @@ public class LaneCombatBridge : NetworkBehaviour
             SyncMonstersClientRpc(laneId, copy);
         }
     }
+    
+    [ClientRpc]
+    private void TowerFireClientRpc(
+        int laneId,
+        int towerNetId,
+        int targetMonsterNetId,
+        Vector3 firePos,
+        string towerTypeId
+    )
+    {
+        if (laneId == MultiplayerContext.MyLaneId)
+            return;
+
+        RemoteLaneWorld.Instance?
+            .OnRemoteTowerFire(laneId, towerNetId, targetMonsterNetId, firePos, towerTypeId);
+    }
+    
+    [ServerRpc(RequireOwnership = false)]
+    public void NotifyTowerFireServerRpc(
+        int laneId,
+        int towerNetId,
+        int targetMonsterNetId,
+        Vector3 firePos,
+        string towerTypeId,
+        float splashRadius,
+        float splashRatio,
+        int traitType,
+        float traitValue,
+        float traitRange,
+        float traitDuration,
+        int traitCount,
+        ServerRpcParams rpcParams = default)
+    {
+        NotifyTowerFireClientRpc(
+            laneId, towerNetId, targetMonsterNetId, firePos, towerTypeId,
+            splashRadius, splashRatio,
+            traitType, traitValue, traitRange, traitDuration, traitCount);
+    }
+
+    [ClientRpc]
+    private void NotifyTowerFireClientRpc(
+        int laneId,
+        int towerNetId,
+        int targetMonsterNetId,
+        Vector3 firePos,
+        string towerTypeId,
+        float splashRadius,
+        float splashRatio,
+        int traitType,
+        float traitValue,
+        float traitRange,
+        float traitDuration,
+        int traitCount)
+    {
+        if (RemoteLaneWorld.Instance == null)
+            return;
+
+        RemoteLaneWorld.Instance.OnRemoteTowerFire(
+            laneId, towerNetId, targetMonsterNetId, firePos, towerTypeId,
+            splashRadius, splashRatio,
+            traitType, traitValue, traitRange, traitDuration, traitCount);
+    }
 }

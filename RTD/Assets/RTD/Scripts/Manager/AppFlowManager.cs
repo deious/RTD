@@ -37,11 +37,8 @@ public class AppFlowManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-
-        // 싱글 모드에서만 유효한 보조용 (멀티는 NGO 이벤트로 해제)
+        
         SceneManager.sceneLoaded += OnUnitySceneLoaded;
-
-        // NGO 이벤트 후킹(있으면)
         HookNgoSceneEvents();
     }
 
@@ -95,11 +92,7 @@ public class AppFlowManager : MonoBehaviour
         
         OnSceneBecameActive?.Invoke(sceneName);
     }
-
-    // ---------------------------
-    // Scene Load
-    // ---------------------------
-
+    
     public void LoadGameScene()
     {
         if (_loadingGameScene) return;
@@ -119,10 +112,17 @@ public class AppFlowManager : MonoBehaviour
         if (_loadingGameScene) return;
 
         var nm = NetworkManager.Singleton;
+        
 
-        if (mode != Mode.Multi)
+        bool isSoloMultiplayer =
+            mode == Mode.Multi &&
+            NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsServer &&
+            NetworkManager.Singleton.ConnectedClientsList.Count == 1;
+        
+        if (mode != Mode.Multi || isSoloMultiplayer)
         {
-            // (사실상 싱글인데 여길 타면 이상하니) 안전 처리
+            mode = Mode.Single;
             _loadingGameScene = true;
             SceneManager.LoadScene(gameSceneName);
             return;
@@ -133,8 +133,7 @@ public class AppFlowManager : MonoBehaviour
             Debug.LogError("[AppFlow] NetworkManager.Singleton is null.");
             return;
         }
-
-        // ✅ 멀티는 서버/호스트만 NGO로 씬 전환
+        
         if (nm.IsServer && nm.IsListening)
         {
             _loadingGameScene = true;
@@ -145,11 +144,7 @@ public class AppFlowManager : MonoBehaviour
             Debug.LogWarning($"[AppFlow] Not server/host or not listening. IsServer={nm.IsServer} IsListening={nm.IsListening}");
         }
     }
-
-    // ---------------------------
-    // Single Flow
-    // ---------------------------
-
+    
     public void StartSingleGame()
     {
         mode = Mode.Single;

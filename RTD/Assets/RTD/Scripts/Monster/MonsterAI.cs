@@ -212,8 +212,29 @@ public class MonsterAI : MonoBehaviour, IPoolable
             return;
         _ended = true;
         
+        int lifeLoss = 1;
+
+        int wave = 0;
+        int maxWave = 0;
         if (GameRuntime.Instance != null)
-            GameRuntime.Instance.ChangeLife(-1);
+        {
+            wave = GameRuntime.Instance.CurrentWave;
+            maxWave = GameRuntime.Instance.MaxWave;
+        }
+        
+        if (IsBoss && (wave == 10 || wave == 20 || wave == 30))
+            lifeLoss = 5;
+        
+        if (IsBoss && wave == maxWave)
+        {
+            if (GameRuntime.Instance != null)
+                GameRuntime.Instance.ChangeLife(-999999); // 즉시 Lose 유도
+        }
+        else
+        {
+            if (GameRuntime.Instance != null)
+                GameRuntime.Instance.ChangeLife(-lifeLoss);
+        }
 
         if (_shieldVfxInstance != null)
             _shieldVfxInstance.gameObject.SetActive(false);

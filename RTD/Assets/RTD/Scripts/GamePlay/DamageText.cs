@@ -11,11 +11,26 @@ public class DamageText : MonoBehaviour
     private Vector3 _vel;
     private System.Action _onRelease;
 
+    private Vector3 _initialScale;
+
     private void Awake()
     {
-        if (tmp == null) tmp = GetComponentInChildren<TextMeshPro>();
+        if (tmp == null)
+            tmp = GetComponentInChildren<TextMeshPro>();
+
+        _initialScale = transform.localScale;
     }
-    
+
+    private void OnEnable()
+    {
+        _t = 0f;
+        _vel = Vector3.zero;
+        transform.localScale = _initialScale;
+
+        if (tmp != null)
+            tmp.alpha = 1f;
+    }
+
     private void Update()
     {
         _t += Time.deltaTime;
@@ -29,8 +44,15 @@ public class DamageText : MonoBehaviour
             _onRelease?.Invoke();
             _onRelease = null;
 
-            DamageTextManager.Instance.Release(this);
+            if (DamageTextManager.Instance != null)
+                DamageTextManager.Instance.Release(this);
         }
+    }
+
+    public void SetScaleMul(float mul)
+    {
+        mul = Mathf.Max(0.01f, mul);
+        transform.localScale = _initialScale * mul;
     }
 
     public void Play(int damage, Vector3 worldPos)
@@ -45,8 +67,6 @@ public class DamageText : MonoBehaviour
             tmp.text = damage.ToString();
             tmp.alpha = 1f;
         }
-
-        gameObject.SetActive(true);
     }
 
     public void SetOnRelease(System.Action onRelease) => _onRelease = onRelease;

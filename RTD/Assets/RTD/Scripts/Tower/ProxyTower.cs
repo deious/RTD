@@ -40,9 +40,9 @@ public class ProxyTower : MonoBehaviour
         _projectileSpeed = 18f;
         _projectileLifeTime = 2.5f;
 
-        if (SpectateTowerVfxRegistry.Instance == null) return;
+        if (SpectatorTowerVfxRegistry.Instance == null) return;
 
-        if (!SpectateTowerVfxRegistry.Instance.TryGet(towerTypeId, out var e) || e == null)
+        if (!SpectatorTowerVfxRegistry.Instance.TryGet(towerTypeId, out var e) || e == null)
             return;
 
         _interval = Mathf.Max(0.1f, e.fireInterval);
@@ -73,19 +73,26 @@ public class ProxyTower : MonoBehaviour
         if (_timer < _interval) return;
         _timer = 0f;
 
-        var target = FindNearestProxyMonster(transform.position, 6f);
+        var target = FindNearestProxyMonster(transform.position, _range);
         if (target == null) return;
-        
-        if (SpectatorProjectileLibrary.Instance == null) return;
-        if (SpectatorProjectilePool.Instance == null) return;
 
-        if (!SpectatorProjectileLibrary.Instance.TryGet(TypeId, out var projPrefab, out var speed))
+        if (ProjectilePool.Instance == null) return;
+        if (SpectatorProjectileLibrary.Instance == null) return;
+
+        if (!SpectatorProjectileLibrary.Instance.TryGet(TypeId, out var projPrefab, out var speed, out var lifeTime))
             return;
 
         Vector3 spawnPos = transform.position + Vector3.up * 0.8f;
-        var proj = SpectatorProjectilePool.Instance.Get(projPrefab, spawnPos, Quaternion.identity);
-        if (proj != null)
-            proj.Init(target.transform, speed);
+
+        var proj = ProjectilePool.Instance.Get(projPrefab, spawnPos, Quaternion.identity);
+        if (proj == null) return;
+        
+        var listener = proj.gameObject.GetComponent<SpectatorProjectileHitListener>();
+        if (listener == null) listener = proj.gameObject.AddComponent<SpectatorProjectileHitListener>();
+        listener.BindWorld(RemoteLaneWorld.Instance);
+        listener.Configure(LaneId, 0f, 0f, -1, 0f, 0f, 0f, 0);
+
+        proj.InitSpectate(target.transform, speed, lifeTime, listener);
     }
 
     private ProxyMonster FindNearestProxyMonster(Vector3 pos, float range)

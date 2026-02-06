@@ -13,7 +13,7 @@ public class GameRuntime : MonoBehaviour
     [SerializeField] private int startGold = 100;
     [SerializeField] private int startLife = 10;
     [SerializeField] private int startWave = 1;
-    [SerializeField] private int maxWave = 20;
+    [SerializeField] private int maxWave = 40;
     [SerializeField] private float intermissionSeconds = 30f;
     
     [Header("Wave Patterns")]
@@ -53,6 +53,7 @@ public class GameRuntime : MonoBehaviour
     public bool IsGameOver => gameOver;
     public int Life => life;
     public int CurrentWave => currentWave;
+    public int MaxWave => maxWave;
 
     private void Awake()
     {

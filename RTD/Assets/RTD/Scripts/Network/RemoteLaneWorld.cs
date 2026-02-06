@@ -305,4 +305,117 @@ public class RemoteLaneWorld : MonoBehaviour
         o += 4;
         return true;
     }
+    
+    private ProxyMonster FindProxyMonster(int laneId, int monsterNetId)
+    {
+        long key = Key(laneId, monsterNetId);
+        if (_monsters.TryGetValue(key, out var pm))
+            return pm;
+        return null;
+    }
+    
+    private SpectatorProjectileHitListener EnsureSpectateHitListener(GameObject projGo)
+    {
+        var l = projGo.GetComponent<SpectatorProjectileHitListener>();
+        if (l == null) l = projGo.AddComponent<SpectatorProjectileHitListener>();
+        l.BindWorld(this);
+        return l;
+    }
+    
+    public void OnRemoteTowerFire(
+        int laneId,
+        int towerNetId,
+        int targetMonsterNetId,
+        Vector3 firePos,
+        string towerTypeId
+    )
+    {
+        OnRemoteTowerFire(
+            laneId,
+            towerNetId,
+            targetMonsterNetId,
+            firePos,
+            towerTypeId,
+            splashRadius: 0f,
+            splashRatio: 0f,
+            traitType: -1,
+            traitValue: 0f,
+            traitRange: 0f,
+            traitDuration: 0f,
+            traitCount: 0
+        );
+    }
+    
+    public void OnRemoteTowerFire(
+        int laneId,
+        int towerNetId,
+        int targetMonsterNetId,
+        Vector3 firePos,
+        string towerTypeId,
+
+        float splashRadius,
+        float splashRatio,
+
+        int traitType,
+        float traitValue,
+        float traitRange,
+        float traitDuration,
+        int traitCount
+    )
+    {
+        if (laneId == MyLaneId) return;
+
+        if (ProjectilePool.Instance == null) return;
+        if (SpectatorProjectileLibrary.Instance == null) return;
+
+        var target = FindProxyMonster(laneId, targetMonsterNetId);
+        if (target == null) return;
+
+        if (!SpectatorProjectileLibrary.Instance.TryGet(towerTypeId, out var projPrefab, out var speed, out var lifeTime))
+            return;
+
+        var proj = ProjectilePool.Instance.Get(projPrefab, firePos, Quaternion.identity);
+        if (proj == null) return;
+        
+        var listener = EnsureSpectateHitListener(proj.gameObject);
+        listener.Configure(
+            laneId,
+            splashRadius,
+            splashRatio,
+            traitType,
+            traitValue,
+            traitRange,
+            traitDuration,
+            traitCount
+        );
+        
+        proj.InitSpectate(target.transform, speed, lifeTime, listener);
+    }
+    
+    public ProxyMonster FindNearestProxyMonster(int laneId, Vector3 center, float radius, HashSet<ProxyMonster> exclude = null)
+    {
+        float bestSq = float.PositiveInfinity;
+        ProxyMonster best = null;
+
+        float rSq = radius * radius;
+
+        foreach (var kv in _monsters)
+        {
+            int keyLane = (int)(kv.Key >> 32);
+            if (keyLane != laneId) continue;
+
+            var pm = kv.Value;
+            if (pm == null) continue;
+            if (exclude != null && exclude.Contains(pm)) continue;
+
+            float sq = (pm.transform.position - center).sqrMagnitude;
+            if (sq <= rSq && sq < bestSq)
+            {
+                bestSq = sq;
+                best = pm;
+            }
+        }
+
+        return best;
+    }
 }

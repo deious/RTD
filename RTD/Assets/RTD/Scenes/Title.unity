@@ -1207,7 +1207,6 @@ MonoBehaviour:
   networkManager: {fileID: 0}
   relayProtocol: dtls
   connectTimeoutSec: 15
-  chatNetworkBridgePrefab: {fileID: 952626500650327942, guid: de598ec2d5a597f43a3f68454956d1d2, type: 3}
 --- !u!114 &963174562
 MonoBehaviour:
   m_ObjectHideFlags: 0

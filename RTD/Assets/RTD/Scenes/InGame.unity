@@ -795,6 +795,99 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 109523772}
   m_CullTransparentMesh: 1
+--- !u!1 &117784436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 117784437}
+  - component: {fileID: 117784438}
+  m_Layer: 0
+  m_Name: SpectatorProjectileLibrary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &117784437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117784436}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 624108004}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &117784438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117784436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a41863ac476ad4849a8e66eade52daa0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpectatorProjectileLibrary
+  entries:
+  - towerTypeId: basic_normal
+    projectilePrefab: {fileID: -7168191655994484760, guid: 3058fa39189f3b746b14fa01e4ede177, type: 3}
+    projectileSpeed: 60
+    projectileLifeTime: 3
+  - towerTypeId: basic_rare
+    projectilePrefab: {fileID: -7168191655994484760, guid: 3058fa39189f3b746b14fa01e4ede177, type: 3}
+    projectileSpeed: 60
+    projectileLifeTime: 3
+  - towerTypeId: basic_epic
+    projectilePrefab: {fileID: -7168191655994484760, guid: 3058fa39189f3b746b14fa01e4ede177, type: 3}
+    projectileSpeed: 60
+    projectileLifeTime: 3
+  - towerTypeId: basic_legendary
+    projectilePrefab: {fileID: -7168191655994484760, guid: 3058fa39189f3b746b14fa01e4ede177, type: 3}
+    projectileSpeed: 60
+    projectileLifeTime: 3
+  - towerTypeId: cannon_normal
+    projectilePrefab: {fileID: 7002824306816115404, guid: 2fac5d6b41aaddc41a550a86888d4147, type: 3}
+    projectileSpeed: 30
+    projectileLifeTime: 3
+  - towerTypeId: cannon_rare
+    projectilePrefab: {fileID: -4094461298891190339, guid: d2aff0554999b3147a62ff841b831c1b, type: 3}
+    projectileSpeed: 30
+    projectileLifeTime: 3
+  - towerTypeId: cannon_epic
+    projectilePrefab: {fileID: 4875472266812555324, guid: 01f8891174a52024ca189c0b6df4c868, type: 3}
+    projectileSpeed: 30
+    projectileLifeTime: 3
+  - towerTypeId: cannon_legendary
+    projectilePrefab: {fileID: 350903890839113632, guid: 59efbb41b3bb1f74f8fec02484a67431, type: 3}
+    projectileSpeed: 30
+    projectileLifeTime: 3
+  - towerTypeId: magic_normal
+    projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+    projectileSpeed: 22
+    projectileLifeTime: 3
+  - towerTypeId: magic_rare
+    projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+    projectileSpeed: 22
+    projectileLifeTime: 3
+  - towerTypeId: magic_epic
+    projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+    projectileSpeed: 22
+    projectileLifeTime: 3
+  - towerTypeId: magic_legendary
+    projectilePrefab: {fileID: 9056719371319067149, guid: 2d35d982f9c94134e9205b62c66f3199, type: 3}
+    projectileSpeed: 22
+    projectileLifeTime: 3
 --- !u!1001 &123757685
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -960,7 +1053,7 @@ GameObject:
   - component: {fileID: 128884123}
   - component: {fileID: 128884122}
   m_Layer: 0
-  m_Name: SpectateVfxRegistry
+  m_Name: SpectatorVfxRegistry
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5201,6 +5294,7 @@ Transform:
   - {fileID: 436480101}
   - {fileID: 1161151520}
   - {fileID: 1856196086}
+  - {fileID: 117784437}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &641195638
@@ -10612,6 +10706,7 @@ MonoBehaviour:
   panSpeed: 150
   useTransformAsInitialView: 0
   blockZoomWhenPointerOver: {fileID: 1380933326}
+  chatInput: {fileID: 0}
 --- !u!114 &1348242620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14015,6 +14110,9 @@ MonoBehaviour:
   baseHeight: 2
   stackStep: 0.22
   maxStack: 6
+  scaleMul: 5
+  heightFixPerExtraScale: -0.25
+  heightFix: 2
 --- !u!4 &1789643972
 Transform:
   m_ObjectHideFlags: 0

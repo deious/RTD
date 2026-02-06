@@ -1,4 +1,4 @@
-public static class SpectateContext
+public static class SpectatorContext
 {
     public static int ViewLaneId = 0;
 
