@@ -252,6 +252,8 @@ public abstract class TowerBase : MonoBehaviour
     public void RefreshStats()
     {
         ApplyDataIfAny();
+        ApplyRangeVisual();
+        OnStatsChanged?.Invoke();
     }
 
     private void ApplyRangeVisual()

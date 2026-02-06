@@ -14110,6 +14110,9 @@ MonoBehaviour:
   baseHeight: 2
   stackStep: 0.22
   maxStack: 6
+  scaleMul: 5
+  heightFixPerExtraScale: -0.25
+  heightFix: 2
 --- !u!4 &1789643972
 Transform:
   m_ObjectHideFlags: 0
