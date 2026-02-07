@@ -187,6 +187,9 @@ public class AppFlowManager : MonoBehaviour
     {
         if (_endingHandled) return;
         _endingHandled = true;
+        
+        if (UIManager.Instance == null)
+            return;
 
         if (mode == Mode.Single)
         {
@@ -194,9 +197,23 @@ public class AppFlowManager : MonoBehaviour
 
             if (UIManager.Instance != null)
                 UIManager.Instance.ShowResultPanel(result);
+
+            return;
         }
 
-        // 멀티 결과처리(나중)
+        Time.timeScale = 1f;
+        UIManager.Instance.ShowResultPanelMulti(
+            result,
+            onSpectate: () =>
+            {
+                if (GameRuntime.Instance != null)
+                    GameRuntime.Instance.EnterSpectatorMode();
+            },
+            onGoTitle: () =>
+            {
+                GoTitle();
+            }
+        );
     }
 
     // ---------------------------

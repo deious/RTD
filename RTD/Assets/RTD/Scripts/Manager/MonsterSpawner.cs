@@ -445,9 +445,6 @@ public class MonsterSpawner : MonoBehaviour
     
     public void StopAllSpawning(bool destroyAlive = false)
     {
-        DLog($"[StopAllSpawning] waveId={_currentWaveId} tokenId={_currentWaveTokenId} " +
-             $"destroyAlive={destroyAlive} BEFORE total={_totalThisWave} scheduled={_scheduledCount} spawned={_spawnedCount} " +
-             $"active={_activeCount} killed={_killedCount} escaped={_escapedCount} time={Time.time:F2}");
         _isSpawning = false;
         _spawnFinished = true;
 
@@ -455,12 +452,19 @@ public class MonsterSpawner : MonoBehaviour
 
         if (destroyAlive)
         {
+            int myLane = MultiplayerContext.MyLaneId;
+
             var monsters = FindObjectsByType<MonsterAI>(FindObjectsSortMode.None);
             foreach (var m in monsters)
             {
                 if (m == null) continue;
-                if (SimplePool.Instance != null) SimplePool.Instance.Release(m.gameObject);
-                else Destroy(m.gameObject);
+                
+                if (m.WorldSlotId != myLane) continue;
+                if (m.GetComponent<ProxyMonster>() != null) continue;
+                if (SimplePool.Instance != null) 
+                    SimplePool.Instance.Release(m.gameObject);
+                else 
+                    Destroy(m.gameObject);
             }
         }
 

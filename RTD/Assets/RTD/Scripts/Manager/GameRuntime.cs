@@ -455,4 +455,27 @@ public class GameRuntime : MonoBehaviour
 
         StartWave(currentWave);
     }
+    
+    public void EnterSpectatorMode()
+    {
+        gameOver = true;
+        waveRunning = false;
+        waitingIntermission = false;
+        waitingAugment = false;
+
+        cts?.Cancel();
+
+        if (MonsterSpawner.Instance != null)
+            MonsterSpawner.Instance.StopAllSpawning(destroyAlive: true);
+
+        SpectatorCleanup.ClearMyLaneAll();
+
+        if (UIManager.Instance != null)
+            UIManager.Instance.SetSpectating(true);
+
+        if (orbitCamera != null)
+            orbitCamera.SetInputLock(true);
+        
+    }
+
 }
