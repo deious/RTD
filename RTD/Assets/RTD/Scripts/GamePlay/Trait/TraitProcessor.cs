@@ -4,6 +4,8 @@ using UnityEngine;
 public static class TraitProcessor
 {
     public static LayerMask MonsterLayerMask = ~0;
+    public static AudioCue ChainCue;
+    public static AudioCue SmallExplosionCue;
 
     public static int ModifyDamage(TowerTraitSO trait, int baseDamage)
     {
@@ -96,6 +98,7 @@ public static class TraitProcessor
         hitSet.Add(firstTarget);
 
         MonsterAI current = firstTarget;
+        bool played = false;
 
         for (int i = 0; i < jumps; i++)
         {
@@ -107,6 +110,12 @@ public static class TraitProcessor
             if (CombatVFX.Instance != null)
                 CombatVFX.Instance.PlayChain(current.transform.position, next.transform.position);
 
+            if (!played && ChainCue != null)
+            {
+                AudioManager.Instance?.PlayImpact(ChainCue, next.transform.position);
+                played = true;
+            }
+            
             next.TakeDamage(chainDamage);
             current = next;
         }
@@ -152,6 +161,9 @@ public static class TraitProcessor
             if (CombatVFX.Instance != null)
                 CombatVFX.Instance.PlayExplosion(p, radius * 0.5f);
 
+            if (SmallExplosionCue != null && Random.value < 0.35f)
+                AudioManager.Instance?.PlayImpact(SmallExplosionCue, p);
+            
             Collider[] cols = Physics.OverlapSphere(p, radius * 0.5f, MonsterLayerMask);
             for (int c = 0; c < cols.Length; c++)
             {
