@@ -4372,7 +4372,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 547349382}
-  - component: {fileID: 547349383}
   m_Layer: 0
   m_Name: SpectatePoints
   m_TagString: Untagged
@@ -4397,30 +4396,8 @@ Transform:
   - {fileID: 147073312}
   - {fileID: 654933477}
   - {fileID: 594023836}
-  - {fileID: 673501667}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &547349383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 547349381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42e924d9ec689a647bc94d056cb74c76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpectatorCameraController
-  cameraTarget: {fileID: 1310832522}
-  points:
-  - {fileID: 1786546232}
-  - {fileID: 147073312}
-  - {fileID: 654933477}
-  - {fileID: 594023836}
-  smoothMove: 1
-  smoothSpeed: 12
-  debugLog: 1
 --- !u!1 &571054285
 GameObject:
   m_ObjectHideFlags: 0
@@ -5376,37 +5353,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 547349382}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &673501666
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 673501667}
-  m_Layer: 0
-  m_Name: SpectatePoint_Test
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &673501667
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 673501666}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.54741377, y: 0.0029212092, z: -0.0019108574, w: 0.8368548}
-  m_LocalPosition: {x: 75.54945, y: 144.8051, z: -20.94381}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 547349382}
-  m_LocalEulerAnglesHint: {x: 66.38, y: 0.4, z: 0}
 --- !u!1 &694995149
 GameObject:
   m_ObjectHideFlags: 0

@@ -25,11 +25,13 @@ public class SpectatorCameraController : MonoBehaviour
     {
         if (cameraTarget != null)
             _goalPos = cameraTarget.position;
+        
+        var all = FindObjectsByType<SpectatorCameraController>(FindObjectsSortMode.None);
+        Debug.Log($"[Spectator] instances={all.Length}");
     }
 
     private void Start()
     {
-        // ✅ 코루틴 대신 UniTask
         StartSpectateMyLaneAsync().Forget();
     }
 
