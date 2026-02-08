@@ -38,7 +38,6 @@ public static class TraitProcessor
             case TowerTraitType.Chain:
                 ApplyChain(trait, target, hitDamage);
                 break;
-            
             case TowerTraitType.Execute:
                 ApplyExecute(trait, target);
                 break;

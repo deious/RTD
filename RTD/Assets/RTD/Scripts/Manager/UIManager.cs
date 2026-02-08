@@ -350,6 +350,7 @@ public class UIManager : MonoBehaviour
         bool isMulti = (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode);
 
         _pauseOpen = true;
+        AudioManager.Instance?.PlayPanelOpen();
 
         if (!isMulti)
         {
@@ -372,6 +373,7 @@ public class UIManager : MonoBehaviour
         bool isMulti = (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode);
 
         _pauseOpen = false;
+        AudioManager.Instance?.PlayPanelClose();
 
         if (!isMulti)
             Time.timeScale = _prevTimeScale;

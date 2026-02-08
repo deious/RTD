@@ -625,6 +625,7 @@ public class TowerManager : MonoBehaviour
         tile.SetTower(tower);
         tower.SetTile(tile);
 
+        AudioManager.Instance?.PlayTowerBuild(spawnPos);
         GameRuntime.Instance.AddGold(-cost);
 
         int ownerLane = MultiplayerContext.MyLaneId;
@@ -976,6 +977,7 @@ public class TowerManager : MonoBehaviour
         }
 
         int refund = CalculateSellRefund(tower);
+        AudioManager.Instance?.PlayTowerSell(tower.transform.position);
         
         if (tile != null && TowerCombatBridge.Instance != null && ShouldSendTowerNetEvent())
         {
@@ -1126,6 +1128,7 @@ public class TowerManager : MonoBehaviour
             return false;
 
         tower.SetTrait(newTrait);
+        AudioManager.Instance?.PlayTraitChange(tower.transform.position);
 
         return true;
     }

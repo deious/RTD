@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d1412f2012e18324b97270abaa9610a9, type: 3}
-  m_Name: UI_Pause_Cue
+  m_Name: UI_Argument_Cue
   m_EditorClassIdentifier: Assembly-CSharp::AudioCue
   clips:
   - {fileID: 8300000, guid: f4c29146b9a8898479bd72c17389df85, type: 3}

@@ -23,6 +23,20 @@ public sealed class AudioManager : MonoBehaviour
     [SerializeField] private AudioCue bgmLobbyCue;
     [SerializeField] private AudioCue bgmInGameCue;
     [SerializeField] private AudioCue bgmBossCue;
+    
+    [SerializeField] private AudioCue winCue;
+    [SerializeField] private AudioCue loseCue;
+
+    [SerializeField] private AudioCue towerBuildCue;
+    [SerializeField] private AudioCue towerSellCue;
+    [SerializeField] private AudioCue traitChangeCue;
+
+    [SerializeField] private AudioCue panelOpenCue;
+    [SerializeField] private AudioCue panelCloseCue;
+    
+    [SerializeField] private AudioCue augmentOpenCue;
+    [SerializeField] private AudioCue augmentPickCue;
+    [SerializeField] private AudioCue augmentCloseCue;
 
     [Header("Trait Cues")]
     [SerializeField] private AudioCue chainCue;
@@ -351,7 +365,7 @@ public sealed class AudioManager : MonoBehaviour
         PlayInternal(cue, sfxImpactGroup, pos, is2D: false, isFire: false, spamKey: 0);
     }
 
-    /*public bool PlayFire(AudioCue cue, Vector3 pos, int spamKey)
+    public bool PlayFire(AudioCue cue, Vector3 pos, int spamKey)
     {
         if (cue == null || !cue.IsValid) return false;
 
@@ -372,42 +386,7 @@ public sealed class AudioManager : MonoBehaviour
         bool ok = PlayInternal(cue, sfxFireGroup, pos, is2D: false, isFire: true, spamKey: spamKey);
         if (ok) _fireConcurrent++;
         return ok;
-    }*/
-    
-    public bool PlayFire(AudioCue cue, Vector3 pos, int spamKey)
-    {
-        if (cue == null || !cue.IsValid) { Debug.LogWarning("[PlayFire] cue invalid"); return false; }
-
-        RefreshListener();
-
-        if (_listenerTr != null)
-        {
-            float d = Vector3.Distance(_listenerTr.position, pos);
-            if (d > fireMaxHearDistance) { Debug.LogWarning($"[PlayFire] distance cut {d:F1}>{fireMaxHearDistance}"); return false; }
-        }
-        else
-        {
-            Debug.LogWarning("[PlayFire] listener not found");
-        }
-
-        float now = Time.unscaledTime;
-
-        if (_fireKeyNextAllowed.TryGetValue(spamKey, out var next) && now < next)
-        { Debug.LogWarning($"[PlayFire] cooldown cut remain {(next-now):F3}s"); return false; }
-
-        if (_fireToken < 1f) { Debug.LogWarning($"[PlayFire] token cut {_fireToken:F2}"); return false; }
-        if (_fireConcurrent >= fireMaxSimultaneous) { Debug.LogWarning($"[PlayFire] concurrent cut {_fireConcurrent}"); return false; }
-
-        _fireKeyNextAllowed[spamKey] = now + firePerKeyCooldown;
-        _fireToken -= 1f;
-
-        bool ok = PlayInternal(cue, sfxFireGroup, pos, is2D:false, isFire:true, spamKey:spamKey);
-        if (!ok) Debug.LogWarning("[PlayFire] PlayInternal failed");
-        else Debug.Log("[PlayFire] OK");
-        if (ok) _fireConcurrent++;
-        return ok;
     }
-
 
     private bool PlayInternal(AudioCue cue, AudioMixerGroup fallbackGroup, Vector3 pos, bool is2D, bool isFire, int spamKey)
     {
@@ -441,4 +420,29 @@ public sealed class AudioManager : MonoBehaviour
         _active.Add((p, isFire));
         return true;
     }
+    
+    public void SetBossBgm(bool on)
+    {
+        if (on)
+        {
+            PlayBossBgm();
+        }
+        else
+        {
+            PlayBgm(BgmChannel.InGame);
+        }
+    }
+    
+    public void PlayWin()  => PlayUI(winCue);
+    public void PlayLose() => PlayUI(loseCue);
+    public void PlayPanelOpen()  => PlayUI(panelOpenCue);
+    public void PlayPanelClose() => PlayUI(panelCloseCue);
+
+    public void PlayAugmentOpen() => PlayUI(augmentOpenCue);
+    public void PlayAugmentPick()  => PlayUI(augmentPickCue);
+    public void PlayAugmentClose() => PlayUI(augmentCloseCue);
+
+    public void PlayTowerBuild(Vector3 pos) => PlayImpact(towerBuildCue, pos);
+    public void PlayTowerSell(Vector3 pos)  => PlayImpact(towerSellCue, pos);
+    public void PlayTraitChange(Vector3 pos)=> PlayImpact(traitChangeCue, pos);
 }

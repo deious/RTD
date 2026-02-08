@@ -188,6 +188,11 @@ public class AppFlowManager : MonoBehaviour
         if (_endingHandled) return;
         _endingHandled = true;
         
+        if (result.endType == GameEndType.Win)
+            AudioManager.Instance?.PlayWin();
+        else
+            AudioManager.Instance?.PlayLose();
+        
         if (UIManager.Instance == null)
             return;
 
