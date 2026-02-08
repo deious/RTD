@@ -146,6 +146,13 @@ MonoBehaviour:
     m_RotationOrder: 4
   spawnParticlePrefab: {fileID: 0}
   spawnParticlePoint: {fileID: 0}
+  useAutoBurstInterval: 1
+  burstIntervalMin: 0.06
+  burstIntervalMax: 0.14
+  muzzleJitterRadius: 0.03
+  burstShotInterval: 0.06
+  fireCue: {fileID: 11400000, guid: 228136991c7b31042869e64ad2717f97, type: 2}
+  towerTypeId: 1
 --- !u!65 &-7122669870781153534
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -193,14 +193,13 @@ public class GameRuntime : MonoBehaviour
     private void StartWave(int waveIndex)
     {
         if (gameOver) return;
-
-        //Debug.Log($"[WaveStart] waveIndex={waveIndex} | time={Time.time:F2}");
+        
         WavePatternSO pattern = FindWavePattern(waveIndex);
 
         if (pattern == null)
         {
             Debug.LogError($"WavePattern not found for waveIndex={waveIndex}. (Option A: pattern-only)");
-            EndGame(GameEndType.Lose); // 혹은 return; 원하는 정책
+            EndGame(GameEndType.Lose);
             return;
         }
 
@@ -210,6 +209,11 @@ public class GameRuntime : MonoBehaviour
 
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateWave(waveIndex, maxWave, currentWaveMods.label);
+        
+        if (pattern != null && pattern.isBossWave)
+            AudioManager.Instance?.SetBossBgm(true);
+        else
+            AudioManager.Instance?.SetBossBgm(false);
 
         MonsterAI.OnBossDied -= HandleBossDied;
         if (pattern.isBossWave)
@@ -348,6 +352,7 @@ public class GameRuntime : MonoBehaviour
     private void HandleBossDied()
     {
         MonsterAI.OnBossDied -= HandleBossDied;
+        AudioManager.Instance?.SetBossBgm(false);
     }
     
     private void OnDestroy()

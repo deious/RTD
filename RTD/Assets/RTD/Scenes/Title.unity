@@ -337,6 +337,77 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &84408551
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 84408553}
+  - component: {fileID: 84408552}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &84408552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84408551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebeedcfa6a5a6b040a3fd7a766cc4fb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  bgmGroup: {fileID: 5155135806411833332, guid: e67103108f7c0394f8dcdf88c6b2eb3d, type: 2}
+  sfxUIGroup: {fileID: -1636149075602911527, guid: e67103108f7c0394f8dcdf88c6b2eb3d, type: 2}
+  sfxFireGroup: {fileID: -4277747858083903893, guid: e67103108f7c0394f8dcdf88c6b2eb3d, type: 2}
+  sfxImpactGroup: {fileID: 596460605653602714, guid: e67103108f7c0394f8dcdf88c6b2eb3d, type: 2}
+  bgmTitleCue: {fileID: 11400000, guid: 28c4e5552de0b65409fb393b24a5c214, type: 2}
+  bgmLobbyCue: {fileID: 11400000, guid: 5588b36dd9da1564681fe70c5fa680dc, type: 2}
+  bgmInGameCue: {fileID: 11400000, guid: 26b50c381a609024a8f621e46118b85a, type: 2}
+  bgmBossCue: {fileID: 11400000, guid: b1ab0173b8a2f47468c3f3fbdd59e44f, type: 2}
+  winCue: {fileID: 11400000, guid: c264556cba0d3a6458371a786b0670a9, type: 2}
+  loseCue: {fileID: 11400000, guid: 1d915bd72da7cae44b1ae16485ced5e4, type: 2}
+  towerBuildCue: {fileID: 11400000, guid: 47c127f5448d3bc4ea7193ef524f6b1d, type: 2}
+  towerSellCue: {fileID: 11400000, guid: e087c4f4da0233c41961c89ea164eefa, type: 2}
+  traitChangeCue: {fileID: 11400000, guid: c2623fb22c49070409f2f22e069d2f69, type: 2}
+  panelOpenCue: {fileID: 11400000, guid: fea845cd1414eaf439881fe896bed0ec, type: 2}
+  panelCloseCue: {fileID: 11400000, guid: fa2bd591d6a4881468f5ecf6a4960e9c, type: 2}
+  augmentOpenCue: {fileID: 11400000, guid: d969bd88d0231b340959cc3296b7ee7c, type: 2}
+  augmentPickCue: {fileID: 11400000, guid: 5980f7aa421afcb4385841870cbe719a, type: 2}
+  augmentCloseCue: {fileID: 0}
+  chainCue: {fileID: 11400000, guid: e4cddcf5d801203438fad7a635f77009, type: 2}
+  smallExplosionCue: {fileID: 11400000, guid: 3d46e703361a451449cc81bf5bb4b75e, type: 2}
+  bgmFadeSec: 1.2
+  initialPoolSize: 24
+  maxPoolSize: 48
+  fireRateLimitPerSec: 10
+  fireMaxSimultaneous: 6
+  fireMaxHearDistance: 250
+  firePerKeyCooldown: 0.08
+--- !u!4 &84408553
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 84408551}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &133819789
 GameObject:
   m_ObjectHideFlags: 0
@@ -483,7 +554,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &147432807
 RectTransform:
   m_ObjectHideFlags: 0
@@ -499,10 +570,10 @@ RectTransform:
   - {fileID: 1334471654}
   m_Father: {fileID: 17687013}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 180, y: -184}
+  m_SizeDelta: {x: 360, y: 64}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &147432808
 MonoBehaviour:
@@ -2195,4 +2266,5 @@ SceneRoots:
   - {fileID: 1293667932}
   - {fileID: 861630084}
   - {fileID: 904064829}
+  - {fileID: 84408553}
   - {fileID: 963174559}

@@ -45,6 +45,8 @@ public abstract class TowerBase : MonoBehaviour
     public GridTile CurrentTile { get; private set; }
     public TowerTraitSO RuntimeTrait { get; private set; }
     public System.Action OnStatsChanged;
+    
+    protected Transform FirePoint => firePoint;
 
     protected virtual void Awake()
     {
@@ -104,33 +106,39 @@ public abstract class TowerBase : MonoBehaviour
     
     protected bool TryFireProjectile(MonsterAI target)
     {
-        return TryFireProjectile(target, Vector3.zero, 0f, 0f);
+        return TryFireProjectile(target, Vector3.zero, 0f, 0f, null);
     }
     
     protected bool TryFireProjectile(MonsterAI target, float splashRadius, float splashRatio)
     {
-        return TryFireProjectile(target, Vector3.zero, splashRadius, splashRatio);
+        return TryFireProjectile(target, Vector3.zero, splashRadius, splashRatio, null);
     }
     
     protected bool TryFireProjectile(MonsterAI target, Vector3 spawnOffset, float splashRadius = 0f, float splashRatio = 0f)
     {
+        return TryFireProjectile(target, spawnOffset, splashRadius, splashRatio, null);
+    }
+    
+    protected bool TryFireProjectile(MonsterAI target, Vector3 spawnOffset, float splashRadius, float splashRatio, AudioCue impactCue)
+    {
         if (target == null) return false;
         if (projectilePrefab == null) return false;
         if (ProjectilePool.Instance == null) return false;
-    
+
         Vector3 spawnPos = (firePoint != null)
             ? firePoint.position
             : (transform.position + Vector3.up * 0.7f);
-    
+
         spawnPos += spawnOffset;
-    
+
         Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
         if (proj == null) return false;
-        
+
         NotifyTowerFireForSpectate(target, spawnPos, splashRadius, splashRatio);
-    
+
         IProjectileHitListener listener = this as IProjectileHitListener;
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio, impactCue);
+
         return true;
     }
     
