@@ -92,6 +92,31 @@ public class MiniMapLaneRegistry : MonoBehaviour
     {
         if (spawnedMaps == null || spawnedMaps.Length < 4) return;
         if (laneAnchors == null || laneAnchors.Length < 4) return;
+        
+        if (forceSoloMode)
+        {
+            int myLane = Mathf.Clamp(MultiplayerContext.MyLaneId, 0, 3);
+        
+            var pr = soloPathRenderer;
+            var map = spawnedMaps[myLane];
+            var anchor = laneAnchors[myLane];
+        
+            if (!pr || !map || !anchor)
+            {
+                Debug.LogWarning($"[MiniMapLaneRegistry][SOLO] bind skipped. pr={pr} map={map} anchor={anchor}");
+                return;
+            }
+        
+            var wp = map.GetComponentInChildren<WaypointPath>(true);
+            if (!wp)
+            {
+                Debug.LogWarning($"[MiniMapLaneRegistry][SOLO] WaypointPath not found in {map.name}");
+                return;
+            }
+        
+            pr.Bind(wp, anchor, rebuildNow: true);
+            return;
+        }
 
         for (int lane = 0; lane < 4; lane++)
         {

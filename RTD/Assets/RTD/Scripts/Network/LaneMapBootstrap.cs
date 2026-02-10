@@ -31,6 +31,9 @@ public class LaneMapBootstrap : MonoBehaviour
     private GameObject[] _spawnedMaps = new GameObject[4];
     private int _builtForMyLane = -1;
     private int _builtForPlayers = -1;
+    
+    public GameObject[] GetSpawnedMaps() => _spawnedMaps;
+    public Transform[] GetLaneAnchors() => laneAnchors;
 
     private void Awake()
     {
@@ -62,7 +65,7 @@ public class LaneMapBootstrap : MonoBehaviour
         for (int i = 0; i < Mathf.Max(0, waitFramesForLaneResolve); i++)
             await UniTask.NextFrame();
 
-        MultiplayerContext.ResolveMyLaneIdFromNgo();
+        MultiplayerContext.SyncFromSessionState();
         int myLane = Mathf.Clamp(MultiplayerContext.MyLaneId, 0, 3);
 
         int players = Mathf.Clamp(MultiplayerContext.PlayersCount, 1, 4);

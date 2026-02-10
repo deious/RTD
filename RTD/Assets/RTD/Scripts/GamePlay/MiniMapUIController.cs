@@ -48,6 +48,13 @@ public class MiniMapUIController : MonoBehaviour
     public void SetPlayerCount(int playerCount)
     {
         playerCount = Mathf.Clamp(playerCount, 1, 4);
+        
+        if (MiniMapLaneRegistry.Instance != null)
+            MiniMapLaneRegistry.Instance.SetForceSoloMode(playerCount == 1);
+        
+        var bootstrap = FindFirstObjectByType<LaneMapBootstrap>(FindObjectsInactive.Include);
+        if (bootstrap != null)
+            MiniMapLaneRegistry.Instance.RebindAllAfterMapBuild(bootstrap.GetSpawnedMaps(), bootstrap.GetLaneAnchors());
 
         ApplyRootSize();
         ApplyGridLayoutFor2x2();
@@ -57,6 +64,7 @@ public class MiniMapUIController : MonoBehaviour
             SetSolo(true);
             SetSlotsActive(0);
             rtBinder?.Bind(1);
+            MiniMapLaneRegistry.Instance?.RebindAllMiniMapsAfterMapBuild();
             return;
         }
 

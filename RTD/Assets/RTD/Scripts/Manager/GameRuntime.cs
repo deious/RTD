@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Threading;
 using RTD.Scripts.Network;
+using Unity.Netcode;
 
 public class GameRuntime : MonoBehaviour
 {
@@ -81,7 +82,8 @@ public class GameRuntime : MonoBehaviour
     private void Start()
     {
         PlayCameraIntro().Forget();
-        MultiplayerContext.ResolveMyLaneIdFromNgo();
+        //MultiplayerContext.ResolveMyLaneIdFromNgo();
+        ResolveLaneAndInitAsync().Forget();
         
         if (orbitCamera != null && grid != null)
         {
@@ -114,7 +116,14 @@ public class GameRuntime : MonoBehaviour
             MonsterSpawner.Instance.OnWaveMonsterCountChanged += HandleWaveMonsterCountChanged;
         }
         
-        StartWaveLoopAsync().Forget();
+        if (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode)
+        {
+            BindWaveSyncEventsAsync().Forget();
+        }
+        else
+        {
+            StartWaveLoopAsync().Forget();
+        }
     }
 
     private void Update()
@@ -129,7 +138,7 @@ public class GameRuntime : MonoBehaviour
         if (keyboard == null)
             return;
 
-        if (keyboard.kKey.wasPressedThisFrame)
+        /*if (keyboard.kKey.wasPressedThisFrame)
         {
             if (augmentSystem != null)
                 augmentSystem.BeginChoice(null);
@@ -139,7 +148,7 @@ public class GameRuntime : MonoBehaviour
         if (keyboard.gKey.wasPressedThisFrame)
         {
             AddGold(1000);
-        }
+        }*/
 
         /*if (keyboard.hKey.wasPressedThisFrame)
         {
@@ -179,6 +188,78 @@ public class GameRuntime : MonoBehaviour
     {
         await RunIntermissionAsync(intermissionSeconds);
         BeginWave();
+    }
+    
+    private async UniTaskVoid ResolveLaneAndInitAsync()
+    {
+        // 멀티면 "기대 인원"을 기준으로 기다린 뒤 확정
+        int expected = MultiplayerContext.PlayersCount; // 아래 3번에서 클라도 채워지게 만들 것
+        if (expected <= 0) expected = 1;
+
+        try
+        {
+            await MultiplayerContext.ResolveMyLaneIdFromNgoAsync(
+                expectedPlayers: expected,
+                timeoutSec: 6f,
+                ct: this.GetCancellationTokenOnDestroy()
+            );
+        }
+        catch { }
+        
+    }
+    
+    private async UniTaskVoid BindWaveSyncEventsAsync()
+    {
+        float end = Time.realtimeSinceStartup + 8f;
+
+        while (WaveSyncController.Instance == null && Time.realtimeSinceStartup < end)
+            await UniTask.Delay(50, ignoreTimeScale: true, cancellationToken: this.GetCancellationTokenOnDestroy());
+
+        var sync = WaveSyncController.Instance;
+        if (sync == null)
+        {
+            Debug.LogError("[GameRuntime] WaveSyncController.Instance is STILL null. 씬에 WaveSyncController(NetworkObject) 존재/스폰 확인 필요");
+            return;
+        }
+        
+        sync.OnWaveStartClient -= HandleSyncedWaveStart;
+        sync.OnWaveStartClient += HandleSyncedWaveStart;
+
+        sync.OnIntermissionClient -= HandleSyncedIntermission;
+        sync.OnIntermissionClient += HandleSyncedIntermission;
+
+        sync.OnAugmentStartClient -= HandleSyncedAugmentStart;
+        sync.OnAugmentStartClient += HandleSyncedAugmentStart;
+        
+        ApplyWaveSyncSnapshotNow(sync);
+
+        Debug.Log("[GameRuntime] WaveSync bound OK");
+    }
+    
+    private void ApplyWaveSyncSnapshotNow(WaveSyncController sync)
+    {
+        if (sync == null) return;
+
+        double serverNow = (NetworkManager.Singleton != null)
+            ? NetworkManager.Singleton.ServerTime.Time
+            : Time.realtimeSinceStartup;
+
+        if (sync.Phase == WavePhase.Intermission)
+        {
+            float remain = (float)System.Math.Max(0.0, sync.NextWaveStartServerTime - serverNow);
+            if (UIManager.Instance != null)
+                UIManager.Instance.UpdateNextWaveTimer(Mathf.CeilToInt(remain));
+
+            RunIntermissionAsync(remain).Forget();
+        }
+        else if (sync.Phase == WavePhase.InWave)
+        {
+            HandleSyncedWaveStart(sync.CurrentWave);
+        }
+        else if (sync.Phase == WavePhase.Augment)
+        {
+            HandleSyncedAugmentStart(sync.CurrentWave);
+        }
     }
 
     private void BeginWave()
@@ -233,6 +314,12 @@ public class GameRuntime : MonoBehaviour
             return;
 
         waveRunning = false;
+        
+        if (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode)
+        {
+            WaveSyncController.Instance?.ReportWaveClearedServerRpc();
+            return;
+        }
 
         waveAdvanceId++;
         nextWaveStartedForThisAdvance = false;
@@ -357,6 +444,7 @@ public class GameRuntime : MonoBehaviour
     
     private void OnDestroy()
     {
+        UnbindWaveSyncEvents();
         MonsterAI.OnBossDied -= HandleBossDied;
 
         if (MonsterSpawner.Instance != null)
@@ -415,6 +503,68 @@ public class GameRuntime : MonoBehaviour
         if (UIManager.Instance != null)
             UIManager.Instance.UpdateWaveMonsterCount(killed, total);
     }
+    
+    private void BindWaveSyncEvents()
+    {
+        var sync = WaveSyncController.Instance;
+        if (sync == null)
+        {
+            Debug.LogError("[GameRuntime] WaveSyncController.Instance is null. InGame 씬에 NetworkObject로 존재해야 함");
+            return;
+        }
+
+        sync.OnWaveStartClient -= HandleSyncedWaveStart;
+        sync.OnWaveStartClient += HandleSyncedWaveStart;
+
+        sync.OnIntermissionClient -= HandleSyncedIntermission;
+        sync.OnIntermissionClient += HandleSyncedIntermission;
+
+        sync.OnAugmentStartClient -= HandleSyncedAugmentStart;
+        sync.OnAugmentStartClient += HandleSyncedAugmentStart;
+    }
+
+    private void UnbindWaveSyncEvents()
+    {
+        var sync = WaveSyncController.Instance;
+        if (sync == null) return;
+
+        sync.OnWaveStartClient -= HandleSyncedWaveStart;
+        sync.OnIntermissionClient -= HandleSyncedIntermission;
+        sync.OnAugmentStartClient -= HandleSyncedAugmentStart;
+    }
+
+    private void HandleSyncedWaveStart(int wave)
+    {
+        if (gameOver) return;
+
+        currentWave = wave;
+        waveRunning = true;
+        
+        StartWave(currentWave);
+    }
+
+    private void HandleSyncedIntermission(int wave, float sec)
+    {
+        RunIntermissionAsync(sec).Forget();
+    }
+
+    private void HandleSyncedAugmentStart(int wave)
+    {
+        if (gameOver) return;
+        
+        if (augmentSystem != null)
+        {
+            augmentSystem.BeginChoice(() =>
+            {
+                if (WaveSyncController.Instance != null)
+                    WaveSyncController.Instance.ReportAugmentDoneServerRpc();
+            });
+        }
+        else
+        {
+            WaveSyncController.Instance?.ReportAugmentDoneServerRpc();
+        }
+    }
 
     public bool TrySpendGold(int amount)
     {
@@ -463,6 +613,9 @@ public class GameRuntime : MonoBehaviour
     
     public void EnterSpectatorMode()
     {
+        if (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode)
+            WaveSyncController.Instance?.ReportPlayerEliminatedServerRpc();
+        
         gameOver = true;
         waveRunning = false;
         waitingIntermission = false;
@@ -483,4 +636,9 @@ public class GameRuntime : MonoBehaviour
         
     }
 
+    public bool IsBossWave(int waveIndex)
+    {
+        var pattern = FindWavePattern(waveIndex);
+        return pattern != null && pattern.isBossWave;
+    }
 }
