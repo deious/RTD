@@ -1,5 +1,7 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class BuildHUDController : MonoBehaviour
@@ -17,7 +19,7 @@ public class BuildHUDController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI txtUpgradeCost;
 
     [Header("Build Button Label")]
-    [SerializeField] private string buildOffText = "건설";
+    [SerializeField] private string buildOffText = "건설 (C)";
     [SerializeField] private string buildOnText  = "건설 (ON)";
 
     [Header("Build Button Colors")]
@@ -36,18 +38,21 @@ public class BuildHUDController : MonoBehaviour
     [Header("Upgrade Max UI")]
     [SerializeField] private string buildLevelMaxText = "Lv. Max";
     [SerializeField] private string upgradeBlockedText = "강화불가";
+    
+    [Header("HotKey")]
+    [SerializeField] private Key buildHotkey = Key.C;
 
-    private float acc;
-    private bool bound;
-    private bool lastIsMax;
+    private float _acc;
+    private bool _bound;
+    private bool _lastIsMax;
 
     // 캐시(변경 있을 때만 갱신)
-    private bool lastPlacing;
-    private int lastGold = int.MinValue;
-    private int lastBuildLevel = int.MinValue;
-    private int lastUpgradeCost = int.MinValue;
-    private bool lastBuildInteractable;
-    private bool lastUpgradeInteractable;
+    private bool _lastPlacing;
+    private int _lastGold = int.MinValue;
+    private int _lastBuildLevel = int.MinValue;
+    private int _lastUpgradeCost = int.MinValue;
+    private bool _lastBuildInteractable;
+    private bool _lastUpgradeInteractable;
     private bool _spectating;
 
     private TowerManager TM => TowerManager.Instance;
@@ -97,20 +102,40 @@ public class BuildHUDController : MonoBehaviour
             TryBindEvents();
             return;
         }
+        
+        if (!_spectating)
+        {
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                // If user is typing in an input field, ignore hotkey
+                if (!IsTextInputFocused())
+                {
+                    if (kb[buildHotkey].wasPressedThisFrame)
+                    {
+                        // Optional: block while augment choosing
+                        if (GameRuntime.Instance == null || (GameRuntime.Instance != null && (GameRuntime.Instance.IsGameOver == false)))
+                        {
+                            OnClickBuild();
+                        }
+                    }
+                }
+            }
+        }
 
         // (1) Placing 상태가 바뀌었으면 즉시 반영 (이벤트 못 받아도 여기서 잡힘)
         bool placingNow = TM.IsPlacing;
-        if (placingNow != lastPlacing)
+        if (placingNow != _lastPlacing)
         {
-            lastPlacing = placingNow;
-            ApplyBuildVisual(lastPlacing);
+            _lastPlacing = placingNow;
+            ApplyBuildVisual(_lastPlacing);
         }
 
         // (2) 골드 변화 감지해서 인터랙터블만 갱신 (매 프레임 SetText 안 함)
         int goldNow = GR.Gold;
-        if (goldNow != lastGold)
+        if (goldNow != _lastGold)
         {
-            lastGold = goldNow;
+            _lastGold = goldNow;
             RefreshInteractable();
         }
 
@@ -118,10 +143,10 @@ public class BuildHUDController : MonoBehaviour
         int levelNow = TM.BuildLevel;
         bool isMax = TM.IsBuildLevelMax;
 
-        if (levelNow != lastBuildLevel || isMax != lastIsMax)
+        if (levelNow != _lastBuildLevel || isMax != _lastIsMax)
         {
-            lastBuildLevel = levelNow;
-            lastIsMax = isMax;
+            _lastBuildLevel = levelNow;
+            _lastIsMax = isMax;
             
             if (txtBuildLevel != null)
                 txtBuildLevel.text = isMax ? buildLevelMaxText : $"Lv. {levelNow}";
@@ -142,10 +167,10 @@ public class BuildHUDController : MonoBehaviour
         }
 
         int upgradeCostNow = TM.GetBuildUpgradeCost();
-        if (upgradeCostNow != lastUpgradeCost)
+        if (upgradeCostNow != _lastUpgradeCost)
         {
-            lastUpgradeCost = upgradeCostNow;
-            if (txtUpgradeCost != null) txtUpgradeCost.SetText("{0}", lastUpgradeCost);
+            _lastUpgradeCost = upgradeCostNow;
+            if (txtUpgradeCost != null) txtUpgradeCost.SetText("{0}", _lastUpgradeCost);
             
             RefreshInteractable();
         }
@@ -186,23 +211,23 @@ public class BuildHUDController : MonoBehaviour
 
     private void TryBindEvents()
     {
-        if (bound) return;
+        if (_bound) return;
         if (TM == null) return;
 
         TM.OnPlacingChanged += HandlePlacingChanged;
-        bound = true;
+        _bound = true;
     }
 
     private void UnbindEvents()
     {
-        if (!bound) return;
+        if (!_bound) return;
         if (TM != null) TM.OnPlacingChanged -= HandlePlacingChanged;
-        bound = false;
+        _bound = false;
     }
 
     private void HandlePlacingChanged(bool isOn)
     {
-        lastPlacing = isOn;
+        _lastPlacing = isOn;
         ApplyBuildVisual(isOn);
         RefreshInteractable();
     }
@@ -220,15 +245,15 @@ public class BuildHUDController : MonoBehaviour
     {
         if (TM == null || GR == null) return;
 
-        lastPlacing = TM.IsPlacing;
-        ApplyBuildVisual(lastPlacing);
+        _lastPlacing = TM.IsPlacing;
+        ApplyBuildVisual(_lastPlacing);
 
-        lastGold = GR.Gold;
-        lastBuildLevel = TM.BuildLevel;
-        lastUpgradeCost = TM.GetBuildUpgradeCost();
+        _lastGold = GR.Gold;
+        _lastBuildLevel = TM.BuildLevel;
+        _lastUpgradeCost = TM.GetBuildUpgradeCost();
 
-        if (txtBuildLevel != null) txtBuildLevel.SetText("Lv. {0}", lastBuildLevel);
-        if (txtUpgradeCost != null) txtUpgradeCost.SetText("{0}", lastUpgradeCost);
+        if (txtBuildLevel != null) txtBuildLevel.SetText("Lv. {0}", _lastBuildLevel);
+        if (txtUpgradeCost != null) txtUpgradeCost.SetText("{0}", _lastUpgradeCost);
 
         RefreshInteractable(true);
     }
@@ -245,17 +270,30 @@ public class BuildHUDController : MonoBehaviour
         int upgradeCost = TM.GetBuildUpgradeCost();
         bool upgradeInteractable = GR.Gold >= upgradeCost;
 
-        if (btnBuild != null && (force || buildInteractable != lastBuildInteractable))
+        if (btnBuild != null && (force || buildInteractable != _lastBuildInteractable))
         {
-            lastBuildInteractable = buildInteractable;
+            _lastBuildInteractable = buildInteractable;
             btnBuild.interactable = buildInteractable;
         }
 
-        if (btnUpgrade != null && (force || upgradeInteractable != lastUpgradeInteractable))
+        if (btnUpgrade != null && (force || upgradeInteractable != _lastUpgradeInteractable))
         {
-            lastUpgradeInteractable = upgradeInteractable;
+            _lastUpgradeInteractable = upgradeInteractable;
             btnUpgrade.interactable = upgradeInteractable;
         }
+    }
+    
+    private bool IsTextInputFocused()
+    {
+        if (EventSystem.current == null) return false;
+
+        var go = EventSystem.current.currentSelectedGameObject;
+        if (go == null) return false;
+        
+        if (go.GetComponent<TMP_InputField>() != null) return true;
+        if (go.GetComponent<UnityEngine.UI.InputField>() != null) return true;
+
+        return false;
     }
     
     public void SetSpectating(bool spectating)

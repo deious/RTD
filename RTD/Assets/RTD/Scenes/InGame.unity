@@ -9125,7 +9125,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAC74\uC124"
+  m_text: "\uAC74\uC124 (C)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f91792c5e9f3fcb4798ca1101ff6001e, type: 2}
   m_sharedMaterial: {fileID: 454156065243207972, guid: f91792c5e9f3fcb4798ca1101ff6001e, type: 2}
@@ -11794,7 +11794,7 @@ MonoBehaviour:
   btnUpgradeLabel: {fileID: 826206303}
   txtBuildLevel: {fileID: 141393467}
   txtUpgradeCost: {fileID: 1837037477}
-  buildOffText: "\uAC74\uC124"
+  buildOffText: "\uAC74\uC124 (C)"
   buildOnText: "\uAC74\uC124 (ON)"
   buildOffColor: {r: 1, g: 1, b: 1, a: 1}
   buildOnColor: {r: 0.8, g: 1, b: 0.8, a: 1}
@@ -11802,6 +11802,7 @@ MonoBehaviour:
   txtBuildCost: {fileID: 514021987}
   buildLevelMaxText: Lv. Max
   upgradeBlockedText: "\uAC15\uD654 \uBD88\uAC00"
+  buildHotkey: 17
 --- !u!1 &1442806286
 GameObject:
   m_ObjectHideFlags: 0
