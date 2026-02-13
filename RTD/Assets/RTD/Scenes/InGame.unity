@@ -10354,7 +10354,7 @@ Transform:
   m_GameObject: {fileID: 1310832521}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 43.69412, y: 0, z: 24.983665}
+  m_LocalPosition: {x: 75.99, y: 0, z: 42.16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14690,7 +14690,7 @@ MonoBehaviour:
   laneId: 0
   pathRenderer: {fileID: 968342078}
   drawArea: {fileID: 1859221895}
-  blipSize: 10
+  blipSize: 15
   normalColor: {r: 1, g: 0.25, b: 0.25, a: 1}
   bossColor: {r: 1, g: 0.85, b: 0.25, a: 1}
   blipSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}

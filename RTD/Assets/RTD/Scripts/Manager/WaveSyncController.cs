@@ -29,6 +29,7 @@ public sealed class WaveSyncController : NetworkBehaviour
     private readonly Dictionary<ulong, bool> _clearedByClient = new();
     private readonly Dictionary<ulong, bool> _augmentDoneByClient = new();
     private readonly Dictionary<ulong, bool> _aliveByClient = new();
+    private readonly Dictionary<ulong, int> _laneByClient = new();
 
     private CancellationTokenSource _cts;
 
@@ -95,9 +96,13 @@ public sealed class WaveSyncController : NetworkBehaviour
     private void OnClientConnected(ulong clientId)
     {
         if (!IsServer) return;
+
         _clearedByClient[clientId] = false;
         _augmentDoneByClient[clientId] = false;
         _aliveByClient[clientId] = true;
+
+        if (!_laneByClient.ContainsKey(clientId))
+            ResetFlagsForConnectedClients();
     }
 
     private void OnClientDisconnected(ulong clientId)
@@ -108,6 +113,12 @@ public sealed class WaveSyncController : NetworkBehaviour
         _augmentDoneByClient.Remove(clientId);
         _aliveByClient.Remove(clientId);
 
+        if (_laneByClient.TryGetValue(clientId, out int leftLane))
+        {
+            _laneByClient.Remove(clientId);
+            LaneLeftClientRpc(leftLane);
+        }
+
         CheckAndAdvanceIfReady();
     }
 
@@ -116,14 +127,24 @@ public sealed class WaveSyncController : NetworkBehaviour
         _clearedByClient.Clear();
         _augmentDoneByClient.Clear();
         _aliveByClient.Clear();
+        _laneByClient.Clear();
 
         var list = NetworkManager.ConnectedClientsList;
+
+        var ids = new List<ulong>(list.Count);
         for (int i = 0; i < list.Count; i++)
+            ids.Add(list[i].ClientId);
+
+        ids.Sort();
+
+        for (int i = 0; i < ids.Count; i++)
         {
-            ulong id = list[i].ClientId;
+            ulong id = ids[i];
             _clearedByClient[id] = false;
             _augmentDoneByClient[id] = false;
             _aliveByClient[id] = true;
+
+            _laneByClient[id] = Mathf.Clamp(i, 0, 3);
         }
     }
 
@@ -327,5 +348,26 @@ public sealed class WaveSyncController : NetworkBehaviour
     private void OnPhaseChanged(WavePhase oldV, WavePhase newV)
     {
         // Debug.Log($"[WaveSync] phase {oldV} -> {newV}");
+    }
+    
+    [ClientRpc]
+    private void LaneLeftClientRpc(int laneId)
+    {
+        laneId = Mathf.Clamp(laneId, 0, 3);
+
+        // Do NOT recompute MyLaneId here. Lane is fixed.
+        // Only clear visuals related to the disconnected lane.
+        if (RemoteLaneWorld.Instance != null)
+            RemoteLaneWorld.Instance.ClearProxyMonstersByLane(laneId);
+
+        // Clear minimap dots for that lane only
+        if (MiniMapLaneRegistry.Instance != null)
+        {
+            MiniMapLaneRegistry.Instance.ClearLaneMonsterRenderer(laneId);
+            MiniMapLaneRegistry.Instance.SetLaneActive(laneId, false);
+        }
+
+        // Rebind reporters to ensure my lane stays visible
+        MiniMapLaneRegistry.Instance?.RebindAllMonsterReportersAsync().Forget();
     }
 }

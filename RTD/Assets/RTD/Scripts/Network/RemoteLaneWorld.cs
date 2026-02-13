@@ -418,4 +418,49 @@ public class RemoteLaneWorld : MonoBehaviour
 
         return best;
     }
+    
+    public void ClearAllProxyMonsters()
+    {
+        if (_monsters.Count == 0) return;
+
+        foreach (var kv in _monsters)
+        {
+            var pm = kv.Value;
+            if (pm != null)
+                Destroy(pm.gameObject);
+        }
+
+        _monsters.Clear();
+        _seenInLastSync.Clear();
+    }
+
+    public void ClearProxyMonstersByLane(int laneId)
+    {
+        if (_monsters.Count == 0) return;
+
+        List<long> toRemove = null;
+
+        foreach (var kv in _monsters)
+        {
+            long key = kv.Key;
+            int keyLane = (int)(key >> 32);
+            if (keyLane != laneId) continue;
+
+            toRemove ??= new List<long>();
+            toRemove.Add(key);
+        }
+
+        if (toRemove == null) return;
+
+        for (int i = 0; i < toRemove.Count; i++)
+        {
+            long k = toRemove[i];
+            if (_monsters.TryGetValue(k, out var pm))
+            {
+                _monsters.Remove(k);
+                if (pm != null)
+                    Destroy(pm.gameObject);
+            }
+        }
+    }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,62 +30,146 @@ public class MiniMapUIController : MonoBehaviour
     [Header("Startup")]
     [SerializeField, Range(1, 4)] private int initialPlayerCount = 1;
 
-    private void Reset()
-    {
-        miniMapRoot = GetComponent<RectTransform>();
-    }
-
+    private int _rev;
+    private int _fixedSlotCount = 1;
+    private bool _startedAsMulti = false;
+    
     private void Awake()
     {
-        if (!miniMapRoot) miniMapRoot = GetComponent<RectTransform>();
-        if (!rtBinder) rtBinder = GetComponent<MiniMapRTBinder>();
+        if (!miniMapRoot) 
+            miniMapRoot = GetComponent<RectTransform>();
+        if (!rtBinder)
+            rtBinder = GetComponent<MiniMapRTBinder>();
 
         ApplyRootSize();
         ApplyGridLayoutFor2x2();
 
-        SetPlayerCount(initialPlayerCount);
+        /*_fixedSlotCount = Mathf.Clamp(initialPlayerCount, 1, 4);
+        _startedAsMulti = (_fixedSlotCount >= 2);
+        SetPlayerCount(initialPlayerCount);*/
+    }
+    
+    private void Start()
+    {
+        InitPlayerCountFromNetworkAsync().Forget();
+    }
+    
+    private void Reset()
+    {
+        miniMapRoot = GetComponent<RectTransform>();
+    }
+    
+    private async UniTaskVoid InitPlayerCountFromNetworkAsync()
+    {
+        float end = Time.realtimeSinceStartup + 2.0f;
+
+        int detected = 0;
+
+        while (Time.realtimeSinceStartup < end)
+        {
+            MultiplayerContext.SyncFromSessionState();
+            detected = Mathf.Clamp(MultiplayerContext.PlayersCount, 1, 4);
+            
+            if (detected >= 2)
+                break;
+
+            await UniTask.Delay(50, ignoreTimeScale: true, cancellationToken: this.GetCancellationTokenOnDestroy());
+        }
+        
+        int initial = Mathf.Clamp(initialPlayerCount, 1, 4);
+
+        int startCount = Mathf.Max(initial, detected);
+
+        _fixedSlotCount = startCount;
+        _startedAsMulti = (_fixedSlotCount >= 2);
+
+        Debug.Log($"[MiniMapUI] detected PlayersCount={MultiplayerContext.PlayersCount}, initial={initialPlayerCount}, startCount={startCount}, startedAsMulti={_startedAsMulti}");
+        SetPlayerCount(startCount);
     }
     
     public void SetPlayerCount(int playerCount)
     {
         playerCount = Mathf.Clamp(playerCount, 1, 4);
+        _rev++;
+        
+        int uiCount = Mathf.Clamp(_fixedSlotCount, 1, 4);
+        
+        List<int> lanes = MultiplayerContext.GetActiveLaneIds();
+        if (lanes == null || lanes.Count == 0)
+        {
+            lanes = new List<int>(uiCount);
+            for (int i = 0; i < uiCount; i++)
+                lanes.Add(i);
+        }
         
         if (MiniMapLaneRegistry.Instance != null)
-            MiniMapLaneRegistry.Instance.SetForceSoloMode(playerCount == 1);
-        
+        {
+            bool forceSolo = (!_startedAsMulti && uiCount == 1);
+            
+            MiniMapLaneRegistry.Instance.SetForceSoloMode(forceSolo);
+            MiniMapLaneRegistry.Instance.SetVisibleLanesForPlayerCount(uiCount, twoPlayersUseTopRowOnly);
+        }
+    
         var bootstrap = FindFirstObjectByType<LaneMapBootstrap>(FindObjectsInactive.Include);
+        GameObject[] spawnedMaps = null;
+        Transform[] laneAnchors = null;
+    
         if (bootstrap != null)
-            MiniMapLaneRegistry.Instance.RebindAllAfterMapBuild(bootstrap.GetSpawnedMaps(), bootstrap.GetLaneAnchors());
-
+        {
+            spawnedMaps = bootstrap.GetSpawnedMaps();
+            laneAnchors = bootstrap.GetLaneAnchors();
+            MiniMapLaneRegistry.Instance?.RebindAllAfterMapBuild(spawnedMaps, laneAnchors);
+        }
+    
         ApplyRootSize();
         ApplyGridLayoutFor2x2();
-
-        if (playerCount == 1)
+        
+        if (!_startedAsMulti && uiCount == 1)
         {
             SetSolo(true);
             SetSlotsActive(0);
             rtBinder?.Bind(1);
-            MiniMapLaneRegistry.Instance?.RebindAllMiniMapsAfterMapBuild();
+            FinalizeRebindAsync(_rev).Forget();
             return;
         }
 
         SetSolo(false);
-
-        if (twoPlayersUseTopRowOnly && playerCount == 2)
+    
+        if (twoPlayersUseTopRowOnly && uiCount == 2)
         {
             SetSlot(0, true);
             SetSlot(1, true);
             SetSlot(2, false);
             SetSlot(3, false);
-
-            rtBinder?.Bind(2);
-            return;
         }
+        else
+        {
+            for (int i = 0; i < 4; i++)
+                SetSlot(i, i < uiCount);
+        }
+        
+        if (MiniMapLaneRegistry.Instance != null && spawnedMaps != null)
+        {
+            for (int uiSlot = 0; uiSlot < uiCount; uiSlot++)
+            {
+                int laneId = Mathf.Clamp(lanes[uiSlot], 0, 3);
+                MiniMapLaneRegistry.Instance.BindUISlotToLane(uiSlot, laneId, spawnedMaps);
+            }
+        }
+    
+        rtBinder?.Bind(uiCount);
+        FinalizeRebindAsync(_rev).Forget();
+    }
+    
+    private async UniTaskVoid FinalizeRebindAsync(int rev)
+    {
+        await UniTask.NextFrame();
+        await UniTask.NextFrame();
 
-        for (int i = 0; i < 4; i++)
-            SetSlot(i, i < playerCount);
+        if (rev != _rev) return;
 
-        rtBinder?.Bind(playerCount);
+        MiniMapLaneRegistry.Instance?.RebindAllMiniMapsAfterMapBuild();
+        MiniMapLaneRegistry.Instance?.RebindAllMonsterReportersAsync().Forget();
     }
 
     private void SetSolo(bool isSolo)
@@ -113,7 +198,7 @@ public class MiniMapUIController : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = 2;
         
-        float cell = (rootSize.x - (padding * 2) - spacing) / 2f;
+        float cell = (rootSize.x - (padding * 2) - spacing) * 0.5f;
         
         float cellInt = Mathf.Floor(cell);
 
@@ -131,13 +216,4 @@ public class MiniMapUIController : MonoBehaviour
         if (index < 0 || index >= slots.Count) return;
         if (slots[index]) slots[index].SetActive(active);
     }
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-        if (!miniMapRoot) miniMapRoot = GetComponent<RectTransform>();
-        ApplyRootSize();
-        ApplyGridLayoutFor2x2();
-    }
-#endif
 }

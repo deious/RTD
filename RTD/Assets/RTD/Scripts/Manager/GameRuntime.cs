@@ -42,6 +42,7 @@ public class GameRuntime : MonoBehaviour
     private bool nextWaveStartedForThisAdvance;
     
     private WaveModifiers _currentWaveMods;
+    private MiniMapUIController _miniMapUI;
 
     public float TowerDamageMul => (augmentSystem != null) ? augmentSystem.TowerDamageMul : 1f;
     public float TowerAttackSpeedMul => (augmentSystem != null) ? augmentSystem.TowerAttackSpeedMul : 1f;
@@ -83,6 +84,20 @@ public class GameRuntime : MonoBehaviour
     {
         PlayCameraIntro().Forget();
         //MultiplayerContext.ResolveMyLaneIdFromNgo();
+        _miniMapUI = FindFirstObjectByType<MiniMapUIController>(FindObjectsInactive.Include);
+
+        var nm = NetworkManager.Singleton;
+        if (nm != null)
+        {
+            nm.OnClientConnectedCallback -= OnNgoClientCountChanged;
+            nm.OnClientConnectedCallback += OnNgoClientCountChanged;
+
+            nm.OnClientDisconnectCallback -= OnNgoClientCountChanged;
+            nm.OnClientDisconnectCallback += OnNgoClientCountChanged;
+        }
+
+        // 시작 시점도 한번 적용
+        RefreshPlayerCountAndMiniMapAsync().Forget();
         ResolveLaneAndInitAsync().Forget();
         
         if (orbitCamera != null && grid != null)
@@ -259,6 +274,44 @@ public class GameRuntime : MonoBehaviour
         else if (sync.Phase == WavePhase.Augment)
         {
             HandleSyncedAugmentStart(sync.CurrentWave);
+        }
+    }
+    
+    private void OnNgoClientCountChanged(ulong _)
+    {
+        RefreshPlayerCountAndMiniMapAsync().Forget();
+    }
+
+    private async UniTaskVoid RefreshPlayerCountAndMiniMapAsync()
+    {
+        await UniTask.NextFrame();
+        await UniTask.NextFrame();
+
+        var nm = NetworkManager.Singleton;
+
+        int count = 1;
+        if (nm != null && nm.IsListening && nm.ConnectedClientsList != null)
+            count = Mathf.Clamp(nm.ConnectedClientsList.Count, 1, 4);
+
+        MultiplayerContext.SetPlayersCount(count);
+        
+        if (RemoteLaneWorld.Instance != null)
+            RemoteLaneWorld.Instance.ClearAllProxyMonsters();
+        
+        if (_miniMapUI != null)
+            _miniMapUI.SetPlayerCount(count);
+
+        MiniMapLaneRegistry.Instance?.RebindAllMonsterReportersAsync().Forget();
+
+        var bridge = LaneCombatBridge.Instance;
+        if (bridge != null)
+        {
+            int myLane = MultiplayerContext.MyLaneId;
+            for (int lane = 0; lane < 4; lane++)
+            {
+                if (lane == myLane) continue;
+                bridge.RequestSyncLane(lane);
+            }
         }
     }
 

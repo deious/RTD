@@ -39,4 +39,42 @@ public static class SpectatorCleanup
             Object.Destroy(t.gameObject);
         }
     }
+    
+    public static void ClearAllProxyMonsters()
+    {
+        var monsters = Object.FindObjectsByType<MonsterAI>(FindObjectsSortMode.None);
+        foreach (var m in monsters)
+        {
+            if (m == null) continue;
+
+            var proxy = m.GetComponent<ProxyMonster>();
+            if (proxy == null) continue;
+
+            if (SimplePool.Instance != null) SimplePool.Instance.Release(m.gameObject);
+            else Object.Destroy(m.gameObject);
+        }
+    }
+    
+    public static void ClearOtherLaneNonProxyMonsters()
+    {
+        int myLane = MultiplayerContext.MyLaneId;
+
+        var monsters = Object.FindObjectsByType<MonsterAI>(FindObjectsSortMode.None);
+        foreach (var m in monsters)
+        {
+            if (m == null) continue;
+            
+            if (m.GetComponent<ProxyMonster>() != null) continue;
+            
+            if (m.WorldSlotId == myLane) continue;
+
+            if (SimplePool.Instance != null) SimplePool.Instance.Release(m.gameObject);
+            else Object.Destroy(m.gameObject);
+        }
+    }
+    
+    public static void ClearAllRemoteLaneVisuals()
+    {
+        ClearAllProxyMonsters();
+    }
 }

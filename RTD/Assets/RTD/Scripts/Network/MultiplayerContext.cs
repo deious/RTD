@@ -8,6 +8,9 @@ public static class MultiplayerContext
 {
     public static int PlayersCount { get; private set; } = 1;
     public static int MyLaneId { get; private set; } = 0;
+    
+    public static bool LaneLocked { get; private set; } = false;
+    public static int FixedPlayersCount { get; private set; } = 1;
 
     public static void SetPlayersCount(int count)
     {
@@ -21,12 +24,17 @@ public static class MultiplayerContext
         {
             PlayersCount = 1;
             MyLaneId = 0;
+            LaneLocked = false;
+            FixedPlayersCount = 1;
             return;
         }
-        
+
         int connected = (nm.ConnectedClientsList != null) ? nm.ConnectedClientsList.Count : 1;
         PlayersCount = Mathf.Clamp(connected, 1, 4);
         
+        if (LaneLocked)
+            return;
+
         ulong myId = nm.LocalClientId;
 
         var list = nm.ConnectedClientsList;
@@ -70,7 +78,43 @@ public static class MultiplayerContext
         }
         
         SyncFromSessionState();
+        LockLane(MyLaneId, PlayersCount);
 
         Debug.Log($"[MultiplayerContext] Resolved(Async). players={PlayersCount} myLane={MyLaneId} localClientId={nm.LocalClientId}");
+    }
+    
+    public static List<int> GetActiveLaneIds()
+    {
+        var result = new List<int>();
+
+        if (LaneLocked)
+        {
+            int n = Mathf.Clamp(FixedPlayersCount, 1, 4);
+            for (int i = 0; i < n; i++)
+                result.Add(i);
+            return result;
+        }
+
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.ConnectedClientsList == null)
+            return result;
+
+        var ids = new List<ulong>();
+        foreach (var c in nm.ConnectedClientsList)
+            ids.Add(c.ClientId);
+
+        ids.Sort();
+
+        for (int i = 0; i < ids.Count; i++)
+            result.Add(i);
+
+        return result;
+    }
+    
+    public static void LockLane(int myLaneId, int initialPlayers)
+    {
+        MyLaneId = Mathf.Clamp(myLaneId, 0, 3);
+        FixedPlayersCount = Mathf.Clamp(initialPlayers, 1, 4);
+        LaneLocked = true;
     }
 }
