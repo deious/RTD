@@ -66,7 +66,7 @@ public sealed class WaveSyncController : NetworkBehaviour
         _nextWaveStartServerTime.Value = 0;
 
         // 현재 접속자 기준 초기화
-        ResetFlagsForConnectedClients();
+        InitializeStateForConnectedClients();
         NetworkManager.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.OnClientDisconnectCallback += OnClientDisconnected;
         
@@ -99,10 +99,10 @@ public sealed class WaveSyncController : NetworkBehaviour
 
         _clearedByClient[clientId] = false;
         _augmentDoneByClient[clientId] = false;
-        _aliveByClient[clientId] = true;
+        if (!_aliveByClient.ContainsKey(clientId))
+            _aliveByClient[clientId] = true;
 
-        if (!_laneByClient.ContainsKey(clientId))
-            ResetFlagsForConnectedClients();
+        AssignLanesForConnectedClients();
     }
 
     private void OnClientDisconnected(ulong clientId)
@@ -122,7 +122,7 @@ public sealed class WaveSyncController : NetworkBehaviour
         CheckAndAdvanceIfReady();
     }
 
-    private void ResetFlagsForConnectedClients()
+    private void InitializeStateForConnectedClients()
     {
         _clearedByClient.Clear();
         _augmentDoneByClient.Clear();
@@ -143,8 +143,36 @@ public sealed class WaveSyncController : NetworkBehaviour
             _clearedByClient[id] = false;
             _augmentDoneByClient[id] = false;
             _aliveByClient[id] = true;
+        }
 
-            _laneByClient[id] = Mathf.Clamp(i, 0, 3);
+        AssignLanesForConnectedClients();
+    }
+    
+    private void AssignLanesForConnectedClients()
+    {
+        var list = NetworkManager.ConnectedClientsList;
+        var ids = new List<ulong>(list.Count);
+
+        for (int i = 0; i < list.Count; i++)
+            ids.Add(list[i].ClientId);
+
+        ids.Sort();
+
+        for (int i = 0; i < ids.Count; i++)
+            _laneByClient[ids[i]] = Mathf.Clamp(i, 0, 3);
+    }
+    
+    private void ResetRoundFlagsForConnectedClients()
+    {
+        var list = NetworkManager.ConnectedClientsList;
+        for (int i = 0; i < list.Count; i++)
+        {
+            ulong id = list[i].ClientId;
+            _clearedByClient[id] = false;
+            _augmentDoneByClient[id] = false;
+            
+            if (!_aliveByClient.ContainsKey(id))
+                _aliveByClient[id] = true;
         }
     }
 
@@ -277,7 +305,7 @@ public sealed class WaveSyncController : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        ResetFlagsForConnectedClients();
+        ResetRoundFlagsForConnectedClients();
 
         _currentWave.Value = wave;
         _phase.Value = WavePhase.InWave;

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using System.Threading;
 using RTD.Scripts.Network;
 using Unity.Netcode;
+using UnityEngine.Rendering.Universal;
 
 public class GameRuntime : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class GameRuntime : MonoBehaviour
 
     private bool gameOver;
     private CancellationTokenSource cts;
+    private bool _eliminationReported;
     
     private int gold;
     private int life;
@@ -533,6 +535,10 @@ public class GameRuntime : MonoBehaviour
     private void EndGame(GameEndType endType)
     {
         if (gameOver) return;
+        
+        if (endType == GameEndType.Lose)
+            ReportEliminatedInMultiIfNeeded();
+        
         gameOver = true;
 
         waveRunning = false;
@@ -618,6 +624,18 @@ public class GameRuntime : MonoBehaviour
             WaveSyncController.Instance?.ReportAugmentDoneServerRpc();
         }
     }
+    
+    private void ReportEliminatedInMultiIfNeeded()
+    {
+        if (_eliminationReported)
+            return;
+
+        if (AppFlowManager.Instance == null || !AppFlowManager.Instance.IsMultiMode)
+            return;
+
+        WaveSyncController.Instance?.ReportPlayerEliminatedServerRpc();
+        _eliminationReported = true;
+    }
 
     public bool TrySpendGold(int amount)
     {
@@ -666,8 +684,7 @@ public class GameRuntime : MonoBehaviour
     
     public void EnterSpectatorMode()
     {
-        if (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode)
-            WaveSyncController.Instance?.ReportPlayerEliminatedServerRpc();
+        ReportEliminatedInMultiIfNeeded();
         
         gameOver = true;
         waveRunning = false;

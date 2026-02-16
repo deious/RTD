@@ -24,6 +24,7 @@ public class OrbitCamera : MonoBehaviour
 
     [Header("Panning")]
     public float panSpeed = 10f;
+    [SerializeField] private bool enableKeyboardPan = false;
     
     [Header("Mode")]
     [SerializeField] private bool useTransformAsInitialView = false;
@@ -133,7 +134,7 @@ public class OrbitCamera : MonoBehaviour
     {
         Vector3 panDir = Vector3.zero;
         
-        if (Keyboard.current != null)
+        if (enableKeyboardPan && Keyboard.current != null)
         {
             if (Keyboard.current.wKey.isPressed) panDir += Vector3.forward;
             if (Keyboard.current.sKey.isPressed) panDir += Vector3.back;
