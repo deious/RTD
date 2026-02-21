@@ -10740,6 +10740,7 @@ MonoBehaviour:
   minPitch: 20
   maxPitch: 75
   panSpeed: 150
+  enableKeyboardPan: 0
   useTransformAsInitialView: 0
   blockZoomWhenPointerOver: {fileID: 1380933326}
   chatInput: {fileID: 0}

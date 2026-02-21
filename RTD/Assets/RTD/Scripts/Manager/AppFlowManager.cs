@@ -23,6 +23,7 @@ public class AppFlowManager : MonoBehaviour
 
     private bool _endingHandled;
     private bool _loadingGameScene;
+    private string _lastActiveSceneName = string.Empty;
     
     public Mode CurrentMode => mode;
     public bool IsMultiMode => mode == Mode.Multi;
@@ -53,7 +54,9 @@ public class AppFlowManager : MonoBehaviour
         if (mode == Mode.Single && scene.name == gameSceneName)
             _loadingGameScene = false;
         
+        HandleChatResetOnSceneTransition(scene.name);
         OnSceneBecameActive?.Invoke(scene.name);
+        _lastActiveSceneName = scene.name;
     }
 
     private void HookNgoSceneEvents()
@@ -90,7 +93,20 @@ public class AppFlowManager : MonoBehaviour
             }
         }
         
+        HandleChatResetOnSceneTransition(sceneName);
         OnSceneBecameActive?.Invoke(sceneName);
+        _lastActiveSceneName = sceneName;
+    }
+    
+    private void HandleChatResetOnSceneTransition(string newSceneName)
+    {
+        bool wasInGame = _lastActiveSceneName == gameSceneName;
+        bool movedOutFromGame = newSceneName != gameSceneName;
+
+        if (!wasInGame || !movedOutFromGame)
+            return;
+
+        ChatManager.Instance?.ClearHistory();
     }
     
     public void LoadGameScene()

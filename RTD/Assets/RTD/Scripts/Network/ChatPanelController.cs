@@ -14,6 +14,7 @@ public class ChatPanelController : MonoBehaviour
 
     [Header("Message Item Prefab (TMP Text)")]
     [SerializeField] private TextMeshProUGUI messageTextPrefab;
+    [SerializeField] private int maxVisibleMessages = 50;
 
     private void OnEnable()
     {
@@ -36,6 +37,9 @@ public class ChatPanelController : MonoBehaviour
             inputField.onSubmit.AddListener(OnSubmit);
         
         ChatManager.Instance.OnMessageReceived += HandleMessage;
+        ChatManager.Instance.OnHistoryCleared += HandleHistoryCleared;
+
+        ClearMessageViews();
         
         var history = ChatManager.Instance.GetHistory();
         for (int i = 0; i < history.Count; i++)
@@ -47,7 +51,10 @@ public class ChatPanelController : MonoBehaviour
     private void OnDisable()
     {
         if (ChatManager.Instance != null)
+        {
             ChatManager.Instance.OnMessageReceived -= HandleMessage;
+            ChatManager.Instance.OnHistoryCleared -= HandleHistoryCleared;
+        }
 
         if (sendButton != null)
             sendButton.onClick.RemoveListener(OnClickSend);
@@ -85,6 +92,12 @@ public class ChatPanelController : MonoBehaviour
         AddMessageToUI(msg);
         ScrollToBottom();
     }
+    
+    private void HandleHistoryCleared()
+    {
+        ClearMessageViews();
+        ScrollToBottom();
+    }
 
     private void AddMessageToUI(ChatMessage msg)
     {
@@ -93,6 +106,37 @@ public class ChatPanelController : MonoBehaviour
         var t = Instantiate(messageTextPrefab, contentRoot);
         
         t.text = $"[{msg.Sender}] {msg.Text}";
+        TrimOldestMessagesIfNeeded();
+    }
+    
+    private void ClearMessageViews()
+    {
+        if (contentRoot == null)
+            return;
+
+        for (int i = contentRoot.childCount - 1; i >= 0; i--)
+        {
+            var child = contentRoot.GetChild(i);
+            if (child != null)
+                Destroy(child.gameObject);
+        }
+    }
+
+    private void TrimOldestMessagesIfNeeded()
+    {
+        if (contentRoot == null)
+            return;
+
+        int maxCount = Mathf.Max(1, maxVisibleMessages);
+
+        while (contentRoot.childCount > maxCount)
+        {
+            var oldest = contentRoot.GetChild(0);
+            if (oldest == null)
+                break;
+
+            Destroy(oldest.gameObject);
+        }
     }
 
     private void ScrollToBottom()

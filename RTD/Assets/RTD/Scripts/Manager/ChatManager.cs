@@ -8,10 +8,11 @@ public sealed class ChatManager : MonoBehaviour
     public static ChatManager Instance { get; private set; }
 
     public event Action<ChatMessage> OnMessageReceived;
+    public event Action OnHistoryCleared;
     public string MyNickname { get; private set; }
 
     [Header("History")]
-    [SerializeField] private int maxHistory = 200;
+    [SerializeField] private int maxHistory = 50;
 
     private readonly List<ChatMessage> _history = new();
 
@@ -101,6 +102,12 @@ public sealed class ChatManager : MonoBehaviour
                 $"* 닉네임이 {newNick}(으)로 변경되었습니다 *"
             );
         }
+    }
+    
+    public void ClearHistory()
+    {
+        _history.Clear();
+        OnHistoryCleared?.Invoke();
     }
 }
 

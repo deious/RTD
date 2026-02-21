@@ -21,6 +21,6 @@ MonoBehaviour:
     color: {fileID: 11400000, guid: 34262afa52d789a43b789e9241c2d5de, type: 2}
     count: 2
   spawnInterval: 0.45
-  modifiers: 03000000
+  modifiers: 00000000
   isBossWave: 0
   bossData: {fileID: 0}
