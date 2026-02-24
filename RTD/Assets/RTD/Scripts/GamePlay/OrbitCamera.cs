@@ -25,6 +25,8 @@ public class OrbitCamera : MonoBehaviour
     [Header("Panning")]
     public float panSpeed = 10f;
     [SerializeField] private bool enableKeyboardPan = false;
+    [SerializeField] private bool enableEdgePan = true;
+    [SerializeField, Min(1f)] private float edgePanThresholdPx = 24f;
     
     [Header("Mode")]
     [SerializeField] private bool useTransformAsInitialView = false;
@@ -149,6 +151,25 @@ public class OrbitCamera : MonoBehaviour
             Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
             
             panDir += (-right * delta.x + -forward * delta.y) * 0.01f;
+        }
+        
+        if (enableEdgePan && Mouse.current != null)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Vector3 right = transform.right;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+
+            float edge = Mathf.Max(1f, edgePanThresholdPx);
+
+            if (mousePos.x <= edge)
+                panDir += -right;
+            else if (mousePos.x >= Screen.width - edge)
+                panDir += right;
+
+            if (mousePos.y <= edge)
+                panDir += -forward;
+            else if (mousePos.y >= Screen.height - edge)
+                panDir += forward;
         }
 
         if (panDir.sqrMagnitude > 0.0001f)
