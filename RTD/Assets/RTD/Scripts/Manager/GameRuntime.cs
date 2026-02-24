@@ -84,7 +84,6 @@ public class GameRuntime : MonoBehaviour
 
     private void Start()
     {
-        PlayCameraIntro().Forget();
         //MultiplayerContext.ResolveMyLaneIdFromNgo();
         _miniMapUI = FindFirstObjectByType<MiniMapUIController>(FindObjectsInactive.Include);
 
@@ -122,6 +121,8 @@ public class GameRuntime : MonoBehaviour
                 dist: diag * 0.9f
             );
         }
+        
+        PlayCameraIntro().Forget();
         
         UIManager.Instance.UpdateGold(gold);
         UIManager.Instance.UpdateLife(life);
@@ -191,6 +192,13 @@ public class GameRuntime : MonoBehaviour
         float endYaw = 0.40f;
         float endPitch = 66.38f;
         float endDist = 157.50f;
+        
+        if (AppFlowManager.Instance != null && AppFlowManager.Instance.IsMultiMode)
+        {
+            orbitCamera.SetView(endTarget, endYaw, endPitch, endDist);
+            orbitCamera.SetInputLock(false);
+            return;
+        }
 
         await orbitCamera.PlayIntroToView(
             startTarget, startYaw, startPitch, startDist,

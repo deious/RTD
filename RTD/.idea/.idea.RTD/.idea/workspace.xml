@@ -6,14 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="441c655c-b53a-498a-95d7-adae13ef8bd3" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.RTD/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Data/Waves/WavePattern_01.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Data/Waves/WavePattern_01.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/InGame.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scenes/Title.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/AppFlowManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/AppFlowManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/ChatManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Monster/MonsterAI.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatPanelController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Network/ChatPanelController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/RTD/Scripts/Manager/GameRuntime.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,7 +95,7 @@
     <option name="spentUsd" value="0.0606685" />
   </component>
   <component name="RecapUselessUpdatesCounter">
-    <option name="suspendCountdown" value="1" />
+    <option name="suspendCountdown" value="0" />
   </component>
   <component name="RunManager" selected="Unity 에디터에 연결.Attach to Unity Editor">
     <configuration name="유닛 테스트(배치 모드)" type="RunUnityExe" factoryName="Unity Executable">
@@ -248,6 +241,7 @@
       <workItem from="1771024130692" duration="2222000" />
       <workItem from="1771219523727" duration="4026000" />
       <workItem from="1771658888599" duration="2079000" />
+      <workItem from="1771935615713" duration="1742000" />
     </task>
     <servers />
   </component>
