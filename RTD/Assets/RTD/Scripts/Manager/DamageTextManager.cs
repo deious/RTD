@@ -14,6 +14,15 @@ public class DamageTextManager : MonoBehaviour
     [SerializeField] private float stackStep = 0.22f;
     [SerializeField] private int maxStack = 6;
 
+    [Header("Size (managed here)")]
+    [SerializeField] private float scaleMul = 1.8f;
+
+    [Tooltip("scaleMul이 커질수록 떠 보이는 걸 보정.")]
+    [SerializeField] private float heightFixPerExtraScale = -0.25f;
+
+    [Tooltip("추가 미세 조정(+면 위, -면 아래)")]
+    [SerializeField] private float heightFix = 0f;
+
     private readonly Queue<DamageText> _pool = new();
     private readonly Dictionary<int, int> _stackByTarget = new();
 
@@ -21,7 +30,6 @@ public class DamageTextManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-
         Prewarm();
     }
 
@@ -42,19 +50,33 @@ public class DamageTextManager : MonoBehaviour
         if (prefab == null || target == null) return;
 
         int id = target.GetInstanceID();
-        int stack = 0;
-        _stackByTarget.TryGetValue(id, out stack);
+        _stackByTarget.TryGetValue(id, out int stack);
 
         stack = Mathf.Min(stack + 1, maxStack);
         _stackByTarget[id] = stack;
 
-        Vector3 pos = target.position + Vector3.up * (baseHeight + (stack - 1) * stackStep);
+        float mul = Mathf.Max(0.01f, scaleMul);
+
+        float extra = Mathf.Max(0f, mul - 1f);
+        float autoFix = extra * heightFixPerExtraScale;
+
+        float h = baseHeight + heightFix + autoFix + (stack - 1) * stackStep;
+        Vector3 pos = target.position + Vector3.up * h;
 
         DamageText t = _pool.Count > 0 ? _pool.Dequeue() : Instantiate(prefab, transform);
+
+        // ✅ 월드에 떠 있게 분리
         t.transform.SetParent(null, true);
         t.transform.rotation = Quaternion.identity;
-        t.transform.localScale = Vector3.one;
-        
+
+        // ✅ 중요: 먼저 활성화해서 OnEnable에서 초기화가 끝나게 만든다
+        if (!t.gameObject.activeSelf)
+            t.gameObject.SetActive(true);
+
+        // ✅ 그 다음 스케일 적용 (OnEnable에서 덮어쓰는 문제 방지)
+        t.SetScaleMul(mul);
+
+        // ✅ 마지막으로 내용/위치 세팅
         t.Play(damage, pos);
 
         t.SetOnRelease(() =>

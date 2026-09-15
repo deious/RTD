@@ -260,6 +260,9 @@ MonoBehaviour:
   spawnParticlePoint: {fileID: 0}
   baseSplashRadius: 1.6
   baseSplashRatio: 0.6
+  fireCue: {fileID: 11400000, guid: edfa392816d1f7149b42c928498e456c, type: 2}
+  explosionCue: {fileID: 11400000, guid: 28b798bd86b0e8742b4988f438a6d5ba, type: 2}
+  towerTypeId: 2
 --- !u!1 &2668564486252552765
 GameObject:
   m_ObjectHideFlags: 0

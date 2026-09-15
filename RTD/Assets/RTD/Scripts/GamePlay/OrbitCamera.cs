@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -23,12 +24,17 @@ public class OrbitCamera : MonoBehaviour
 
     [Header("Panning")]
     public float panSpeed = 10f;
+    [SerializeField] private bool enableKeyboardPan = false;
+    [SerializeField] private bool enableEdgePan = true;
+    [SerializeField, Min(1f)] private float edgePanThresholdPx = 24f;
     
     [Header("Mode")]
     [SerializeField] private bool useTransformAsInitialView = false;
     
     [Header("UI Block")]
     [SerializeField] private ScrollRect blockZoomWhenPointerOver;
+    
+    [SerializeField] private TMP_InputField chatInput;
 
     private float _yaw = 45f;
     private float _pitch = 45f;
@@ -65,6 +71,12 @@ public class OrbitCamera : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (UIState.BlockWorldInput) 
+            return;
+        
+        if (IsTyping())
+            return;
+        
         if (target == null) return;
 
         if (!_lockInput)
@@ -77,6 +89,17 @@ public class OrbitCamera : MonoBehaviour
         UpdateCameraPosition();
     }
 
+    private bool IsTyping()
+    {
+        if (chatInput != null && chatInput.isFocused) 
+            return true;
+        
+        var go = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
+        if (go == null)
+            return false;
+        return go.GetComponent<TMP_InputField>() != null;
+    }
+    
     private void HandleRotation()
     {
         if (Mouse.current == null) 
@@ -113,7 +136,7 @@ public class OrbitCamera : MonoBehaviour
     {
         Vector3 panDir = Vector3.zero;
         
-        if (Keyboard.current != null)
+        if (enableKeyboardPan && Keyboard.current != null)
         {
             if (Keyboard.current.wKey.isPressed) panDir += Vector3.forward;
             if (Keyboard.current.sKey.isPressed) panDir += Vector3.back;
@@ -128,6 +151,25 @@ public class OrbitCamera : MonoBehaviour
             Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
             
             panDir += (-right * delta.x + -forward * delta.y) * 0.01f;
+        }
+        
+        if (enableEdgePan && Mouse.current != null)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Vector3 right = transform.right;
+            Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+
+            float edge = Mathf.Max(1f, edgePanThresholdPx);
+
+            if (mousePos.x <= edge)
+                panDir += -right;
+            else if (mousePos.x >= Screen.width - edge)
+                panDir += right;
+
+            if (mousePos.y <= edge)
+                panDir += -forward;
+            else if (mousePos.y >= Screen.height - edge)
+                panDir += forward;
         }
 
         if (panDir.sqrMagnitude > 0.0001f)

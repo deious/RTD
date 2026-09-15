@@ -86,9 +86,9 @@ public static class RTDSheetImporter
 
             so.id = id;
             so.prefab = LoadAssetAtPathSafe<GameObject>(r.Get("prefabPath"));
-            so.baseHp = r.GetInt("baseHp", so.baseHp);
+            so.baseHp = r.GetFloat("baseHp", so.baseHp);
             so.baseMoveSpeed = r.GetFloat("baseMoveSpeed", so.baseMoveSpeed);
-            so.baseShieldHp = r.GetInt("baseShieldHp", so.baseShieldHp);
+            so.baseShieldHp = r.GetFloat("baseShieldHp", so.baseShieldHp);
             so.canBeBossCandidate = r.GetBool("canBeBossCandidate", so.canBeBossCandidate);
 
             EditorUtility.SetDirty(so);

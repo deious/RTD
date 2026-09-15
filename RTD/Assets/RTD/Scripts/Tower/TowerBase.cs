@@ -1,6 +1,8 @@
 using TMPro;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
+using Unity.Netcode;
+using RTD.Scripts.Network;
 
 public abstract class TowerBase : MonoBehaviour
 {
@@ -37,10 +39,20 @@ public abstract class TowerBase : MonoBehaviour
     protected float attackTimer;
     private MonsterAI _focusTarget;
     private int _focusStacks;
+    private static int _towerViewIdSeed = 1;
     
+    public int TowerViewId { get; private set; }
     public GridTile CurrentTile { get; private set; }
     public TowerTraitSO RuntimeTrait { get; private set; }
+    public System.Action OnStatsChanged;
+    
+    protected Transform FirePoint => firePoint;
 
+    protected virtual void Awake()
+    {
+        TowerViewId = _towerViewIdSeed++;
+    }
+    
     protected virtual void Start()
     {
         renderers = GetComponentsInChildren<Renderer>(true);
@@ -68,13 +80,18 @@ public abstract class TowerBase : MonoBehaviour
     {
         MonsterAI[] monsters = FindObjectsOfType<MonsterAI>();
 
+        int mySlot = MultiplayerContext.MyLaneId;
+
         MonsterAI closest = null;
         float closestDist = Mathf.Infinity;
         Vector3 myPos = transform.position;
 
         foreach (var m in monsters)
         {
+            if (m == null) continue;
             if (!m.isActiveAndEnabled) continue;
+            
+            if (m.WorldSlotId != mySlot) continue;
 
             float dist = Vector3.Distance(myPos, m.transform.position);
             if (dist <= range && dist < closestDist)
@@ -89,35 +106,27 @@ public abstract class TowerBase : MonoBehaviour
     
     protected bool TryFireProjectile(MonsterAI target)
     {
-        return TryFireProjectile(target, 0f, 0f);
+        return TryFireProjectile(target, Vector3.zero, 0f, 0f, null);
     }
-
+    
     protected bool TryFireProjectile(MonsterAI target, float splashRadius, float splashRatio)
     {
-        if (target == null) return false;
-        if (projectilePrefab == null) return false;
-
-        Vector3 spawnPos = (firePoint != null) ? firePoint.position : (transform.position + Vector3.up * 0.7f);
-        if (ProjectilePool.Instance == null) return false;
-
-        Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
-        if (proj == null) return false;
-        
-        IProjectileHitListener listener = this as IProjectileHitListener;
-
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
-        return true;
+        return TryFireProjectile(target, Vector3.zero, splashRadius, splashRatio, null);
     }
     
     protected bool TryFireProjectile(MonsterAI target, Vector3 spawnOffset, float splashRadius = 0f, float splashRatio = 0f)
     {
+        return TryFireProjectile(target, spawnOffset, splashRadius, splashRatio, null);
+    }
+    
+    protected bool TryFireProjectile(MonsterAI target, Vector3 spawnOffset, float splashRadius, float splashRatio, AudioCue impactCue)
+    {
         if (target == null) return false;
         if (projectilePrefab == null) return false;
-
         if (ProjectilePool.Instance == null) return false;
 
-        Vector3 spawnPos = (firePoint != null) 
-            ? firePoint.position 
+        Vector3 spawnPos = (firePoint != null)
+            ? firePoint.position
             : (transform.position + Vector3.up * 0.7f);
 
         spawnPos += spawnOffset;
@@ -125,11 +134,57 @@ public abstract class TowerBase : MonoBehaviour
         Projectile proj = ProjectilePool.Instance.Get(projectilePrefab, spawnPos, Quaternion.identity);
         if (proj == null) return false;
 
+        NotifyTowerFireForSpectate(target, spawnPos, splashRadius, splashRatio);
+
         IProjectileHitListener listener = this as IProjectileHitListener;
-        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio);
+        proj.Init(target, projectileSpeed, damage, projectileLifeTime, this, listener, splashRadius, splashRatio, impactCue);
+
         return true;
     }
+    
+    private void NotifyTowerFireForSpectate(MonsterAI target, Vector3 firePos, float splashRadius, float splashRatio)
+    {
+        if (target == null) return;
+        
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsClient || !nm.IsListening)
+            return;
+        
+        var bridge = LaneCombatBridge.Instance;
+        if (bridge == null || !bridge.IsSpawned)
+            return;
+        
+        int laneId = MultiplayerContext.MyLaneId;
 
+        var td = GetData();
+        string towerTypeId = (td != null) ? td.towerId : "";
+
+        var trait = RuntimeTrait;
+        int traitType = (trait != null) ? (int)trait.type : -1;
+        float traitValue = (trait != null) ? trait.value : 0f;
+        float traitRange = (trait != null) ? trait.range : 0f;
+        float traitDuration = (trait != null) ? trait.duration : 0f;
+        int traitCount = (trait != null) ? trait.count : 0;
+        
+        int towerNetId = TowerViewId;
+
+        bridge.NotifyTowerFireServerRpc(
+            laneId: laneId,
+            towerNetId: towerNetId,
+            targetMonsterNetId: target.NetId,
+            firePos: firePos,
+            towerTypeId: towerTypeId,
+
+            splashRadius: splashRadius,
+            splashRatio: splashRatio,
+
+            traitType: traitType,
+            traitValue: traitValue,
+            traitRange: traitRange,
+            traitDuration: traitDuration,
+            traitCount: traitCount
+        );
+    }
 
     public int ApplyHitAndReturnDamage(MonsterAI target, int baseDamage)
     {
@@ -205,6 +260,8 @@ public abstract class TowerBase : MonoBehaviour
     public void RefreshStats()
     {
         ApplyDataIfAny();
+        ApplyRangeVisual();
+        OnStatsChanged?.Invoke();
     }
 
     private void ApplyRangeVisual()
@@ -242,18 +299,6 @@ public abstract class TowerBase : MonoBehaviour
             typeLabel.text = GetTypeShortLabel(data.towerId);
             typeLabel.color = Color.white;
         }
-        
-        /*
-        if (renderers != null)
-        {
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                var r = renderers[i];
-                if (r != null && r.material != null && r.material.HasProperty("_Color"))
-                    r.material.color = Color.gray;
-            }
-        }
-        */
     }
     
     public void PlaySpawnFeedback()

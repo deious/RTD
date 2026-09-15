@@ -5,17 +5,20 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class MiniMapPathRenderer : MonoBehaviour
 {
-    [Header("Source Path")]
+    [Header("Source Path (runtime assigned)")]
     [SerializeField] private WaypointPath waypointPath;
 
-    [Header("World Bounds")]
-    [SerializeField] private Bounds worldBounds;
-    
-    [SerializeField] private Renderer boundsRenderer;
+    [Header("Space Root (IMPORTANT)")]
+    [Tooltip("이 미니맵이 기준으로 삼을 좌표계(해당 Lane의 MapRoot 권장)")]
+    [SerializeField] private Transform spaceRoot;
+
+    [Header("Local Bounds (x,z in spaceRoot)")]
+    [SerializeField] private Vector2 localMinXZ;
+    [SerializeField] private Vector2 localMaxXZ;
 
     [Header("Auto Bounds From Waypoints")]
     [SerializeField] private bool autoBoundsFromWaypoints = true;
-    [SerializeField] private float waypointBoundsPadding = 2f;
+    [SerializeField] private float padding = 2f;
 
     [Header("UI Target")]
     [SerializeField] private RectTransform drawArea;
@@ -26,21 +29,24 @@ public class MiniMapPathRenderer : MonoBehaviour
     [SerializeField] private Sprite lineSprite;
 
     [Header("Overlap Fix")]
-    [Tooltip("코너/교차점에서 겹침을 줄여 두께가 일정하게 보이도록, 선분 끝을 일부 잘라냅니다.")]
     [SerializeField] private bool trimEndsToAvoidOverlap = true;
 
     [Header("Corner Caps")]
-    [Tooltip("선분 끝(방향이 바뀌는 지점/끝점)에 캡(정사각형)을 추가하여 끊김을 메웁니다.")]
     [SerializeField] private bool addCornerCaps = true;
-
-    [Tooltip("캡 크기 = lineThickness * capSizeMultiplier")]
     [SerializeField] private float capSizeMultiplier = 1.0f;
 
     [Header("Rebuild")]
     [SerializeField] private bool rebuildOnEnable = true;
+    
+    [Header("Lane Id (0..3)")]
+    [SerializeField] private int laneId = 0;
+    public int LaneId => Mathf.Clamp(laneId, 0, 3);
 
     private readonly List<GameObject> _spawned = new List<GameObject>();
-    public Bounds CurrentWorldBounds => worldBounds;
+
+    public Transform SpaceRoot => spaceRoot ? spaceRoot : (waypointPath ? waypointPath.transform : null);
+    public Vector2 LocalMinXZ => localMinXZ;
+    public Vector2 LocalMaxXZ => localMaxXZ;
 
     private void Awake()
     {
@@ -53,45 +59,67 @@ public class MiniMapPathRenderer : MonoBehaviour
             Rebuild();
     }
 
+    /// <summary>
+    /// ✅ 맵이 런타임에 생성/교체될 때 반드시 호출.
+    /// </summary>
+    public void Bind(WaypointPath path, Transform newSpaceRoot = null, bool rebuildNow = true)
+    {
+        waypointPath = path;
+        if (newSpaceRoot) spaceRoot = newSpaceRoot;
+
+        if (autoBoundsFromWaypoints && waypointPath && SpaceRoot)
+            AutoComputeLocalBounds();
+
+        if (rebuildNow)
+            Rebuild();
+    }
+
     public void Rebuild()
     {
         ClearSpawned();
 
+        if (!drawArea)
+            return;
+
         if (!waypointPath || waypointPath.Count < 2)
             return;
 
-        if (!drawArea)
+        if (!SpaceRoot)
         {
-            Debug.LogError("[MiniMapPathRenderer] drawArea가 비었습니다.", this);
+            Debug.LogError("[MiniMapPathRenderer] SpaceRoot가 null 입니다. Bind()로 spaceRoot를 넣어주세요.", this);
             return;
         }
 
-        ResolveWorldBounds();
-        if (!IsValidBounds(worldBounds))
+        if (autoBoundsFromWaypoints)
+            AutoComputeLocalBounds();
+
+        if (!IsValidLocalBounds())
         {
-            Debug.LogError("[MiniMapPathRenderer] worldBounds가 유효하지 않습니다. boundsRenderer/worldBounds/autoBoundsFromWaypoints를 확인하세요.", this);
+            Debug.LogError($"[MiniMapPathRenderer] local bounds invalid. min={localMinXZ}, max={localMaxXZ}", this);
             return;
         }
 
         float w = drawArea.rect.width;
         float h = drawArea.rect.height;
+        if (w <= 1f || h <= 1f)
+            return;
 
-        Vector2 prev = WorldToUI(waypointPath.Get(0).position, w, h);
-        
+        Vector2 prev = LocalToUI(ToLocalXZ(waypointPath.Get(0).position), w, h);
+
+        if (addCornerCaps)
+            CreateCap(prev);
+
         bool hasRun = false;
         bool runHorizontal = true;
         Vector2 runStart = prev;
         Vector2 runEnd = prev;
-        
-        if (addCornerCaps)
-            CreateCap(prev);
 
         for (int i = 1; i < waypointPath.Count; i++)
         {
             Transform t = waypointPath.Get(i);
             if (!t) continue;
 
-            Vector2 cur = WorldToUI(t.position, w, h);
+            Vector2 cur = LocalToUI(ToLocalXZ(t.position), w, h);
             Vector2 snapped = SnapAxis(prev, cur);
 
             bool stepHorizontal = Mathf.Abs(snapped.x - prev.x) >= Mathf.Abs(snapped.y - prev.y);
@@ -112,9 +140,7 @@ public class MiniMapPathRenderer : MonoBehaviour
                 else
                 {
                     CreateSegment(runStart, runEnd);
-                    
-                    if (addCornerCaps)
-                        CreateCap(runEnd);
+                    if (addCornerCaps) CreateCap(runEnd);
 
                     runHorizontal = stepHorizontal;
                     runStart = runEnd;
@@ -124,70 +150,57 @@ public class MiniMapPathRenderer : MonoBehaviour
 
             prev = snapped;
         }
-        
+
         if (hasRun)
         {
             CreateSegment(runStart, runEnd);
-
-            if (addCornerCaps)
-                CreateCap(runEnd);
+            if (addCornerCaps) CreateCap(runEnd);
         }
     }
 
-    private void ResolveWorldBounds()
+    private Vector2 ToLocalXZ(Vector3 worldPos)
     {
-        if (boundsRenderer)
-        {
-            worldBounds = boundsRenderer.bounds;
-            return;
-        }
-
-        if (IsValidBounds(worldBounds))
-            return;
-
-        if (autoBoundsFromWaypoints)
-            worldBounds = CalcBoundsFromWaypoints(waypointPath, waypointBoundsPadding);
+        Vector3 lp = SpaceRoot.InverseTransformPoint(worldPos);
+        return new Vector2(lp.x, lp.z);
     }
 
-    private static bool IsValidBounds(Bounds b)
+    public void AutoComputeLocalBounds()
     {
-        return b.size.x > 0.001f && b.size.z > 0.001f;
-    }
+        if (!SpaceRoot || !waypointPath || waypointPath.Count == 0)
+            return;
 
-    private static Bounds CalcBoundsFromWaypoints(WaypointPath path, float padding)
-    {
-        Vector3 min = new Vector3(float.PositiveInfinity, 0f, float.PositiveInfinity);
-        Vector3 max = new Vector3(float.NegativeInfinity, 0f, float.NegativeInfinity);
+        float minX = float.PositiveInfinity, minZ = float.PositiveInfinity;
+        float maxX = float.NegativeInfinity, maxZ = float.NegativeInfinity;
 
-        for (int i = 0; i < path.Count; i++)
+        for (int i = 0; i < waypointPath.Count; i++)
         {
-            var t = path.Get(i);
+            var t = waypointPath.Get(i);
             if (!t) continue;
 
-            Vector3 p = t.position;
-            min.x = Mathf.Min(min.x, p.x);
-            min.z = Mathf.Min(min.z, p.z);
-            max.x = Mathf.Max(max.x, p.x);
-            max.z = Mathf.Max(max.z, p.z);
+            Vector3 lp = SpaceRoot.InverseTransformPoint(t.position);
+            minX = Mathf.Min(minX, lp.x);
+            minZ = Mathf.Min(minZ, lp.z);
+            maxX = Mathf.Max(maxX, lp.x);
+            maxZ = Mathf.Max(maxZ, lp.z);
         }
 
-        if (float.IsInfinity(min.x) || float.IsInfinity(min.z))
-            return new Bounds();
+        if (float.IsInfinity(minX) || float.IsInfinity(minZ))
+            return;
 
-        Vector3 center = new Vector3((min.x + max.x) * 0.5f, 0f, (min.z + max.z) * 0.5f);
-        Vector3 size = new Vector3(
-            Mathf.Max(1f, (max.x - min.x) + padding * 2f),
-            0f,
-            Mathf.Max(1f, (max.z - min.z) + padding * 2f)
-        );
-
-        return new Bounds(center, size);
+        localMinXZ = new Vector2(minX - padding, minZ - padding);
+        localMaxXZ = new Vector2(maxX + padding, maxZ + padding);
     }
 
-    private Vector2 WorldToUI(Vector3 worldPos, float uiW, float uiH)
+    private bool IsValidLocalBounds()
     {
-        float nx = Mathf.InverseLerp(worldBounds.min.x, worldBounds.max.x, worldPos.x);
-        float nz = Mathf.InverseLerp(worldBounds.min.z, worldBounds.max.z, worldPos.z);
+        Vector2 size = localMaxXZ - localMinXZ;
+        return size.x > 0.001f && size.y > 0.001f;
+    }
+
+    private Vector2 LocalToUI(Vector2 localXZ, float uiW, float uiH)
+    {
+        float nx = Mathf.InverseLerp(localMinXZ.x, localMaxXZ.x, localXZ.x);
+        float nz = Mathf.InverseLerp(localMinXZ.y, localMaxXZ.y, localXZ.y);
 
         float px = nx * uiW - uiW * drawArea.pivot.x;
         float py = nz * uiH - uiH * drawArea.pivot.y;
@@ -200,17 +213,16 @@ public class MiniMapPathRenderer : MonoBehaviour
         float dx = b.x - a.x;
         float dy = b.y - a.y;
 
-        if (Mathf.Abs(dx) >= Mathf.Abs(dy))
-            return new Vector2(b.x, a.y); // 수평
-        else
-            return new Vector2(a.x, b.y); // 수직
+        return (Mathf.Abs(dx) >= Mathf.Abs(dy))
+            ? new Vector2(b.x, a.y)
+            : new Vector2(a.x, b.y);
     }
 
     private void CreateSegment(Vector2 a, Vector2 b)
     {
         Vector2 delta = b - a;
         bool horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
-        
+
         float trim = trimEndsToAvoidOverlap ? (lineThickness * 0.5f) : 0f;
 
         Vector2 pos;
@@ -298,10 +310,9 @@ public class MiniMapPathRenderer : MonoBehaviour
     private void ClearSpawned()
     {
         for (int i = 0; i < _spawned.Count; i++)
-        {
-            if (_spawned[i])
-                Destroy(_spawned[i]);
-        }
+            if (_spawned[i]) Destroy(_spawned[i]);
         _spawned.Clear();
     }
 }
+
+

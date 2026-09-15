@@ -43,6 +43,7 @@ public class AugmentSystem : MonoBehaviour
         IsChoosing = true;
         _onChoiceComplete = onChoiceComplete;
 
+        AudioManager.Instance?.PlayAugmentOpen();
         RollOptions(_offered);
         
         augmentUI.Show(_offered, OnPicked);
@@ -52,6 +53,8 @@ public class AugmentSystem : MonoBehaviour
     {
         if (!IsChoosing)
             return;
+        
+        AudioManager.Instance?.PlayAugmentPick();
 
         if (picked != null)
         {

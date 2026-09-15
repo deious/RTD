@@ -6,6 +6,10 @@ public class MiniMapMonsterReporter : MonoBehaviour, IPoolable
     private Transform root;
     private bool inited;
     private bool registered;
+    
+    private void OnDisable() => Unregister();
+    public void OnSpawned() => Register();
+    public void OnDespawned() => Unregister();
 
     public void Init(MiniMapMonsterUIRenderer renderer, Transform monsterRoot)
     {
@@ -34,19 +38,28 @@ public class MiniMapMonsterReporter : MonoBehaviour, IPoolable
         if (rendererRef != null && root != null)
             rendererRef.Unregister(root);
     }
-
-    public void OnSpawned()
+    
+    public void SetRenderer(MiniMapMonsterUIRenderer newRenderer)
     {
+        if (rendererRef == newRenderer) return;
+        
+        Unregister();
+
+        rendererRef = newRenderer;
+        
         Register();
     }
-
-    public void OnDespawned()
+    
+    public void Rebind(MiniMapMonsterUIRenderer newRenderer)
     {
         Unregister();
-    }
 
-    private void OnDisable()
-    {
-        Unregister();
+        rendererRef = newRenderer;
+
+        if (root == null)
+            root = transform;
+
+        inited = true;
+        Register();
     }
 }

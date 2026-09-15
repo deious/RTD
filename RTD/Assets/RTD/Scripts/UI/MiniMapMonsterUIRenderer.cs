@@ -5,6 +5,9 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class MiniMapMonsterUIRenderer : MonoBehaviour
 {
+    [Header("Lane Id (0..3) - IMPORTANT")]
+    [SerializeField] private int laneId = 0;
+
     [Header("World Bounds Source")]
     [SerializeField] private MiniMapPathRenderer pathRenderer;
 
@@ -14,7 +17,7 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
     [Header("Blip Style")]
     [SerializeField] private float blipSize = 6f;
     [SerializeField] private Color normalColor = new Color(1f, 0.25f, 0.25f, 1f);
-    [SerializeField] private Color bossColor   = new Color(1f, 0.85f, 0.25f, 1f);
+    [SerializeField] private Color bossColor = new Color(1f, 0.85f, 0.25f, 1f);
     [SerializeField] private Sprite blipSprite;
 
     [Header("Options")]
@@ -24,28 +27,46 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
     private readonly List<Transform> _monsters = new List<Transform>(128);
     private readonly List<Image> _pool = new List<Image>(128);
 
-    private Bounds _worldBounds;
+    private static readonly Dictionary<int, MiniMapMonsterUIRenderer> _byLane = new();
+
+    public int LaneId => Mathf.Clamp(laneId, 0, 3);
 
     private void Awake()
     {
         if (!drawArea) drawArea = GetComponent<RectTransform>();
     }
 
+    private void OnEnable()
+    {
+        _byLane[LaneId] = this;
+    }
+
+    private void OnDisable()
+    {
+        if (_byLane.TryGetValue(LaneId, out var r) && r == this)
+            _byLane.Remove(LaneId);
+    }
+
+    public static bool TryGetByLane(int laneId, out MiniMapMonsterUIRenderer r)
+        => _byLane.TryGetValue(Mathf.Clamp(laneId, 0, 3), out r);
+
     private void LateUpdate()
     {
-        if (!pathRenderer || !drawArea)
+        if (!pathRenderer || !drawArea || !pathRenderer.SpaceRoot)
         {
             HideAll();
             return;
         }
 
-        _worldBounds = pathRenderer.CurrentWorldBounds;
-        if (!IsValidBounds(_worldBounds))
+        Vector2 min = pathRenderer.LocalMinXZ;
+        Vector2 max = pathRenderer.LocalMaxXZ;
+
+        if (!IsValidBounds(min, max))
         {
             HideAll();
             return;
         }
-        
+
         for (int i = _monsters.Count - 1; i >= 0; i--)
             if (!_monsters[i]) _monsters.RemoveAt(i);
 
@@ -55,9 +76,11 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
         float h = drawArea.rect.height;
 
         float minX = -w * drawArea.pivot.x;
-        float maxX =  w * (1f - drawArea.pivot.x);
+        float maxX = w * (1f - drawArea.pivot.x);
         float minY = -h * drawArea.pivot.y;
-        float maxY =  h * (1f - drawArea.pivot.y);
+        float maxY = h * (1f - drawArea.pivot.y);
+
+        Transform root = pathRenderer.SpaceRoot;
 
         for (int i = 0; i < _pool.Count; i++)
         {
@@ -66,9 +89,11 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
             if (!active) continue;
 
             Transform m = _monsters[i];
-            Vector3 wp = m.position;
 
-            Vector2 p = WorldToUI(wp, w, h);
+            Vector3 lp = root.InverseTransformPoint(m.position);
+            Vector2 localXZ = new Vector2(lp.x, lp.z);
+
+            Vector2 p = LocalToUI(localXZ, min, max, w, h, drawArea.pivot);
 
             if (clampToRect)
             {
@@ -82,8 +107,7 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
                 p.y = Mathf.Round(p.y);
             }
 
-            RectTransform rt = (RectTransform)_pool[i].transform;
-            rt.anchoredPosition = p;
+            ((RectTransform)_pool[i].transform).anchoredPosition = p;
 
             var ai = m.GetComponent<MonsterAI>();
             _pool[i].color = (ai != null && ai.IsBoss) ? bossColor : normalColor;
@@ -103,13 +127,13 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
         _monsters.Remove(monsterRoot);
     }
 
-    private Vector2 WorldToUI(Vector3 worldPos, float uiW, float uiH)
+    private static Vector2 LocalToUI(Vector2 localXZ, Vector2 min, Vector2 max, float uiW, float uiH, Vector2 pivot)
     {
-        float nx = Mathf.InverseLerp(_worldBounds.min.x, _worldBounds.max.x, worldPos.x);
-        float nz = Mathf.InverseLerp(_worldBounds.min.z, _worldBounds.max.z, worldPos.z);
+        float nx = Mathf.InverseLerp(min.x, max.x, localXZ.x);
+        float nz = Mathf.InverseLerp(min.y, max.y, localXZ.y);
 
-        float px = nx * uiW - uiW * drawArea.pivot.x;
-        float py = nz * uiH - uiH * drawArea.pivot.y;
+        float px = nx * uiW - uiW * pivot.x;
+        float py = nz * uiH - uiH * pivot.y;
 
         return new Vector2(px, py);
     }
@@ -118,12 +142,9 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
     {
         while (_pool.Count < count)
             _pool.Add(CreateBlip());
-        
+
         for (int i = 0; i < count; i++)
-        {
-            RectTransform rt = (RectTransform)_pool[i].transform;
-            rt.sizeDelta = new Vector2(blipSize, blipSize);
-        }
+            ((RectTransform)_pool[i].transform).sizeDelta = new Vector2(blipSize, blipSize);
     }
 
     private Image CreateBlip()
@@ -153,8 +174,22 @@ public class MiniMapMonsterUIRenderer : MonoBehaviour
             if (_pool[i]) _pool[i].gameObject.SetActive(false);
     }
 
-    private static bool IsValidBounds(Bounds b)
+    private static bool IsValidBounds(Vector2 min, Vector2 max)
     {
-        return b.size.x > 0.001f && b.size.z > 0.001f;
+        Vector2 size = max - min;
+        return size.x > 0.001f && size.y > 0.001f;
+    }
+    
+    public void SetPathRenderer(MiniMapPathRenderer pr)
+    {
+        pathRenderer = pr;
+    }
+    
+    public void ClearAllRegisteredMonsters(bool hideBlips = true)
+    {
+        _monsters.Clear();
+        if (hideBlips) HideAll();
     }
 }
+
+

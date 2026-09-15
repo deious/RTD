@@ -5,6 +5,11 @@ public class CannonTower : TowerBase
     [Header("Cannon Splash (Base Ability)")]
     [SerializeField] private float baseSplashRadius = 1.6f;
     [SerializeField, Range(0f, 1f)] private float baseSplashRatio = 0.6f;
+    
+    [Header("Audio")]
+    [SerializeField] private AudioCue fireCue;
+    [SerializeField] private AudioCue explosionCue;
+    [SerializeField] private int towerTypeId = 2;
 
     protected override void Attack()
     {
@@ -21,7 +26,16 @@ public class CannonTower : TowerBase
             radius *= radiusMul;
             ratio = Mathf.Clamp01(ratio * dmgMul);
         }
+        
+        Vector3 muzzlePos =
+            FirePoint != null ? FirePoint.position : transform.position;
 
-        TryFireProjectile(target, radius, ratio);
+        //int laneId = MultiplayerContext.MyLaneId;
+        int spamKey = (towerTypeId * 100000) + (MultiplayerContext.MyLaneId * 1000) + TowerViewId;
+
+        if (fireCue != null)
+            AudioManager.Instance?.PlayFire(fireCue, muzzlePos, spamKey);
+
+        TryFireProjectile(target, Vector3.zero, radius, ratio, explosionCue);
     }
 }

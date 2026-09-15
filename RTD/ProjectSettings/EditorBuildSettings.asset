@@ -5,12 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
     path: Assets/RTD/Scenes/Title.unity
     guid: 982b77a4c12564a4c89196e49a5a4847
+  - enabled: 1
+    path: Assets/RTD/Scenes/Lobby.unity
+    guid: b3cc9f113045e1443bcbdf110004cc62
   - enabled: 1
     path: Assets/RTD/Scenes/InGame.unity
     guid: d76c358703bed3349afe8372347e0366

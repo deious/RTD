@@ -260,6 +260,8 @@ MonoBehaviour:
   spawnParticlePoint: {fileID: 0}
   baseDotDps: 6
   baseDotDuration: 2.5
+  fireCue: {fileID: 11400000, guid: de283144659801244bfce944d7fa2f18, type: 2}
+  towerTypeId: 3
 --- !u!1 &2764038825228167329
 GameObject:
   m_ObjectHideFlags: 0

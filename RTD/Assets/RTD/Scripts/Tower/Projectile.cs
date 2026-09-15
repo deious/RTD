@@ -23,6 +23,8 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float gravity = 25f;
     [SerializeField] private float ballisticFlightTime = 0.55f;
     [SerializeField] private float arcHeight = 2.0f;
+    
+    private AudioCue impactCue;
 
     private Transform target;
     private MonsterAI targetMonster;
@@ -59,6 +61,7 @@ public class Projectile : MonoBehaviour
         ballisticInited = false;
         ballisticT = 0f;
         ballisticVel = Vector3.zero;
+        impactCue = null;
     }
 
     public void Init(
@@ -69,7 +72,8 @@ public class Projectile : MonoBehaviour
         TowerBase sourceTower,
         IProjectileHitListener hitListener = null,
         float splashRadius = 0f,
-        float splashRatio = 0f)
+        float splashRatio = 0f,
+        AudioCue impactCue = null)
     {
         targetMonster = target;
         this.target = target != null ? target.transform : null;
@@ -84,6 +88,7 @@ public class Projectile : MonoBehaviour
 
         this.splashRadius = Mathf.Max(0f, splashRadius);
         this.splashRatio = Mathf.Clamp01(splashRatio);
+        this.impactCue = impactCue;
 
         ballisticInited = false;
     }
@@ -208,6 +213,9 @@ public class Projectile : MonoBehaviour
             int splashDmg = Mathf.Max(1, Mathf.RoundToInt(damage * splashRatio));
             TraitProcessor.ApplySplashDamage(sourceTower, hitPos, splashRadius, targetMonster, splashDmg);
         }
+        
+        if (impactCue != null)
+            AudioManager.Instance?.PlayImpact(impactCue, hitPos);
 
         hitListener?.OnProjectileHit(targetMonster, hitPos, dealt);
         ReleaseOrDestroy();
@@ -250,5 +258,28 @@ public class Projectile : MonoBehaviour
         };
 
         return Quaternion.FromToRotation(modelAxis, Vector3.forward);
+    }
+    
+    public void InitSpectate(
+        Transform targetTransform,
+        float speed,
+        float lifeTime,
+        IProjectileHitListener hitListener = null)
+    {
+        targetMonster = null;
+        target = targetTransform;
+
+        this.speed = Mathf.Max(0.01f, speed);
+        this.damage = 0;
+        this.lifeTime = Mathf.Max(0.01f, lifeTime);
+        this.lifeTimer = 0f;
+
+        this.sourceTower = null;
+        this.hitListener = hitListener;
+
+        this.splashRadius = 0f;
+        this.splashRatio = 0f;
+
+        ballisticInited = false;
     }
 }

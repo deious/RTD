@@ -44,11 +44,18 @@ public class TitleMenuUI : MonoBehaviour
 
     private void OnClickMulti()
     {
-        Debug.Log("멀티모드는 아직 미구현입니다.");
+        /*if (AppFlowManager.Instance != null)
+            AppFlowManager.Instance.StartMultiLobby();
+        else
+            SceneManager.LoadScene(lobbySceneName);*/
+        
+        if (AppFlowManager.Instance == null)
+        {
+            Debug.LogError("[TitleMenuUI] AppFlowManager.Instance is null. Title 씬에 AppFlowManager가 존재해야 합니다.");
+            return;
+        }
 
-        // 멀티 붙이면 이런 식으로:
-        // if (AppFlowManager.Instance != null) AppFlowManager.Instance.GoLobby();
-        // else SceneManager.LoadScene(lobbySceneName);
+        AppFlowManager.Instance.StartMultiLobby();
     }
 
     private void OnClickSettings()

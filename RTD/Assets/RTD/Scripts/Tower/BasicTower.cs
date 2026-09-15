@@ -12,6 +12,10 @@ public class BasicTower : TowerBase
     [SerializeField] private float muzzleJitterRadius = 0.03f;
     
     [SerializeField] private float burstShotInterval = 0.06f;   // 수동으로 조절할 때
+    
+    [Header("Audio")]
+    [SerializeField] private AudioCue fireCue;
+    [SerializeField] private int towerTypeId = 1;
 
     private bool _isBursting;
 
@@ -58,10 +62,21 @@ public class BasicTower : TowerBase
 
     private void FireOnce(MonsterAI target)
     {
+        Debug.Log($"[BasicTower] FireOnce called. fireCue={(fireCue!=null?fireCue.name:"null")}");
         if (target == null || target.IsEnded) return;
         
         Vector3 jitter = GetMuzzleJitter();
 
+        Vector3 muzzlePos = (FirePoint  != null)
+            ? (FirePoint .position + jitter)
+            : (transform.position + Vector3.up * 0.7f + jitter);
+        
+        int laneId = MultiplayerContext.MyLaneId;
+        int spamKey = (towerTypeId * 100000) + (MultiplayerContext.MyLaneId * 1000) + TowerViewId;
+        
+        if (fireCue != null)
+            AudioManager.Instance?.PlayFire(fireCue, muzzlePos, spamKey);
+        
         if (TryFireProjectile(target, jitter))
             return;
 

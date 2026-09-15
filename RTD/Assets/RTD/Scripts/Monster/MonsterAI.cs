@@ -8,7 +8,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     [Header("Stats")]
     public float maxHp = 20;
-    [SerializeField]private float currentHp;                // 인스펙터에서 편하게 확인하기 위해 시리얼라이즈
+    [SerializeField] private float currentHp;                // 인스펙터에서 편하게 확인하기 위해 시리얼라이즈
     [SerializeField] private float shieldHp;
 
     [SerializeField] private Transform shieldVfxPrefab;
@@ -26,6 +26,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public float Hp01 => (maxHp <= 0) ? 0f : Mathf.Clamp01((float)currentHp / maxHp);
     public float CurrentHp => currentHp;
     public float MaxHp => maxHp;
+    public float ShieldHp => shieldHp;
 
     [Header("Status: Stun")]
     [SerializeField] private bool showStunDebug = false;
@@ -72,8 +73,8 @@ public class MonsterAI : MonoBehaviour, IPoolable
     [SerializeField] private float moveSpeedAddPerWave = 0.15f;
     [SerializeField] private float maxMoveSpeed = 25.0f;
 
-    private int _baseMaxHp;
-    private int _baseShieldHp;
+    private float _baseMaxHp;
+    private float _baseShieldHp;
     private float _baseMoveSpeed;
     private Vector3 _baseLocalScale;
 
@@ -94,6 +95,9 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public void SetSpawner(MonsterSpawner spawner) => this._spawner = spawner;
     
     public bool IsBoss { get; private set; }
+    public int WorldSlotId { get; private set; } = 0;
+    public int NetId { get; private set; } = -1;
+    public int PathLaneIndex => _laneIndex;
     public static System.Action OnBossDied;
 
     private void Awake()
@@ -208,8 +212,29 @@ public class MonsterAI : MonoBehaviour, IPoolable
             return;
         _ended = true;
         
+        int lifeLoss = 1;
+
+        int wave = 0;
+        int maxWave = 0;
         if (GameRuntime.Instance != null)
-            GameRuntime.Instance.ChangeLife(-1);
+        {
+            wave = GameRuntime.Instance.CurrentWave;
+            maxWave = GameRuntime.Instance.MaxWave;
+        }
+        
+        if (IsBoss && (wave == 10 || wave == 20 || wave == 30))
+            lifeLoss = 5;
+        
+        if (IsBoss && wave == maxWave)
+        {
+            if (GameRuntime.Instance != null)
+                GameRuntime.Instance.ChangeLife(-999999); // 즉시 Lose 유도
+        }
+        else
+        {
+            if (GameRuntime.Instance != null)
+                GameRuntime.Instance.ChangeLife(-lifeLoss);
+        }
 
         if (_shieldVfxInstance != null)
             _shieldVfxInstance.gameObject.SetActive(false);
@@ -573,7 +598,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
     public void ApplyWaveScaling(int waveIndex, WaveModifiers mods)
     {
         int w = Mathf.Max(1, waveIndex);
-        int hp = _baseMaxHp;
+        float hp = _baseMaxHp;
 
         if (applyWaveHpExp)
         {
@@ -609,7 +634,7 @@ public class MonsterAI : MonoBehaviour, IPoolable
 
         moveSpeed = Mathf.Min(speed, maxMoveSpeed);
         
-        int shield = 0;
+        float shield = 0;
         bool shieldEnabled = (mods.shieldHp > 0); 
 
         if (shieldEnabled)
@@ -664,8 +689,8 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     public void OnSpawned()
     {
-        _ended = false;
-        _released = false;
+        ResetState();
+        enabled = false;
         
         transform.localScale = _baseLocalScale;
         
@@ -684,5 +709,40 @@ public class MonsterAI : MonoBehaviour, IPoolable
         
         IsBoss = false;
     }
+    
+    public void ConfigureIdentity(int worldSlotId, int netId)
+    {
+        WorldSlotId = Mathf.Clamp(worldSlotId, 0, 3);
+        NetId = netId;
+    }
+    
+    public void ConfigurePathLane(int pathLaneIndex, bool force = true)
+    {
+        if (GridManager.Instance == null)
+            return;
 
+        int max = Mathf.Max(1, GridManager.Instance.LaneCount);
+        int idx = Mathf.Clamp(pathLaneIndex, 0, max - 1);
+
+        if (force)
+        {
+            randomLane = false;
+            fixedLaneIndex = idx;
+        }
+        else
+        {
+            fixedLaneIndex = idx;
+        }
+    }
+    
+    public void SetAsProxyMode()
+    {
+        enabled = false;
+    }
+    
+    public void SetShieldForProxy(float newShieldHp)
+    {
+        shieldHp = Mathf.Max(0f, newShieldHp);
+        UpdateShieldVfx();
+    }
 }
