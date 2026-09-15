@@ -119,7 +119,7 @@ public class LaneCombatBridge : NetworkBehaviour
         }
     }
     
-    [ClientRpc]
+    /*[ClientRpc]
     private void TowerFireClientRpc(
         int laneId,
         int towerNetId,
@@ -133,7 +133,7 @@ public class LaneCombatBridge : NetworkBehaviour
 
         RemoteLaneWorld.Instance?
             .OnRemoteTowerFire(laneId, towerNetId, targetMonsterNetId, firePos, towerTypeId);
-    }
+    }*/
     
     [ServerRpc(RequireOwnership = false)]
     public void NotifyTowerFireServerRpc(

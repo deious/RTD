@@ -136,20 +136,6 @@ public class TowerManager : MonoBehaviour
 
             HandleClick();
         }
-        
-        if (Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
-        {
-            combineMode = (combineMode == CombineMode.Exact) ? CombineMode.Random : CombineMode.Exact;
-            Debug.Log($"[CombineMode] {combineMode}");
-        }
-        
-        if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
-        {
-            if (_combineBusy)
-                return;
-            
-            TryCombineSelectedTowerAsync().Forget();
-        }
     }
 
     private void HandleClick()

@@ -76,11 +76,8 @@ public class NetworkBootstrap : MonoBehaviour
 
     private void HandleClientConnected(ulong clientId)
     {
-        MultiplayerContext.ResolveMyLaneIdFromNgo();
-        
         var list = NetworkManager.Singleton != null ? NetworkManager.Singleton.ConnectedClientsList : null;
         int count = (list != null) ? list.Count : 1;
-        MultiplayerContext.SetPlayersCount(count);
         EnsureChatBridgeServer();
 
         Debug.Log($"[NGO] ClientConnected clientId={clientId} MyLaneId={MultiplayerContext.MyLaneId} PlayersCount={MultiplayerContext.PlayersCount}");
@@ -88,11 +85,8 @@ public class NetworkBootstrap : MonoBehaviour
 
     private void HandleClientDisconnected(ulong clientId)
     {
-        MultiplayerContext.ResolveMyLaneIdFromNgo();
-
         var list = NetworkManager.Singleton != null ? NetworkManager.Singleton.ConnectedClientsList : null;
         int count = (list != null) ? list.Count : 1;
-        MultiplayerContext.SetPlayersCount(count);
 
         Debug.Log($"[NGO] ClientDisconnected clientId={clientId} MyLaneId={MultiplayerContext.MyLaneId} PlayersCount={MultiplayerContext.PlayersCount}");
     }

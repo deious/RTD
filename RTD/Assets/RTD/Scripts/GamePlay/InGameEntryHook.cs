@@ -20,20 +20,8 @@ public class InGameEntryHook : MonoBehaviour
     {
         if (sceneName != "InGame") return;
 
-        int count = MultiplayerContext.PlayersCount;
+        MultiplayerContext.SyncFromSessionState();
 
-        var nm = NetworkManager.Singleton;
-        if (nm != null && nm.IsListening)
-        {
-            count = Mathf.Clamp(nm.ConnectedClientsList.Count, 1, 4);
-            MultiplayerContext.SetPlayersCount(count);
-            MultiplayerContext.ResolveMyLaneIdFromNgo();
-        }
-        else
-        {
-            MultiplayerContext.SetPlayersCount(1);
-        }
-        
         if (miniMapUI == null)
             miniMapUI = FindFirstObjectByType<MiniMapUIController>();
 

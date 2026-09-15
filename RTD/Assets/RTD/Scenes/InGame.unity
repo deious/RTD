@@ -5289,6 +5289,7 @@ Transform:
   - {fileID: 1161151520}
   - {fileID: 1856196086}
   - {fileID: 117784437}
+  - {fileID: 1222098435}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &641195638
@@ -9124,7 +9125,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uAC74\uC124"
+  m_text: "\uAC74\uC124 (C)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f91792c5e9f3fcb4798ca1101ff6001e, type: 2}
   m_sharedMaterial: {fileID: 454156065243207972, guid: f91792c5e9f3fcb4798ca1101ff6001e, type: 2}
@@ -9270,6 +9271,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 624108004}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1222098434
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1222098435}
+  - component: {fileID: 1222098437}
+  - component: {fileID: 1222098436}
+  m_Layer: 0
+  m_Name: WaveSyncController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1222098435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222098434}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 624108004}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1222098436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222098434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 1030812839
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1222098437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1222098434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a59be508743a524f8ca284b960b74cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveSyncController
+  ShowTopMostFoldoutHeaderGroup: 1
+  intermissionSeconds: 20
 --- !u!1 &1230109847
 GameObject:
   m_ObjectHideFlags: 0
@@ -10281,7 +10354,7 @@ Transform:
   m_GameObject: {fileID: 1310832521}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 43.69412, y: 0, z: 24.983665}
+  m_LocalPosition: {x: 75.99, y: 0, z: 42.16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10667,6 +10740,7 @@ MonoBehaviour:
   minPitch: 20
   maxPitch: 75
   panSpeed: 150
+  enableKeyboardPan: 0
   useTransformAsInitialView: 0
   blockZoomWhenPointerOver: {fileID: 1380933326}
   chatInput: {fileID: 0}
@@ -11721,7 +11795,7 @@ MonoBehaviour:
   btnUpgradeLabel: {fileID: 826206303}
   txtBuildLevel: {fileID: 141393467}
   txtUpgradeCost: {fileID: 1837037477}
-  buildOffText: "\uAC74\uC124"
+  buildOffText: "\uAC74\uC124 (C)"
   buildOnText: "\uAC74\uC124 (ON)"
   buildOffColor: {r: 1, g: 1, b: 1, a: 1}
   buildOnColor: {r: 0.8, g: 1, b: 0.8, a: 1}
@@ -11729,6 +11803,7 @@ MonoBehaviour:
   txtBuildCost: {fileID: 514021987}
   buildLevelMaxText: Lv. Max
   upgradeBlockedText: "\uAC15\uD654 \uBD88\uAC00"
+  buildHotkey: 17
 --- !u!1 &1442806286
 GameObject:
   m_ObjectHideFlags: 0
@@ -14617,7 +14692,7 @@ MonoBehaviour:
   laneId: 0
   pathRenderer: {fileID: 968342078}
   drawArea: {fileID: 1859221895}
-  blipSize: 10
+  blipSize: 15
   normalColor: {r: 1, g: 0.25, b: 0.25, a: 1}
   bossColor: {r: 1, g: 0.85, b: 0.25, a: 1}
   blipSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}

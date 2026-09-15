@@ -689,8 +689,8 @@ public class MonsterAI : MonoBehaviour, IPoolable
     
     public void OnSpawned()
     {
-        _ended = false;
-        _released = false;
+        ResetState();
+        enabled = false;
         
         transform.localScale = _baseLocalScale;
         

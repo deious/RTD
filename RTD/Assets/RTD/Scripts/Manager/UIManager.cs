@@ -317,6 +317,17 @@ public class UIManager : MonoBehaviour
 
         var ctx = FindFirstObjectByType<ContextUIController>();
         if (ctx != null && spectating) ctx.Hide();
+        
+        if (spectating)
+        {
+            _resultLocked = false;
+            _pauseOpen = false;
+
+            if (resultPanel != null)
+                resultPanel.SetActive(false);
+
+            SetWorldBlock(false);
+        }
     }
 
     public void TogglePausePanel()

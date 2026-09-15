@@ -61,11 +61,7 @@ public class GridManager : MonoBehaviour
                 Debug.Log($"[GridManager] Start auto-load skipped. tileParent={(tileParent ? tileParent.name : "null")}, waypointPath={(waypointPath ? waypointPath.name : "null")}");
         }
     }
-
-    /// <summary>
-    /// ✅ A-1 핵심: 현재 사용할 MapRoot(내 lane의 MapRoot)로 GridManager 데이터 소스를 바인딩한다.
-    /// mapRoot 하위에 "Tiles", "WaypointPath"가 있어야 함.
-    /// </summary>
+    
     public void BindToMapRoot(Transform mapRoot)
     {
         if (mapRoot == null)
@@ -99,10 +95,6 @@ public class GridManager : MonoBehaviour
 
         BuildTilesFromScene();
         bool ok = LoadWaypointsFromPath();
-
-        MiniMapLaneRegistry.Instance?.RebindAllMiniMapsAfterMapBuild();
-        Debug.Log($"[GridManager] Bound to mapRoot={mapRoot.name} tiles={tileParent.name} waypointPath={waypointPath.name} waypoints={waypoints.Count} ok={ok}");
-        //OnMapBuilt?.Invoke();
     }
 
     private void BuildTilesFromScene()
